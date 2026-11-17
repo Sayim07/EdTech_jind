@@ -80,39 +80,39 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 sm:space-y-8">
       {/* Student Welcome Header */}
-      <section className="bg-white dark:bg-ink-900 rounded-3xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 shadow-sm transition-colors">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Student Learning Dashboard</span>
+      <section className="bg-white dark:bg-ink-900 rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-gray-800 p-5 sm:p-7 shadow-sm transition-colors">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-[11px] font-semibold">
+              <Sparkles className="w-3 h-3 text-amber-600" />
+              <span>Student Dashboard</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-gray-900 dark:text-white">
-              Welcome, {user.name}
+            <h1 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 dark:text-white">
+              Hi, {user.name}
             </h1>
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-              Browse popular masterclasses or access your purchased courses, videos, PPT slides, and assignments.
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Continue learning or discover new courses.
             </p>
           </div>
 
           {/* Quick Metrics */}
-          <div className="flex items-center gap-6 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-800 pt-4 md:pt-0 md:pl-6 shrink-0">
+          <div className="flex items-center gap-5 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-800 pt-3 md:pt-0 md:pl-6 shrink-0">
             <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-serif font-bold text-amber-600">
+              <div className="text-xl sm:text-2xl font-serif font-bold text-amber-600">
                 {enrollments.length}
               </div>
-              <div className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
-                Purchased
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
+                Enrolled
               </div>
             </div>
-            <div className="h-8 w-px bg-gray-200 dark:bg-gray-800" />
+            <div className="h-7 w-px bg-gray-200 dark:bg-gray-800" />
             <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-serif font-bold text-gray-800 dark:text-gray-200">
+              <div className="text-xl sm:text-2xl font-serif font-bold text-gray-800 dark:text-gray-200">
                 {popularCourses.length}
               </div>
-              <div className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
                 Available
               </div>
             </div>
@@ -121,43 +121,43 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
       </section>
 
       {/* Primary Navigation Tabs & Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {/* Tab Controls */}
-        <div className="flex items-center p-1 rounded-2xl bg-gray-200/80 dark:bg-ink-800 text-xs font-semibold shrink-0">
+        <div className="flex items-center p-1 rounded-xl bg-gray-200/80 dark:bg-ink-800 text-xs font-semibold shrink-0">
           <button
             onClick={() => setActiveTab('explore')}
-            className={`px-4 py-2.5 rounded-xl transition flex items-center gap-2 ${
+            className={`px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 ${
               activeTab === 'explore'
                 ? 'bg-white dark:bg-ink-900 text-amber-600 dark:text-amber-400 shadow-sm'
                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
             }`}
           >
-            <Compass className="w-4 h-4" />
-            <span>Popular Courses ({popularCourses.length})</span>
+            <Compass className="w-3.5 h-3.5" />
+            <span>Explore ({popularCourses.length})</span>
           </button>
 
           <button
             onClick={handleMyCoursesClick}
-            className={`px-4 py-2.5 rounded-xl transition flex items-center gap-2 ${
+            className={`px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 ${
               activeTab === 'my_courses'
                 ? 'bg-white dark:bg-ink-900 text-amber-600 dark:text-amber-400 shadow-sm'
                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
             }`}
           >
-            <BookOpen className="w-4 h-4" />
+            <BookOpen className="w-3.5 h-3.5" />
             <span>My Courses ({enrollments.length})</span>
           </button>
         </div>
 
         {/* Course Search Bar */}
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
+        <div className="relative w-full sm:w-72">
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search courses, history, topics..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-ink-900 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
+            placeholder="Search courses..."
+            className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-ink-900 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
           />
         </div>
       </div>
@@ -177,34 +177,34 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
               <ShoppingBag className="w-8 h-8" />
             </div>
 
-            <div className="space-y-2">
-              <h3 className="font-serif text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                You Haven't Purchased Any Course
+            <div className="space-y-1.5">
+              <h3 className="font-serif text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                No Courses Yet
               </h3>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                You have not enrolled in any masterclasses yet. Please purchase a course to unlock full access to lecture videos, downloadable PPT presentation decks, and assignment submissions.
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                You haven&apos;t enrolled in any courses yet. Choose a course to start learning.
               </p>
             </div>
 
-            <div className="pt-2 flex flex-col gap-2.5">
+            <div className="pt-2 flex flex-col gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setShowNoPurchaseModal(false);
                   setActiveTab('explore');
                 }}
-                className="w-full py-3 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs tracking-wide shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs tracking-wide shadow-md transition active:scale-95 flex items-center justify-center gap-2"
               >
-                <span>Browse Popular Courses</span>
+                <span>Browse Courses</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowNoPurchaseModal(false)}
-                className="w-full py-2 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium"
+                className="w-full py-1.5 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium"
               >
-                Close Window
+                Close
               </button>
             </div>
           </div>
@@ -213,22 +213,17 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
 
       {/* TAB 1: EXPLORE & POPULAR COURSES */}
       {activeTab === 'explore' && (
-        <section className="space-y-6">
+        <section className="space-y-5">
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-600">
-                Curriculum Catalog
-              </span>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 dark:text-white">
-                Popular Masterclasses
-              </h2>
-            </div>
+            <h2 className="text-lg sm:text-xl font-serif font-bold text-gray-900 dark:text-white">
+              Popular Courses
+            </h2>
             <span className="text-xs text-gray-500">
-              Showing {filteredPopularCourses.length} courses
+              {filteredPopularCourses.length} courses
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredPopularCourses.map((course) => {
               const isPurchased = enrollments.some((e) => e.courseId === course.id);
               const lessonCount = course.modules?.reduce(
@@ -239,7 +234,7 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
               return (
                 <article
                   key={course.id}
-                  className="flex flex-col rounded-3xl overflow-hidden bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition group"
+                  className="flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition group"
                 >
                   {/* Thumbnail: only rendered if admin specifically uploaded/provided one */}
                   {course.thumbnail ? (
@@ -259,24 +254,24 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                         </span>
                       </div>
                       {isPurchased && (
-                        <div className="absolute top-2.5 right-3 bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow">
-                          PURCHASED
+                        <div className="absolute top-2.5 right-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow">
+                          Enrolled
                         </div>
                       )}
                     </div>
                   ) : (
                     /* Clean typography header when no thumbnail is set by admin */
-                    <div className="p-6 pb-0 flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wide uppercase bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/60">
+                    <div className="p-4 sm:p-5 pb-0 flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/60">
                         {course.category}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
                           {course.level}
                         </span>
                         {isPurchased && (
                           <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
-                            PURCHASED
+                            Enrolled
                           </span>
                         )}
                       </div>
@@ -284,34 +279,34 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                   )}
 
                   {/* Body */}
-                  <div className={`p-6 flex-1 flex flex-col justify-between space-y-4 ${course.thumbnail ? 'pt-5' : 'pt-3'}`}>
-                    <div className="space-y-2.5">
-                      <h3 className="font-serif text-xl font-bold text-gray-900 dark:text-white group-hover:text-amber-600 transition leading-snug">
+                  <div className={`p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3 ${course.thumbnail ? 'pt-4' : 'pt-2'}`}>
+                    <div className="space-y-1.5">
+                      <h3 className="font-serif text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-amber-600 transition leading-snug line-clamp-2">
                         {course.title}
                       </h3>
-                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-3 leading-relaxed">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
                         {course.shortDescription || course.description}
                       </p>
                     </div>
 
-                    <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1.5 font-medium">
+                    <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex items-center gap-1 font-medium text-[11px]">
                           <BookOpen className="w-3.5 h-3.5 text-amber-600" />
-                          {lessonCount} Lectures
+                          {lessonCount} Lessons
                         </span>
-                        <span className="flex items-center gap-1.5 font-medium">
+                        <span className="flex items-center gap-1 font-medium text-[11px]">
                           <FileText className="w-3.5 h-3.5 text-amber-600" />
-                          PPT Included
+                          Slides
                         </span>
                       </div>
                       <div className="flex items-baseline gap-1.5">
                         {course.originalPrice && course.originalPrice > course.price && (
-                          <span className="text-xs line-through text-gray-400">
+                          <span className="text-[11px] line-through text-gray-400">
                             {formatPrice(course.originalPrice)}
                           </span>
                         )}
-                        <span className="text-base font-bold text-gray-900 dark:text-white font-serif">
+                        <span className="text-sm sm:text-base font-bold text-gray-900 dark:text-white font-serif">
                           {course.price > 0 ? formatPrice(course.price) : 'Free'}
                         </span>
                       </div>
@@ -319,25 +314,25 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                   </div>
 
                   {/* Action Button */}
-                  <div className="px-6 pb-6 pt-0">
+                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
                     {isPurchased ? (
                       <Link
                         href={`/learn/${course.slug}`}
-                        className="w-full block text-center py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs tracking-wide shadow-sm transition active:scale-95"
+                        className="w-full block text-center py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs tracking-wide shadow-sm transition active:scale-95"
                       >
-                        Open Classroom Player
+                        Go to Class
                       </Link>
                     ) : (
                       <button
                         onClick={() => handleQuickEnroll(course.id, course.slug)}
                         disabled={enrollingCourseId === course.id}
-                        className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs tracking-wide shadow-sm transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs tracking-wide shadow-sm transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                       >
-                        <ShoppingBag className="w-4 h-4" />
+                        <ShoppingBag className="w-3.5 h-3.5" />
                         <span>
                           {enrollingCourseId === course.id
-                            ? 'Unlocking Access...'
-                            : `Enroll Now (${formatPrice(course.price)})`}
+                            ? 'Enrolling...'
+                            : `Enroll • ${formatPrice(course.price)}`}
                         </span>
                       </button>
                     )}
@@ -351,40 +346,40 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
 
       {/* TAB 2: MY PURCHASED COURSES */}
       {activeTab === 'my_courses' && (
-        <section className="space-y-6">
+        <section className="space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 dark:text-white">
-              My Purchased Courses
+            <h2 className="text-lg sm:text-xl font-serif font-bold text-gray-900 dark:text-white">
+              My Courses
             </h2>
             <span className="text-xs text-gray-500">
-              {filteredMyCourses.length} active enrollments
+              {filteredMyCourses.length} enrolled
             </span>
           </div>
 
           {filteredMyCourses.length === 0 ? (
             /* Empty State when student has no purchases */
-            <div className="text-center py-16 px-6 rounded-3xl bg-white dark:bg-ink-900 border border-dashed border-gray-300 dark:border-gray-800 space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-600 flex items-center justify-center mx-auto">
-                <BookOpen className="w-7 h-7" />
+            <div className="text-center py-12 px-5 rounded-2xl bg-white dark:bg-ink-900 border border-dashed border-gray-300 dark:border-gray-800 space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 flex items-center justify-center mx-auto">
+                <BookOpen className="w-6 h-6" />
               </div>
-              <h3 className="font-serif text-lg font-bold text-gray-900 dark:text-white">
-                You Haven't Purchased Any Course Yet
+              <h3 className="font-serif text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+                No Courses Yet
               </h3>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto leading-relaxed">
-                Please purchase a course from the catalog to unlock video archives, downloadable PPT presentations, and research assignments.
+              <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                Pick a course to start learning video lessons and presentation slides.
               </p>
               <button
                 type="button"
                 onClick={() => setActiveTab('explore')}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow transition active:scale-95"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow transition active:scale-95"
               >
-                <span>Browse Popular Courses</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Browse Courses</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
             /* List of purchased courses */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredMyCourses.map(({ course, id, createdAt }) => {
                 const lessonCount = course.modules?.reduce(
                   (sum: number, m: any) => sum + (m.lessons?.length || 0),
@@ -394,7 +389,7 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                 return (
                   <article
                     key={id}
-                    className="flex flex-col rounded-3xl overflow-hidden bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition group"
+                    className="flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition group"
                   >
                     {course.thumbnail ? (
                       <div className="relative aspect-[16/10] bg-gray-100 dark:bg-gray-800 overflow-hidden border-b border-gray-100 dark:border-gray-800">
@@ -409,24 +404,24 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                             {course.category}
                           </span>
                         </div>
-                        <div className="absolute top-2.5 right-3 bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow">
-                          PURCHASED
+                        <div className="absolute top-2.5 right-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow">
+                          Enrolled
                         </div>
                       </div>
                     ) : (
-                      <div className="p-6 pb-0 flex items-center justify-between gap-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wide uppercase bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/60">
+                      <div className="p-4 sm:p-5 pb-0 flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/60">
                           {course.category}
                         </span>
                         <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
-                          PURCHASED
+                          Enrolled
                         </span>
                       </div>
                     )}
 
-                    <div className={`p-6 flex-1 flex flex-col justify-between space-y-4 ${course.thumbnail ? 'pt-5' : 'pt-3'}`}>
-                      <div className="space-y-1.5">
-                        <h3 className="font-serif text-lg font-bold text-gray-900 dark:text-white group-hover:text-amber-600 transition">
+                    <div className={`p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3 ${course.thumbnail ? 'pt-4' : 'pt-2'}`}>
+                      <div className="space-y-1">
+                        <h3 className="font-serif text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-amber-600 transition line-clamp-2">
                           {course.title}
                         </h3>
                         <p className="text-xs text-gray-500 line-clamp-2">
@@ -434,22 +429,22 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                         </p>
                       </div>
 
-                      <div className="pt-3 border-t border-gray-100 dark:border-gray-800 space-y-3">
+                      <div className="pt-3 border-t border-gray-100 dark:border-gray-800 space-y-2.5">
                         <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1 text-[11px]">
                             <Layers className="w-3.5 h-3.5 text-amber-600" />
                             {course.modules?.length || 0} Modules
                           </span>
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1 text-[11px]">
                             <PlayCircle className="w-3.5 h-3.5 text-amber-600" />
-                            {lessonCount} Lectures
+                            {lessonCount} Lessons
                           </span>
                         </div>
 
                         {/* Progress */}
                         <div className="space-y-1">
                           <div className="flex justify-between text-[10px] font-semibold text-gray-500">
-                            <span>Syllabus Progress</span>
+                            <span>Progress</span>
                             <span>30% Completed</span>
                           </div>
                           <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
@@ -461,7 +456,7 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                           href={`/learn/${course.slug}`}
                           className="w-full block text-center py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs tracking-wide shadow-sm transition active:scale-95"
                         >
-                          Open Classroom (Videos & PPTs)
+                          Go to Class
                         </Link>
                       </div>
                     </div>

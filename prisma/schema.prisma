@@ -30,7 +30,7 @@ model Course {
   originalPrice    Float?
   level            String       @default("All Levels") // "Beginner" | "Intermediate" | "Advanced" | "All Levels"
   category         String       @default("History & Food")
-  instructorName   String       @default("Prof. C.I.M. Jindal")
+  instructorName   String       @default("CIM India Faculty")
   published        Boolean      @default(true)
   featured         Boolean      @default(false)
   createdAt        DateTime     @default(now())

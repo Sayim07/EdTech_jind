@@ -57,6 +57,7 @@ export async function PATCH(
     if (body.originalPrice !== undefined) data.originalPrice = body.originalPrice ? parseFloat(body.originalPrice) : null;
     if (body.category !== undefined) data.category = body.category.trim();
     if (body.level !== undefined) data.level = body.level.trim();
+    if (body.instructorName !== undefined) data.instructorName = body.instructorName.trim();
     if (body.thumbnail !== undefined) data.thumbnail = body.thumbnail ? body.thumbnail.trim() : null;
     if (body.published !== undefined) data.published = Boolean(body.published);
     if (body.featured !== undefined) data.featured = Boolean(body.featured);
@@ -74,8 +75,15 @@ export async function PATCH(
       },
     });
 
-    // If lecture media attachments were updated
-    if (body.videoUrl !== undefined || body.fileUrl !== undefined) {
+    // If lecture media attachments or module titles were updated
+    if (
+      body.videoUrl !== undefined ||
+      body.fileUrl !== undefined ||
+      body.moduleTitle !== undefined ||
+      body.lectureTitle !== undefined ||
+      body.lectureType !== undefined ||
+      body.duration !== undefined
+    ) {
       let firstModule = await prisma.module.findFirst({
         where: { courseId: id },
         orderBy: { order: 'asc' },
@@ -85,30 +93,40 @@ export async function PATCH(
       if (!firstModule) {
         firstModule = await prisma.module.create({
           data: {
-            title: 'Module 1: Foundations',
+            title: body.moduleTitle?.trim() || 'Module 1: Foundations',
             order: 1,
             courseId: id,
           },
           include: { lessons: true },
         });
+      } else if (body.moduleTitle) {
+        await prisma.module.update({
+          where: { id: firstModule.id },
+          data: { title: body.moduleTitle.trim() },
+        });
       }
 
       if (firstModule.lessons && firstModule.lessons.length > 0) {
         const lessonData: any = {};
+        if (body.lectureTitle !== undefined) lessonData.title = body.lectureTitle.trim();
         if (body.videoUrl !== undefined) lessonData.videoUrl = body.videoUrl ? body.videoUrl.trim() : null;
         if (body.fileUrl !== undefined) lessonData.fileUrl = body.fileUrl ? body.fileUrl.trim() : null;
+        if (body.lectureType !== undefined) lessonData.type = body.lectureType;
+        if (body.duration !== undefined) lessonData.duration = body.duration.trim();
         await prisma.lesson.update({
           where: { id: firstModule.lessons[0].id },
           data: lessonData,
         });
-      } else if (body.videoUrl || body.fileUrl) {
+      } else if (body.videoUrl || body.fileUrl || body.lectureTitle) {
         await prisma.lesson.create({
           data: {
-            title: '1.1 Foundations & Overview',
+            title: body.lectureTitle?.trim() || '1.1 Foundations & Overview',
+            slug: (body.lectureTitle?.trim() || '1-1-foundations-overview').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
             order: 1,
-            type: 'VIDEO',
+            type: body.lectureType || 'VIDEO',
             videoUrl: body.videoUrl ? body.videoUrl.trim() : null,
             fileUrl: body.fileUrl ? body.fileUrl.trim() : null,
+            duration: body.duration?.trim() || '30 mins',
             moduleId: firstModule.id,
           },
         });
@@ -121,6 +139,8 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to update course' }, { status: 500 });
   }
 }
+
+export const PUT = PATCH;
 
 export async function DELETE(
   req: NextRequest,

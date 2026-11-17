@@ -166,10 +166,10 @@ export function ClassroomPlayerClient({ course, user }: Props) {
               <div className="text-center p-8 space-y-3">
                 <FileText className="w-12 h-12 text-amber-500 mx-auto" />
                 <div className="text-base font-serif font-bold text-gray-100">
-                  Slide Seminar Lecture
+                  Slide Presentation Lesson
                 </div>
                 <p className="text-xs text-gray-300 max-w-sm">
-                  This masterclass lecture is conducted via the archival presentation slides and notes below.
+                  This class is based on the presentation slides and lecture notes below.
                 </p>
               </div>
             )}
@@ -264,7 +264,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                       <FileText className="w-6 h-6 text-amber-600 shrink-0" />
                       <div>
                         <div className="text-xs font-bold text-gray-900 dark:text-white">
-                          Curriculum Presentation Deck
+                          Class Presentation Slides
                         </div>
                         <div className="text-[11px] text-gray-500 dark:text-gray-400">
                           {activeLesson.fileUrl.split('/').pop()}
@@ -292,7 +292,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="space-y-1">
                         <h4 className="font-serif font-bold text-base text-gray-900 dark:text-white">
-                          Academic Presentation Deck
+                          Class Slides & Presentation
                         </h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           File: {activeLesson.fileUrl.split('/').pop()}
@@ -304,7 +304,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                         className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold flex items-center gap-2 transition shadow-sm self-start sm:self-auto"
                       >
                         <Download className="w-4 h-4" />
-                        <span>Download Slides (.PPTX / PDF)</span>
+                        <span>Download Slides</span>
                       </a>
                     </div>
 
@@ -345,10 +345,10 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                       </div>
                       <div>
                         <h4 className="font-serif font-bold text-base text-gray-900 dark:text-white">
-                          Audio Masterclass Podcast
+                          Audio Lesson
                         </h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Listen on mobile while commuting or studying. Archival audio lecture.
+                          Listen to this audio lesson anytime on your phone or computer.
                         </p>
                       </div>
                     </div>
@@ -356,7 +356,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                     <div className="p-4 rounded-xl bg-gray-50 dark:bg-ink-950 border border-gray-200 dark:border-gray-800 space-y-3">
                       <audio controls src={activeLesson.audioUrl} className="w-full" />
                       <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400 pt-1">
-                        <span>Format: AAC / M4A Master Audio</span>
+                        <span>Audio Recording</span>
                         <a
                           href={activeLesson.audioUrl}
                           download
@@ -388,10 +388,10 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                         </div>
                         <div>
                           <h4 className="font-serif font-bold text-base text-gray-900 dark:text-white">
-                            Curriculum Infographic & Analytical Diagram
+                            Visual Study Chart
                           </h4>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            High-resolution academic taxonomy chart
+                            Visual summary and study guide
                           </p>
                         </div>
                       </div>
@@ -429,7 +429,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-                          Graded Coursework
+                          Homework / Assignment
                         </span>
                         <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
                           Max Score: {currentAssignment.maxScore} pts
@@ -479,7 +479,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                           className="py-2.5 px-5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-sm"
                         >
                           <Send className="w-3.5 h-3.5" />
-                          <span>{submitting ? 'Submitting...' : 'Submit Assignment to Faculty'}</span>
+                          <span>{submitting ? 'Submitting...' : 'Submit Assignment'}</span>
                         </button>
                       </form>
                     )}

@@ -108,12 +108,12 @@ export default async function CourseDetailPage({
                   </div>
                   <div className="flex items-center gap-1.5">
                     <PlayCircle className="w-4 h-4 text-amber-400" />
-                    <span>{totalLessons} Lectures</span>
+                    <span>{totalLessons} Lessons</span>
                   </div>
                   {totalAssignments > 0 && (
                     <div className="flex items-center gap-1.5">
                       <Award className="w-4 h-4 text-amber-400" />
-                      <span>{totalAssignments} Graded Assignments</span>
+                      <span>{totalAssignments} Assignments</span>
                     </div>
                   )}
                 </div>
@@ -140,7 +140,7 @@ export default async function CourseDetailPage({
                       <PlayCircle className="w-6 h-6 ml-0.5" />
                     </div>
                     <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-                      Masterclass Video & Slide Lectures
+                      Video & Slide Lessons
                     </span>
                   </div>
                 )}
@@ -157,7 +157,7 @@ export default async function CourseDetailPage({
                     )}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Full lifetime access to video lectures, PPT presentations & assignments.
+                    Full lifetime access to video lessons, presentation slides & study notes.
                   </p>
                 </div>
 
@@ -166,7 +166,7 @@ export default async function CourseDetailPage({
                     href={`/learn/${course.slug}`}
                     className="w-full block text-center py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-medium text-sm transition shadow-sm active:scale-95"
                   >
-                    Go to Classroom (Enrolled)
+                    Go to Classroom
                   </Link>
                 ) : (
                   <EnrollButton
@@ -184,7 +184,7 @@ export default async function CourseDetailPage({
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Downloadable Academic PPT Slide Decks</span>
+                    <span>Downloadable PowerPoint Slides</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
@@ -200,13 +200,13 @@ export default async function CourseDetailPage({
         <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
           <div className="space-y-1">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-500">
-              Curriculum Structure
+              Course Content
             </span>
             <h2 className="text-2xl font-serif font-bold text-gray-900 dark:text-white">
-              Course Syllabus & Modules
+              Lessons & Study Topics
             </h2>
             <p className="text-xs sm:text-sm text-gray-500">
-              {course.modules.length} modules • {totalLessons} lectures • Self-paced learning
+              {course.modules.length} modules • {totalLessons} lessons • Self-paced learning
             </p>
           </div>
 

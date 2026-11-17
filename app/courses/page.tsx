@@ -62,13 +62,13 @@ export default async function CoursesCatalogPage({
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-500">
             <Compass className="w-4 h-4" />
-            <span>Academic Curriculum</span>
+            <span>Course Catalog</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-serif font-bold text-gray-900 dark:text-white">
-            All Masterclasses & Archival Studies
+            All Available Courses
           </h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl">
-            Explore comprehensive video series, interactive presentation decks, and evaluation assignments on human food evolution and civilization.
+            Explore video lessons, presentation slides, and study notes on food history and civilization.
           </p>
         </div>
 
@@ -81,7 +81,7 @@ export default async function CoursesCatalogPage({
                 type="text"
                 name="q"
                 defaultValue={q}
-                placeholder="Search courses, empires, culinary eras..."
+                placeholder="Search courses or topics..."
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
@@ -89,7 +89,7 @@ export default async function CoursesCatalogPage({
               type="submit"
               className="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-medium text-sm transition active:scale-95 shrink-0"
             >
-              Filter Catalog
+              Search
             </button>
           </form>
 

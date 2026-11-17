@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
+import { ButtonSpinner } from '@/components/ui/Loaders';
 import { 
   BookOpen, 
   PlayCircle, 
@@ -326,14 +327,16 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                       <button
                         onClick={() => handleQuickEnroll(course.id, course.slug)}
                         disabled={enrollingCourseId === course.id}
-                        className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs tracking-wide shadow-sm transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs tracking-wide shadow-sm transition active:scale-95 disabled:opacity-75 flex items-center justify-center gap-2"
                       >
-                        <ShoppingBag className="w-3.5 h-3.5" />
-                        <span>
-                          {enrollingCourseId === course.id
-                            ? 'Enrolling...'
-                            : `Enroll • ${formatPrice(course.price)}`}
-                        </span>
+                        {enrollingCourseId === course.id ? (
+                          <ButtonSpinner label="Enrolling..." />
+                        ) : (
+                          <>
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            <span>Enroll • {formatPrice(course.price)}</span>
+                          </>
+                        )}
                       </button>
                     )}
                   </div>

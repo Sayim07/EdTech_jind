@@ -25,6 +25,7 @@ import {
   Save
 } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
+import { Spinner, ButtonSpinner } from '@/components/ui/Loaders';
 
 interface AdminUser {
   id: string;
@@ -310,14 +311,16 @@ export function EditCourseClient({
             type="button"
             onClick={() => handleSaveChanges()}
             disabled={savingCourse}
-            className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow-sm transition active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+            className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow-sm transition active:scale-95 disabled:opacity-75 flex items-center gap-1.5"
           >
             {savingCourse ? (
-              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <ButtonSpinner label="Saving..." />
             ) : (
-              <Save className="w-3.5 h-3.5" />
+              <>
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Changes</span>
+              </>
             )}
-            <span>{savingCourse ? 'Saving...' : 'Save Changes'}</span>
           </button>
         </div>
       </div>
@@ -495,7 +498,7 @@ export function EditCourseClient({
                         className="px-3.5 py-2 rounded-xl border border-dashed border-amber-400 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50 text-amber-800 dark:text-amber-300 text-xs font-medium flex items-center justify-center gap-1.5 shrink-0 transition"
                       >
                         {uploadingVideo ? (
-                          <span className="w-3.5 h-3.5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                          <Spinner size="xs" variant="primary" />
                         ) : (
                           <FolderPlus className="w-3.5 h-3.5" />
                         )}
@@ -534,7 +537,7 @@ export function EditCourseClient({
                         className="px-3.5 py-2 rounded-xl border border-dashed border-amber-400 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50 text-amber-800 dark:text-amber-300 text-xs font-medium flex items-center justify-center gap-1.5 shrink-0 transition"
                       >
                         {uploadingPpt ? (
-                          <span className="w-3.5 h-3.5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                          <Spinner size="xs" variant="primary" />
                         ) : (
                           <FolderPlus className="w-3.5 h-3.5" />
                         )}
@@ -726,9 +729,9 @@ export function EditCourseClient({
                       className="w-full aspect-[16/9] rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-amber-500 bg-gray-50/50 dark:bg-ink-800/40 transition flex flex-col items-center justify-center p-4 text-center cursor-pointer group"
                     >
                       {uploadingImage ? (
-                        <div className="flex flex-col items-center gap-2 text-amber-600">
-                          <span className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
-                          <span className="text-xs font-medium">Uploading image...</span>
+                        <div className="flex flex-col items-center gap-2">
+                          <Spinner size="md" variant="primary" />
+                          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Uploading image...</span>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-1.5 text-gray-500 dark:text-gray-400 group-hover:text-amber-600">
@@ -769,24 +772,32 @@ export function EditCourseClient({
                 <button
                   type="submit"
                   disabled={savingCourse}
-                  className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-md transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-md transition active:scale-95 disabled:opacity-75 flex items-center justify-center gap-2"
                 >
                   {savingCourse ? (
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <ButtonSpinner label="Saving Changes..." />
                   ) : (
-                    <Save className="w-4 h-4" />
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Save Changes</span>
+                    </>
                   )}
-                  <span>{savingCourse ? 'Saving Changes...' : 'Save Changes'}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleDeleteCourse}
                   disabled={deletingCourse}
-                  className="w-full py-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-medium transition flex items-center justify-center gap-1.5 mt-2"
+                  className="w-full py-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-medium transition flex items-center justify-center gap-1.5 mt-2 disabled:opacity-50"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Delete Course Permanently</span>
+                  {deletingCourse ? (
+                    <Spinner size="xs" variant="primary" label="Deleting..." />
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Course Permanently</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

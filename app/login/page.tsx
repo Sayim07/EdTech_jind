@@ -196,11 +196,13 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-ink-950 flex flex-col transition-colors duration-200">
       {/* Top minimal header with Theme Toggle */}
       <header className="h-16 px-4 sm:px-8 flex items-center justify-between max-w-7xl w-full mx-auto">
-        <div className="flex items-center gap-2 font-serif font-bold text-gray-900 dark:text-white text-base">
-          <div className="w-7 h-7 rounded-lg bg-amber-600 text-white flex items-center justify-center text-xs font-bold">
-            J
+        <div className="flex items-center gap-2.5 font-serif font-bold text-gray-900 dark:text-white text-base">
+          <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-sm">
+            <GraduationCap className="w-4 h-4" />
           </div>
-          <span>Jindal EdTech</span>
+          <span className="font-serif text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+            CIM India
+          </span>
         </div>
         <ThemeToggle />
       </header>
@@ -213,7 +215,7 @@ export default function LoginPage() {
       </main>
 
       <footer className="py-4 text-center text-xs text-gray-400">
-        © 2026 Jindal EdTech Institute
+        © 2026 CIM India. All rights reserved.
       </footer>
     </div>
   );

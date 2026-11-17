@@ -53,7 +53,7 @@ export function Navbar() {
           </div>
           <div>
             <span className="font-serif text-lg font-bold tracking-tight text-gray-900 dark:text-white block leading-tight">
-              Jindal EdTech
+              CIM India
             </span>
             <span className="text-[10px] tracking-wider uppercase text-amber-600 dark:text-amber-400 font-bold block">
               {user?.role === 'ADMIN' ? 'Admin Portal' : 'Student Academy'}

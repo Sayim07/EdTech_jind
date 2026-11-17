@@ -4,10 +4,10 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/ThemeProvider';
-import { 
-  BookOpen, 
-  ShieldCheck, 
-  LogOut, 
+import {
+  BookOpen,
+  ShieldCheck,
+  LogOut,
   Compass,
   GraduationCap
 } from 'lucide-react';
@@ -72,18 +72,16 @@ export function Navbar() {
             <>
               <Link
                 href="/dashboard"
-                className={`transition flex items-center gap-1.5 ${
-                  pathname === '/dashboard' ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-gray-600 dark:text-gray-300 hover:text-amber-600'
-                }`}
+                className={`transition flex items-center gap-1.5 ${pathname === '/dashboard' ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-gray-600 dark:text-gray-300 hover:text-amber-600'
+                  }`}
               >
                 <Compass className="w-4 h-4" />
                 <span>Dashboard & Catalog</span>
               </Link>
               <Link
                 href="/dashboard?tab=my_courses"
-                className={`transition flex items-center gap-1.5 ${
-                  pathname.includes('tab=my_courses') ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-gray-600 dark:text-gray-300 hover:text-amber-600'
-                }`}
+                className={`transition flex items-center gap-1.5 ${pathname.includes('tab=my_courses') ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-gray-600 dark:text-gray-300 hover:text-amber-600'
+                  }`}
               >
                 <BookOpen className="w-4 h-4" />
                 <span>My Courses</span>

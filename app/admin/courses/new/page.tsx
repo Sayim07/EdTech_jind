@@ -6,7 +6,7 @@ import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { CreateCourseClient } from './CreateCourseClient';
 
 export const metadata = {
-  title: 'Publish New Masterclass | Jindal EdTech Admin',
+  title: 'Publish New Masterclass | CIM India Admin',
   description: 'Create and publish authentic academic masterclasses, lecture videos, and slide decks.',
 };
 

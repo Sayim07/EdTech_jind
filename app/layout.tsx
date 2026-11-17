@@ -4,7 +4,7 @@ import { AgentationDev } from '@/AgentationDev';
 import { ThemeProvider } from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
-  title: 'Jindal EdTech | Masterclasses in Food History & Gastronomy',
+  title: 'CIM India | Masterclasses in Food History & Gastronomy',
   description: 'Premier mobile-first educational platform with lecture archives, PPT decks, and assignments.',
 };
 

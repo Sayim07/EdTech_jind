@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String
+  name         String
+  role         String       @default("STUDENT") // "STUDENT" | "ADMIN"
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  enrollments  Enrollment[]
+  submissions  Submission[]
+}
+
+model Course {
+  id               String       @id @default(uuid())
+  title            String
+  slug             String       @unique
+  description      String
+  shortDescription String?
+  thumbnail        String?
+  price            Float        @default(0.0)
+  originalPrice    Float?
+  level            String       @default("All Levels") // "Beginner" | "Intermediate" | "Advanced" | "All Levels"
+  category         String       @default("History & Food")
+  instructorName   String       @default("Prof. C.I.M. Jindal")
+  published        Boolean      @default(true)
+  featured         Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  modules          Module[]
+  enrollments      Enrollment[]
+}
+
+model Module {
+  id        String   @id @default(uuid())
+  title     String
+  order     Int      @default(1)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons   Lesson[]
+}
+
+model Lesson {
+  id             String       @id @default(uuid())
+  title          String
+  slug           String
+  order          Int          @default(1)
+  type           String       @default("VIDEO") // "VIDEO" | "YOUTUBE" | "PPT" | "PDF" | "ASSIGNMENT"
+  videoUrl       String?      // Local relative or streaming path
+  fileUrl        String?      // PPTX / PDF local or remote path
+  audioUrl       String?      // M4A / Audio podcast track
+  infographicUrl String?      // High-res summary infographic image
+  duration       String?      // e.g. "14:20"
+  content        String?      // Markdown or notes
+  moduleId       String
+  module      Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  assignments Assignment[]
+}
+
+model Assignment {
+  id           String       @id @default(uuid())
+  title        String
+  description  String
+  instructions String?
+  maxScore     Int          @default(100)
+  lessonId     String
+  lesson       Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  submissions  Submission[]
+}
+
+model Submission {
+  id           String     @id @default(uuid())
+  userId       String
+  assignmentId String
+  content      String?
+  fileUrl      String?
+  status       String     @default("PENDING") // "PENDING" | "SUBMITTED" | "GRADED"
+  score        Int?
+  feedback     String?
+  submittedAt  DateTime   @default(now())
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+}
+
+model Enrollment {
+  id         String   @id @default(uuid())
+  userId     String
+  courseId   String
+  amountPaid Float    @default(0.0)
+  paymentId  String?
+  status     String   @default("ACTIVE") // "ACTIVE" | "COMPLETED"
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}

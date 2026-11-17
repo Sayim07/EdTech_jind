@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import {
@@ -358,13 +359,13 @@ export function AdminClient({
           </p>
         </div>
 
-        <button
-          onClick={openAddCourseModal}
+        <Link
+          href="/admin/courses/new"
           className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs tracking-wide shadow-sm transition active:scale-95 flex items-center justify-center gap-2 self-start md:self-auto"
         >
           <PlusCircle className="w-4 h-4" />
           <span>Publish New Course</span>
-        </button>
+        </Link>
       </section>
 
       {/* Navigation Tabs */}
@@ -436,12 +437,12 @@ export function AdminClient({
               Admin Quick Actions
             </h3>
             <div className="flex flex-wrap gap-3">
-              <button
-                onClick={openAddCourseModal}
-                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium"
+              <Link
+                href="/admin/courses/new"
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium inline-flex items-center gap-1.5"
               >
                 + Add Video / PPT Masterclass
-              </button>
+              </Link>
               <button
                 onClick={() => setActiveTab('students')}
                 className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-ink-800 hover:bg-gray-200 text-gray-800 dark:text-gray-200 text-xs font-medium"
@@ -471,13 +472,13 @@ export function AdminClient({
                 Create courses, update pricing, add/remove thumbnails, and attach lectures & PPTs.
               </p>
             </div>
-            <button
-              onClick={openAddCourseModal}
+            <Link
+              href="/admin/courses/new"
               className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow flex items-center gap-1.5 transition active:scale-95"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Add New Course</span>
-            </button>
+            </Link>
           </div>
 
           <div className="bg-white dark:bg-ink-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">

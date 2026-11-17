@@ -147,7 +147,7 @@ export default async function CourseDetailPage({
 
                 <div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-serif font-bold text-gray-900 dark:text-white">
+                    <span className="text-2xl sm:text-3xl font-serif font-bold text-gray-900 dark:text-white">
                       {course.price > 0 ? formatPrice(course.price) : 'Free Enrollment'}
                     </span>
                     {course.originalPrice && (
@@ -157,16 +157,16 @@ export default async function CourseDetailPage({
                     )}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Full lifetime access to video lessons, presentation slides & study notes.
+                    Lifetime access to all video lessons and slides.
                   </p>
                 </div>
 
                 {isEnrolled ? (
                   <Link
                     href={`/learn/${course.slug}`}
-                    className="w-full block text-center py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-medium text-sm transition shadow-sm active:scale-95"
+                    className="w-full block text-center py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs sm:text-sm transition shadow-sm active:scale-95"
                   >
-                    Go to Classroom
+                    Go to Class
                   </Link>
                 ) : (
                   <EnrollButton
@@ -177,18 +177,18 @@ export default async function CourseDetailPage({
                   />
                 )}
 
-                <div className="text-xs text-gray-500 space-y-1.5 border-t border-gray-100 dark:border-gray-800 pt-3">
+                <div className="text-[11px] sm:text-xs text-gray-500 space-y-1 border-t border-gray-100 dark:border-gray-800 pt-3">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Watch on Mobile & Desktop</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>Mobile & desktop access</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Downloadable PowerPoint Slides</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>Downloadable slides</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Verified Certificate of Completion</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>Course certificate</span>
                   </div>
                 </div>
               </div>
@@ -197,16 +197,13 @@ export default async function CourseDetailPage({
         </section>
 
         {/* Syllabus / Curriculum Section */}
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-          <div className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-500">
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
+          <div className="space-y-0.5">
+            <h2 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 dark:text-white">
               Course Content
-            </span>
-            <h2 className="text-2xl font-serif font-bold text-gray-900 dark:text-white">
-              Lessons & Study Topics
             </h2>
-            <p className="text-xs sm:text-sm text-gray-500">
-              {course.modules.length} modules • {totalLessons} lessons • Self-paced learning
+            <p className="text-xs text-gray-500">
+              {course.modules.length} modules • {totalLessons} lessons
             </p>
           </div>
 

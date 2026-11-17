@@ -527,13 +527,13 @@ export function AdminClient({
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                    <button
-                      onClick={() => openEditModal(course)}
+                    <Link
+                      href={`/admin/courses/${course.id}`}
                       className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs font-semibold hover:bg-amber-100 dark:hover:bg-amber-900/60 flex items-center gap-1.5 transition active:scale-95"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       <span>Edit Course & Pricing</span>
-                    </button>
+                    </Link>
                     <button
                       onClick={() => router.push(`/learn/${course.slug}`)}
                       className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"

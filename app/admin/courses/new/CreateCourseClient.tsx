@@ -62,7 +62,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
   const [originalPrice, setOriginalPrice] = useState('2999');
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [level, setLevel] = useState(LEVELS[0]);
-  const [instructorName, setInstructorName] = useState('Prof. C.I.M. Jindal');
+  const [instructorName, setInstructorName] = useState('CIM India Faculty');
   const [thumbnail, setThumbnail] = useState('');
 
   // First Module & Lecture Details
@@ -528,7 +528,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       type="text"
                       value={instructorName}
                       onChange={(e) => setInstructorName(e.target.value)}
-                      placeholder="e.g. Prof. C.I.M. Jindal"
+                      placeholder="e.g. CIM India Faculty"
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>

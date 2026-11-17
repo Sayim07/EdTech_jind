@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { ThemeToggle } from '@/components/ThemeProvider';
 import { 
   ArrowLeft, 
   Eye, 
@@ -14,15 +15,16 @@ import {
   FileText, 
   Clock, 
   Compass, 
-  ShieldCheck, 
   FolderPlus, 
   Image as ImageIcon, 
-  Trash2, 
-  Sparkles,
   Layers,
   GraduationCap,
   ExternalLink,
-  DollarSign
+  DollarSign,
+  Headphones,
+  CheckCircle,
+  Download,
+  Award
 } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 
@@ -46,8 +48,11 @@ const LEVELS = ['All Levels', 'Beginner', 'Intermediate', 'Advanced'];
 export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
   const router = useRouter();
 
-  // Mode: 'editor' | 'preview-card' | 'preview-page'
-  const [viewMode, setViewMode] = useState<'editor' | 'preview-card' | 'preview-page'>('editor');
+  // Primary Mode: 'editor' | 'preview'
+  const [mainMode, setMainMode] = useState<'editor' | 'preview'>('editor');
+
+  // Preview Sub-Tab: 'card' (chhota preview) | 'page' (full page landing preview) | 'classroom' (classroom player view)
+  const [previewSubTab, setPreviewSubTab] = useState<'card' | 'page' | 'classroom'>('card');
 
   // Form State
   const [title, setTitle] = useState('');
@@ -62,7 +67,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
 
   // First Module & Lecture Details
   const [moduleTitle, setModuleTitle] = useState('Module 1: Foundations & Archeology');
-  const [lectureTitle, setLessonTitle] = useState('');
+  const [lectureTitle, setLessonTitle] = useState('1.1 The Royal Cuneiform Tablets & Feasting');
   const [lectureType, setLessonType] = useState('VIDEO');
   const [videoUrl, setVideoUrl] = useState('');
   const [fileUrl, setFileUrl] = useState('');
@@ -108,12 +113,12 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
     if (e) e.preventDefault();
     if (!title.trim()) {
       alert('Please provide a course title.');
-      setViewMode('editor');
+      setMainMode('editor');
       return;
     }
     if (!description.trim()) {
       alert('Please provide a course description.');
-      setViewMode('editor');
+      setMainMode('editor');
       return;
     }
 
@@ -169,7 +174,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
     }
   };
 
-  // Discount calculation
+  // Pricing & Discount Calculations
   const numericPrice = parseFloat(price) || 0;
   const numericOriginal = parseFloat(originalPrice) || 0;
   const discountPercent =
@@ -179,8 +184,8 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Top Navigation & Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-ink-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+      {/* Top Navigation & Mode Switcher Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-ink-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm transition-colors">
         <div className="flex items-center gap-3">
           <Link
             href="/admin"
@@ -195,22 +200,29 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
               <span>/</span>
               <span>Publish Course</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 dark:text-white mt-0.5">
               {title ? title : 'New Masterclass Publication'}
             </h1>
           </div>
         </div>
 
-        {/* View Mode Switcher & Publish Action */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        {/* Action Controls: Dual-Theme Toggle + Primary Mode Switcher + Publish */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Theme Toggle (Test in Light & Dark Mode) */}
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-gray-100 dark:bg-ink-800 border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300">
+            <span className="text-[11px] hidden sm:inline">Theme:</span>
+            <ThemeToggle />
+          </div>
+
+          {/* Clean 2-Mode Primary Switcher: Edit vs Preview */}
           <div className="flex items-center p-1 rounded-xl bg-gray-100 dark:bg-ink-800 border border-gray-200 dark:border-gray-700">
             <button
               type="button"
-              onClick={() => setViewMode('editor')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                viewMode === 'editor'
-                  ? 'bg-white dark:bg-ink-900 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+              onClick={() => setMainMode('editor')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+                mainMode === 'editor'
+                  ? 'bg-white dark:bg-ink-900 text-amber-700 dark:text-amber-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -218,30 +230,19 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
             </button>
             <button
               type="button"
-              onClick={() => setViewMode('preview-card')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                viewMode === 'preview-card'
-                  ? 'bg-white dark:bg-ink-900 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+              onClick={() => setMainMode('preview')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+                mainMode === 'preview'
+                  ? 'bg-white dark:bg-ink-900 text-amber-700 dark:text-amber-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
-              <span>Preview Card</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('preview-page')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                viewMode === 'preview-page'
-                  ? 'bg-white dark:bg-ink-900 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
-              }`}
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Full Page Preview</span>
+              <span>Student Live Preview</span>
             </button>
           </div>
 
+          {/* Publish Action Button */}
           <button
             type="button"
             onClick={() => handlePublishCourse()}
@@ -258,14 +259,16 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
         </div>
       </div>
 
-      {/* MODE 1: FORM EDITOR */}
-      {viewMode === 'editor' && (
+      {/* ========================================================================= */}
+      {/* 1. EDITOR FORM (When mainMode === 'editor')                                */}
+      {/* ========================================================================= */}
+      {mainMode === 'editor' && (
         <form onSubmit={handlePublishCourse} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left 2 Columns: Core Information & Attachments */}
+            {/* Left 2 Columns: Core Information & Curriculum Attachments */}
             <div className="lg:col-span-2 space-y-6">
               {/* Section 1: Course Identity */}
-              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-5">
+              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-5 transition-colors">
                 <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4 text-amber-600" />
@@ -286,25 +289,22 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       required
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="e.g. Mesopotamian Cuisine & The First Written Recipes"
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="e.g. Ancient Civilizations & Their Food Traditions"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Short Synopsis / Subtitle
+                      Short Synopsis / Subtitle (Shown on catalog card)
                     </label>
                     <input
                       type="text"
                       value={shortDescription}
                       onChange={(e) => setShortDescription(e.target.value)}
-                      placeholder="e.g. How ancient royal banquets and clay culinary tablets shaped ancient Near East society."
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="e.g. From Roman power banquets and Egyptian beer pyramids to Mesopotamian royal tablets."
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
-                    <p className="text-[11px] text-gray-500 mt-1">
-                      This snippet appears on the course card in the catalog and previews.
-                    </p>
                   </div>
 
                   <div>
@@ -317,22 +317,22 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Detailed academic synopsis, historical context, key learning outcomes, and archival bibliography..."
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 2: Curriculum & Initial Media Attachments */}
-              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-5">
+              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-5 transition-colors">
                 <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
                   <div className="flex items-center gap-2">
                     <Layers className="w-4 h-4 text-amber-600" />
                     <h2 className="text-base font-serif font-bold text-gray-900 dark:text-white">
-                      2. Curriculum & Initial Lecture Media
+                      2. Curriculum & Lecture Media (Folder Upload & Direct Link)
                     </h2>
                   </div>
-                  <span className="text-xs text-gray-400">Folder & Direct Link options</span>
+                  <span className="text-xs text-gray-400">Classroom Content</span>
                 </div>
 
                 <div className="space-y-4">
@@ -345,8 +345,8 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         type="text"
                         value={moduleTitle}
                         onChange={(e) => setModuleTitle(e.target.value)}
-                        placeholder="e.g. Module 1: Foundations & Archeology"
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        placeholder="e.g. Module 1: Mesopotamian Cuisine"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
                     <div>
@@ -357,8 +357,8 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         type="text"
                         value={lectureTitle}
                         onChange={(e) => setLessonTitle(e.target.value)}
-                        placeholder="e.g. 1.1 The Royal Cuneiform Tablets"
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        placeholder="e.g. 1.1 Tasting Ancient Mesopotamia: Table of Gods"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
                   </div>
@@ -371,7 +371,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       <select
                         value={lectureType}
                         onChange={(e) => setLessonType(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                       >
                         <option value="VIDEO">Video Lecture (MP4 / YouTube)</option>
                         <option value="PPT">Presentation Deck (PPTX / Slides)</option>
@@ -388,12 +388,12 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         value={duration}
                         onChange={(e) => setDuration(e.target.value)}
                         placeholder="e.g. 45 mins or 24 slides"
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
                   </div>
 
-                  {/* Video Attachment: Folder Upload or Link */}
+                  {/* Video Attachment */}
                   <div className="space-y-1.5 pt-2">
                     <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
                       Lecture Video (MP4 Folder Upload or Video Link)
@@ -427,12 +427,12 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         value={videoUrl}
                         onChange={(e) => setVideoUrl(e.target.value)}
                         placeholder="Or enter Video URL / YouTube link / /media/lecture.mp4"
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
                   </div>
 
-                  {/* Presentation Deck: Folder Upload or Link */}
+                  {/* Presentation Deck Attachment */}
                   <div className="space-y-1.5 pt-2">
                     <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
                       Presentation Deck (PPT / PDF from Folder or Direct Path)
@@ -466,7 +466,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         value={fileUrl}
                         onChange={(e) => setFileUrl(e.target.value)}
                         placeholder="Or enter PPT / PDF path (e.g. /media/deck.pptx)"
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
                   </div>
@@ -477,7 +477,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
             {/* Right Column: Taxonomy, Pricing & Visual Thumbnail */}
             <div className="space-y-6">
               {/* Section 3: Taxonomy & Instructor */}
-              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4 transition-colors">
                 <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
                   <Compass className="w-4 h-4 text-amber-600" />
                   <h2 className="text-base font-serif font-bold text-gray-900 dark:text-white">
@@ -493,7 +493,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     >
                       {CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>
@@ -510,7 +510,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                     <select
                       value={level}
                       onChange={(e) => setLevel(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     >
                       {LEVELS.map((lvl) => (
                         <option key={lvl} value={lvl}>
@@ -529,14 +529,14 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={instructorName}
                       onChange={(e) => setInstructorName(e.target.value)}
                       placeholder="e.g. Prof. C.I.M. Jindal"
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 4: Pricing & Fees */}
-              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4 transition-colors">
                 <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
                   <DollarSign className="w-4 h-4 text-amber-600" />
                   <h2 className="text-base font-serif font-bold text-gray-900 dark:text-white">
@@ -555,7 +555,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
                       placeholder="1499"
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                   <div>
@@ -568,7 +568,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={originalPrice}
                       onChange={(e) => setOriginalPrice(e.target.value)}
                       placeholder="2999"
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 </div>
@@ -582,7 +582,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
               </div>
 
               {/* Section 5: Thumbnail Image Upload & URL */}
-              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4 transition-colors">
                 <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
                   <div className="flex items-center gap-2">
                     <ImageIcon className="w-4 h-4 text-amber-600" />
@@ -661,7 +661,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={thumbnail}
                       onChange={(e) => setThumbnail(e.target.value)}
                       placeholder="https://... or /media/cover.jpg"
-                      className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
 
@@ -671,15 +671,15 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                 </div>
               </div>
 
-              {/* Action Buttons in Sidebar */}
+              {/* Action Button to switch to Preview */}
               <div className="space-y-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setViewMode('preview-card')}
+                  onClick={() => setMainMode('preview')}
                   className="w-full py-3 rounded-xl border border-amber-600/50 dark:border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-xs font-semibold transition flex items-center justify-center gap-2"
                 >
                   <Eye className="w-4 h-4" />
-                  <span>Preview Course Before Publishing</span>
+                  <span>Preview as Student Before Publishing</span>
                 </button>
                 <button
                   type="submit"
@@ -699,286 +699,414 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
         </form>
       )}
 
-      {/* MODE 2: STUDENT CATALOG CARD PREVIEW */}
-      {viewMode === 'preview-card' && (
+      {/* ========================================================================= */}
+      {/* 2. AUTHENTIC STUDENT LIVE PREVIEW (When mainMode === 'preview')            */}
+      {/* ========================================================================= */}
+      {mainMode === 'preview' && (
         <section className="space-y-6">
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
-              <Eye className="w-5 h-5 text-amber-600 shrink-0" />
-              <div>
-                <h3 className="text-sm font-semibold">Student Catalog Card Preview</h3>
-                <p className="text-xs text-amber-700 dark:text-amber-400">
-                  This is exactly how prospective students will see this course in the masterclass browsing catalog.
-                </p>
+          {/* Preview Navigation Banner */}
+          <div className="bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
+                <Eye className="w-5 h-5 text-amber-600 shrink-0" />
+                <h3 className="text-sm font-semibold">Student Live Preview</h3>
               </div>
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                This renders exactly how students will see your course across the platform in both Light and Dark mode.
+              </p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+
+            {/* Sub-view selector tabs */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center p-1 rounded-xl bg-white dark:bg-ink-900 border border-amber-200 dark:border-gray-800 shadow-sm text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setPreviewSubTab('card')}
+                  className={`px-3 py-1.5 rounded-lg transition ${
+                    previewSubTab === 'card'
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  Chhota Preview (Catalog Card)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewSubTab('page')}
+                  className={`px-3 py-1.5 rounded-lg transition ${
+                    previewSubTab === 'page'
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  Full Page Preview (Landing)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewSubTab('classroom')}
+                  className={`px-3 py-1.5 rounded-lg transition ${
+                    previewSubTab === 'classroom'
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  Classroom Player View
+                </button>
+              </div>
+
               <button
                 type="button"
-                onClick={() => setViewMode('editor')}
-                className="px-4 py-2 rounded-xl bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition flex items-center gap-1.5"
+                onClick={() => setMainMode('editor')}
+                className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-ink-800 transition flex items-center gap-1.5"
               >
                 <Edit3 className="w-3.5 h-3.5" />
                 <span>Back to Edit</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('preview-page')}
-                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold transition flex items-center gap-1.5"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>See Full Landing Page</span>
-              </button>
             </div>
           </div>
 
-          {/* Card Mockup */}
-          <div className="max-w-md mx-auto py-6">
-            <article className="flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-800 shadow-md">
-              {/* Thumbnail */}
-              {thumbnail ? (
-                <div className="relative aspect-[16/10] bg-gray-100 dark:bg-gray-800 overflow-hidden block">
-                  <img
-                    src={thumbnail}
-                    alt={title || 'Course Preview'}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-3 left-3 bg-ink-950/80 backdrop-blur-sm text-amber-300 text-[11px] font-bold px-2.5 py-1 rounded-md">
-                    {level}
-                  </div>
-                </div>
-              ) : (
-                <div className="p-6 pb-0 flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                    {category}
-                  </span>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
-                    {level}
-                  </span>
-                </div>
-              )}
+          {/* SUB-VIEW 1: CHHOTA PREVIEW (STUDENT CATALOG CARD) */}
+          {previewSubTab === 'card' && (
+            <div className="p-8 bg-gray-100/60 dark:bg-ink-900/40 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center space-y-6">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Simulated Student Catalog Grid View (/courses)
+              </span>
 
-              {/* Details */}
-              <div className={`p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4 ${thumbnail ? 'pt-5' : 'pt-3'}`}>
-                <div className="space-y-2">
-                  {thumbnail && (
-                    <div className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-                      {category}
+              <div className="w-full max-w-sm">
+                <article className="flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-800 shadow-md transition group">
+                  {/* Thumbnail (if set) */}
+                  {thumbnail ? (
+                    <div className="relative aspect-[16/10] bg-gray-100 dark:bg-gray-800 overflow-hidden block">
+                      <img
+                        src={thumbnail}
+                        alt={title || 'Course Preview'}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                      />
+                      <div className="absolute top-3 left-3 bg-ink-950/80 backdrop-blur-sm text-amber-300 text-[11px] font-bold px-2.5 py-1 rounded-md">
+                        {level}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-6 pb-0 flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        {category}
+                      </span>
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                        {level}
+                      </span>
                     </div>
                   )}
-                  <h3 className="font-serif text-lg font-bold text-gray-900 dark:text-white leading-snug">
-                    {title || 'Untitled Masterclass Course'}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
-                    {shortDescription || description || 'No description provided yet.'}
-                  </p>
-                </div>
 
-                <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                  <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <BookOpen className="w-3.5 h-3.5" />
-                      1 module
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      {duration || '45 mins'}
-                    </span>
+                  {/* Details */}
+                  <div className={`p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4 ${thumbnail ? 'pt-5' : 'pt-3'}`}>
+                    <div className="space-y-2">
+                      {thumbnail && (
+                        <div className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                          {category}
+                        </div>
+                      )}
+                      <h3 className="font-serif text-lg font-bold text-gray-900 dark:text-white leading-snug">
+                        {title || 'Untitled Masterclass Course'}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
+                        {shortDescription || description || 'Detailed historical synopsis and primary archaeological curriculum.'}
+                      </p>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <BookOpen className="w-3.5 h-3.5" />
+                          1 module
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {duration || '45 mins'}
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="font-serif font-bold text-base text-gray-900 dark:text-white">
+                          {formatPrice(numericPrice)}
+                        </div>
+                        {numericOriginal > numericPrice && (
+                          <span className="text-[11px] text-gray-400 line-through">
+                            {formatPrice(numericOriginal)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+          )}
+
+          {/* SUB-VIEW 2: FULL PAGE PREVIEW (COURSE LANDING VIEW) */}
+          {previewSubTab === 'page' && (
+            <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-ink-900 shadow-sm transition-colors">
+              {/* Dark Academic Hero Banner */}
+              <div className="bg-ink-950 text-white p-6 sm:p-10 border-b border-gray-800 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                  <div className="lg:col-span-8 space-y-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold uppercase tracking-wider">
+                        {category}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded bg-gray-800 text-gray-300 text-xs font-medium">
+                        {level}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        Taught by {instructorName}
+                      </span>
+                    </div>
+
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight">
+                      {title || 'Untitled Masterclass Course'}
+                    </h1>
+
+                    <p className="text-sm sm:text-base text-gray-300 max-w-3xl leading-relaxed">
+                      {shortDescription || description || 'Detailed academic curriculum...'}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-5 pt-2 text-xs text-gray-400 border-t border-gray-800/80">
+                      <div className="flex items-center gap-1.5">
+                        <GraduationCap className="w-4 h-4 text-amber-400" />
+                        <span>Authentic Masterclass</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <BookOpen className="w-4 h-4 text-amber-400" />
+                        <span>1 Module &bull; 1 Attached Lecture</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-amber-400" />
+                        <span>{duration || '45 mins'} Estimated</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="font-serif font-bold text-base text-gray-900 dark:text-white">
-                      {formatPrice(numericPrice)}
-                    </div>
-                    {numericOriginal > numericPrice && (
-                      <span className="text-[11px] text-gray-400 line-through">
-                        {formatPrice(numericOriginal)}
-                      </span>
+                  {/* Right Hero Card: Enrollment CTA */}
+                  <div className="lg:col-span-4 bg-ink-900/90 rounded-2xl border border-gray-800 p-6 space-y-5 shadow-2xl backdrop-blur-sm">
+                    {thumbnail && (
+                      <div className="aspect-[16/10] rounded-xl overflow-hidden bg-gray-800">
+                        <img src={thumbnail} alt="" className="w-full h-full object-cover" />
+                      </div>
                     )}
-                  </div>
-                </div>
-              </div>
-            </article>
-          </div>
-        </section>
-      )}
 
-      {/* MODE 3: FULL COURSE LANDING PAGE PREVIEW */}
-      {viewMode === 'preview-page' && (
-        <section className="space-y-6">
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
-              <ExternalLink className="w-5 h-5 text-amber-600 shrink-0" />
-              <div>
-                <h3 className="text-sm font-semibold">Course Landing Page Live Preview</h3>
-                <p className="text-xs text-amber-700 dark:text-amber-400">
-                  This is how students see the course banner, syllabus, attachments, and enrollment CTA.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setViewMode('editor')}
-                className="px-4 py-2 rounded-xl bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition flex items-center gap-1.5"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Back to Edit</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePublishCourse()}
-                disabled={savingCourse}
-                className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow transition active:scale-95 flex items-center gap-1.5"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Publish Course Now</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Student View Banner Simulation */}
-          <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-ink-900 shadow-sm">
-            {/* Dark Hero Banner */}
-            <div className="bg-ink-950 text-white p-6 sm:p-10 border-b border-gray-800 space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div className="lg:col-span-8 space-y-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold uppercase tracking-wider">
-                      {category}
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded bg-gray-800 text-gray-300 text-xs font-medium">
-                      {level}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      Taught by {instructorName}
-                    </span>
-                  </div>
-
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight">
-                    {title || 'Untitled Masterclass Course'}
-                  </h1>
-
-                  <p className="text-sm sm:text-base text-gray-300 max-w-3xl leading-relaxed">
-                    {shortDescription || description || 'Detailed academic curriculum...'}
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-5 pt-2 text-xs text-gray-400 border-t border-gray-800/80">
-                    <div className="flex items-center gap-1.5">
-                      <GraduationCap className="w-4 h-4 text-amber-400" />
-                      <span>Authentic Masterclass</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <BookOpen className="w-4 h-4 text-amber-400" />
-                      <span>1 Module &bull; 1 Attached Lecture</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-amber-400" />
-                      <span>{duration || '45 mins'} Estimated</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Hero Card: Enrollment CTA */}
-                <div className="lg:col-span-4 bg-ink-900/90 rounded-2xl border border-gray-800 p-6 space-y-5 shadow-2xl backdrop-blur-sm">
-                  {thumbnail && (
-                    <div className="aspect-[16/10] rounded-xl overflow-hidden bg-gray-800">
-                      <img src={thumbnail} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-
-                  <div className="space-y-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl sm:text-3xl font-serif font-bold text-white">
-                        {formatPrice(numericPrice)}
-                      </span>
-                      {numericOriginal > numericPrice && (
-                        <span className="text-sm text-gray-400 line-through">
-                          {formatPrice(numericOriginal)}
+                    <div className="space-y-1">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl sm:text-3xl font-serif font-bold text-white">
+                          {formatPrice(numericPrice)}
+                        </span>
+                        {numericOriginal > numericPrice && (
+                          <span className="text-sm text-gray-400 line-through">
+                            {formatPrice(numericOriginal)}
+                          </span>
+                        )}
+                      </div>
+                      {discountPercent !== null && discountPercent > 0 && (
+                        <span className="inline-block text-[11px] font-bold text-green-400 bg-green-950/60 px-2 py-0.5 rounded border border-green-800/40">
+                          Save {discountPercent}% today
                         </span>
                       )}
                     </div>
-                    {discountPercent !== null && discountPercent > 0 && (
-                      <span className="inline-block text-[11px] font-bold text-green-400 bg-green-950/60 px-2 py-0.5 rounded border border-green-800/40">
-                        Save {discountPercent}% today
+
+                    <div className="w-full py-3 rounded-xl bg-amber-600 text-white font-semibold text-xs text-center shadow cursor-not-allowed opacity-90">
+                      Enroll in Masterclass (Student CTA)
+                    </div>
+                    <p className="text-[11px] text-gray-400 text-center">
+                      Instant lifetime access &bull; Archival slide decks included
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Section: Syllabus & Attached Resources Preview */}
+              <div className="p-6 sm:p-10 space-y-8 max-w-4xl">
+                <div className="space-y-3">
+                  <h3 className="font-serif font-bold text-xl text-gray-900 dark:text-white">
+                    Course Description & Academic Scope
+                  </h3>
+                  <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line">
+                    {description || 'Comprehensive course syllabus will be rendered here.'}
+                  </div>
+                </div>
+
+                {/* Syllabus Module Accordion */}
+                <div className="space-y-4">
+                  <h3 className="font-serif font-bold text-xl text-gray-900 dark:text-white">
+                    Curriculum & Presentation Decks
+                  </h3>
+
+                  <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
+                    <div className="p-4 bg-gray-50 dark:bg-ink-800/60 flex items-center justify-between">
+                      <span className="font-serif font-bold text-sm text-gray-900 dark:text-white">
+                        {moduleTitle || 'Module 1'}
                       </span>
+                      <span className="text-xs text-gray-500">1 Lecture</span>
+                    </div>
+
+                    <div className="p-4 bg-white dark:bg-ink-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        {lectureType === 'PPT' || lectureType === 'PDF' ? (
+                          <FileText className="w-5 h-5 text-amber-600 shrink-0" />
+                        ) : (
+                          <PlayCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                        )}
+                        <div>
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {lectureTitle || '1.1 Tasting Ancient Mesopotamia: Table of Gods'}
+                          </div>
+                          <div className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
+                            <span>{lectureType}</span>
+                            <span>&bull;</span>
+                            <span>{duration || '45 mins'}</span>
+                            {fileUrl && (
+                              <>
+                                <span>&bull;</span>
+                                <span className="text-amber-600 dark:text-amber-400 font-medium">Slide Deck Attached</span>
+                              </>
+                            )}
+                            {videoUrl && (
+                              <>
+                                <span>&bull;</span>
+                                <span className="text-blue-600 dark:text-blue-400 font-medium">Video Attached</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className="text-xs px-2.5 py-1 rounded bg-gray-100 dark:bg-ink-800 text-gray-600 dark:text-gray-300 self-start sm:self-auto">
+                        Classroom Preview
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SUB-VIEW 3: CLASSROOM PLAYER VIEW (EXACTLY MATCHING /learn/[slug]) */}
+          {previewSubTab === 'classroom' && (
+            <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-ink-950 shadow-sm transition-colors">
+              {/* Top Classroom Bar */}
+              <div className="h-14 bg-white dark:bg-ink-900 border-b border-gray-200 dark:border-gray-800 px-4 sm:px-6 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <span className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-white">
+                    <ArrowLeft className="w-4 h-4" />
+                  </span>
+                  <div className="truncate">
+                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block leading-none">
+                      {category} &bull; {title || 'Course Player'}
+                    </span>
+                    <span className="text-xs font-serif font-bold text-gray-900 dark:text-gray-100 truncate block mt-0.5">
+                      {lectureTitle || '1.1 Tasting Ancient Mesopotamia: Table of Gods'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-gray-100 dark:bg-ink-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                    Mark Complete
+                  </span>
+                </div>
+              </div>
+
+              {/* Classroom Player Simulator */}
+              <div className="flex flex-col lg:flex-row min-h-[480px]">
+                {/* Left Side: Video Screen & Lecture Details */}
+                <div className="flex-1 flex flex-col overflow-y-auto">
+                  {/* Video Stage */}
+                  <div className="w-full bg-black aspect-video max-h-[380px] flex items-center justify-center relative">
+                    {videoUrl ? (
+                      <div className="text-center p-6 space-y-2 text-white">
+                        <PlayCircle className="w-12 h-12 text-amber-400 mx-auto" />
+                        <div className="text-xs font-semibold">{lectureTitle}</div>
+                        <div className="text-[11px] text-gray-400">Attached: {videoUrl}</div>
+                      </div>
+                    ) : (
+                      <div className="text-center p-6 space-y-2 text-white">
+                        <FileText className="w-12 h-12 text-amber-400 mx-auto" />
+                        <div className="text-sm font-serif font-bold">Slide Seminar Lecture</div>
+                        <p className="text-xs text-gray-400">
+                          {fileUrl ? `PPT Attached: ${fileUrl}` : 'PPT presentation or video attached'}
+                        </p>
+                      </div>
                     )}
                   </div>
 
-                  <div className="w-full py-3 rounded-xl bg-amber-600 text-white font-semibold text-xs text-center shadow cursor-not-allowed opacity-90">
-                    Enroll in Masterclass (Student CTA)
-                  </div>
-                  <p className="text-[11px] text-gray-400 text-center">
-                    Instant lifetime access &bull; Archival slide decks included
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Section: Syllabus & Attached Resources Preview */}
-            <div className="p-6 sm:p-10 space-y-8 max-w-4xl">
-              <div className="space-y-3">
-                <h3 className="font-serif font-bold text-xl text-gray-900 dark:text-white">
-                  Course Description & Academic Scope
-                </h3>
-                <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line">
-                  {description || 'Comprehensive course syllabus will be rendered here.'}
-                </div>
-              </div>
-
-              {/* Syllabus Module Accordion */}
-              <div className="space-y-4">
-                <h3 className="font-serif font-bold text-xl text-gray-900 dark:text-white">
-                  Curriculum & Presentation Decks
-                </h3>
-
-                <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
-                  <div className="p-4 bg-gray-50 dark:bg-ink-800/60 flex items-center justify-between">
-                    <span className="font-serif font-bold text-sm text-gray-900 dark:text-white">
-                      {moduleTitle || 'Module 1'}
-                    </span>
-                    <span className="text-xs text-gray-500">1 Lecture</span>
-                  </div>
-
-                  <div className="p-4 bg-white dark:bg-ink-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      {lectureType === 'PPT' || lectureType === 'PDF' ? (
-                        <FileText className="w-5 h-5 text-amber-600 shrink-0" />
-                      ) : (
-                        <PlayCircle className="w-5 h-5 text-amber-600 shrink-0" />
-                      )}
+                  {/* Lecture Details and Tabs */}
+                  <div className="p-6 space-y-5 bg-white dark:bg-ink-900 border-t border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
                       <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {lectureTitle || '1.1 The Royal Cuneiform Tablets'}
-                        </div>
-                        <div className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
-                          <span>{lectureType}</span>
-                          <span>&bull;</span>
-                          <span>{duration || '45 mins'}</span>
-                          {fileUrl && (
-                            <>
-                              <span>&bull;</span>
-                              <span className="text-amber-600 dark:text-amber-400 font-medium">Slide Deck Attached</span>
-                            </>
-                          )}
-                          {videoUrl && (
-                            <>
-                              <span>&bull;</span>
-                              <span className="text-blue-600 dark:text-blue-400 font-medium">Video Attached</span>
-                            </>
-                          )}
-                        </div>
+                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                          {moduleTitle}
+                        </span>
+                        <h4 className="text-lg font-serif font-bold text-gray-900 dark:text-white mt-0.5">
+                          {lectureTitle}
+                        </h4>
+                      </div>
+
+                      {/* Interactive Tabs */}
+                      <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-ink-800 text-xs font-semibold">
+                        <span className="px-3 py-1 rounded-lg bg-amber-600 text-white shadow-sm">
+                          Lecture Notes
+                        </span>
+                        <span className="px-3 py-1 rounded-lg text-gray-600 dark:text-gray-400">
+                          PPT Slides
+                        </span>
+                        <span className="px-3 py-1 rounded-lg text-gray-600 dark:text-gray-400">
+                          Assignment
+                        </span>
                       </div>
                     </div>
 
-                    <span className="text-xs px-2.5 py-1 rounded bg-gray-100 dark:bg-ink-800 text-gray-600 dark:text-gray-300 self-start sm:self-auto">
-                      Classroom Preview
-                    </span>
+                    <div className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {shortDescription || description || 'Lecture description and archival citations will be displayed here.'}
+                    </div>
+
+                    {fileUrl && (
+                      <div className="p-3.5 rounded-xl bg-gray-50 dark:bg-ink-950 border border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <FileText className="w-5 h-5 text-amber-600" />
+                          <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                            {fileUrl.split('/').pop()}
+                          </span>
+                        </div>
+                        <span className="text-xs text-amber-700 dark:text-amber-400 font-semibold">
+                          Download PPT
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
+
+                {/* Right Side: Curriculum Sidebar Simulator */}
+                <aside className="w-full lg:w-72 border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-ink-900 p-4 space-y-3">
+                  <div className="border-b border-gray-100 dark:border-gray-800 pb-2">
+                    <h5 className="font-serif font-bold text-xs text-gray-900 dark:text-white">
+                      Course Curriculum
+                    </h5>
+                    <span className="text-[11px] text-gray-400">1 Lecture attached</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      {moduleTitle}
+                    </span>
+                    <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-l-2 border-amber-600 text-xs font-semibold flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 truncate">
+                        <PlayCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span className="truncate">{lectureTitle}</span>
+                      </div>
+                      <span className="text-[10px] text-gray-400">{duration || '45m'}</span>
+                    </div>
+                  </div>
+                </aside>
               </div>
             </div>
-          </div>
+          )}
         </section>
       )}
     </div>

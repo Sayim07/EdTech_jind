@@ -55,8 +55,8 @@ export function Navbar() {
             <span className="font-serif text-lg font-bold tracking-tight text-gray-900 dark:text-white block leading-tight">
               CIM India
             </span>
-            <span className="text-[10px] tracking-wider uppercase text-amber-600 dark:text-amber-400 font-bold block">
-              {user?.role === 'ADMIN' ? 'Admin Portal' : 'Student Academy'}
+            <span className="text-[10px] tracking-wider uppercase text-amber-700 dark:text-amber-400 font-bold block">
+              {user?.role === 'ADMIN' ? 'Admin Portal' : 'Student Learning'}
             </span>
           </div>
         </Link>
@@ -66,7 +66,7 @@ export function Navbar() {
           {user?.role === 'ADMIN' ? (
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs font-semibold">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Admin Management Mode</span>
+              <span>Admin Mode</span>
             </div>
           ) : user ? (
             <>

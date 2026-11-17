@@ -366,17 +366,17 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                        Primary Format Type
+                        Lesson Type
                       </label>
                       <select
                         value={lectureType}
                         onChange={(e) => setLessonType(e.target.value)}
                         className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                       >
-                        <option value="VIDEO">Video Lecture (MP4 / YouTube)</option>
-                        <option value="PPT">Presentation Deck (PPTX / Slides)</option>
-                        <option value="PDF">Academic Paper / PDF</option>
-                        <option value="AUDIO">Audio Podcast / Track (M4A / MP3)</option>
+                        <option value="VIDEO">Video Class (MP4 or YouTube)</option>
+                        <option value="PPT">Presentation Slides (PowerPoint / PDF)</option>
+                        <option value="PDF">Reading Document (PDF)</option>
+                        <option value="AUDIO">Audio Lesson (MP3 / Audio)</option>
                       </select>
                     </div>
                     <div>
@@ -396,7 +396,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   {/* Video Attachment */}
                   <div className="space-y-1.5 pt-2">
                     <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-                      Lecture Video (MP4 Folder Upload or Video Link)
+                      Class Video (Upload from Computer or Web Link)
                     </label>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <input
@@ -420,13 +420,13 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         ) : (
                           <FolderPlus className="w-3.5 h-3.5" />
                         )}
-                        <span>{uploadingVideo ? 'Uploading MP4...' : 'Upload MP4 from Folder'}</span>
+                        <span>{uploadingVideo ? 'Uploading Video...' : 'Upload Video from Computer'}</span>
                       </button>
                       <input
                         type="text"
                         value={videoUrl}
                         onChange={(e) => setVideoUrl(e.target.value)}
-                        placeholder="Or enter Video URL / YouTube link / /media/lecture.mp4"
+                        placeholder="Or paste YouTube link / Video web link..."
                         className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
@@ -435,7 +435,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   {/* Presentation Deck Attachment */}
                   <div className="space-y-1.5 pt-2">
                     <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-                      Presentation Deck (PPT / PDF from Folder or Direct Path)
+                      Presentation Slides (PPT / PDF from Computer or Link)
                     </label>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <input
@@ -459,13 +459,13 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         ) : (
                           <FolderPlus className="w-3.5 h-3.5" />
                         )}
-                        <span>{uploadingPpt ? 'Uploading Deck...' : 'Choose PPT / PDF from Folder'}</span>
+                        <span>{uploadingPpt ? 'Uploading Slides...' : 'Upload Slides from Computer'}</span>
                       </button>
                       <input
                         type="text"
                         value={fileUrl}
                         onChange={(e) => setFileUrl(e.target.value)}
-                        placeholder="Or enter PPT / PDF path (e.g. /media/deck.pptx)"
+                        placeholder="Or enter Presentation / PDF link..."
                         className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
@@ -481,14 +481,14 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                 <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
                   <Compass className="w-4 h-4 text-amber-600" />
                   <h2 className="text-base font-serif font-bold text-gray-900 dark:text-white">
-                    3. Classification & Scholar
+                    3. Course Category & Teacher
                   </h2>
                 </div>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Academic Category
+                      Course Category
                     </label>
                     <select
                       value={category}
@@ -505,7 +505,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Difficulty Level
+                      Course Level
                     </label>
                     <select
                       value={level}
@@ -522,7 +522,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Lead Scholar / Instructor
+                      Teacher / Instructor Name
                     </label>
                     <input
                       type="text"
@@ -540,7 +540,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                 <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
                   <DollarSign className="w-4 h-4 text-amber-600" />
                   <h2 className="text-base font-serif font-bold text-gray-900 dark:text-white">
-                    4. Pricing & Tuition
+                    4. Course Fees & Pricing
                   </h2>
                 </div>
 
@@ -587,7 +587,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   <div className="flex items-center gap-2">
                     <ImageIcon className="w-4 h-4 text-amber-600" />
                     <h2 className="text-base font-serif font-bold text-gray-900 dark:text-white">
-                      5. Course Cover / Thumbnail
+                      5. Course Cover Photo
                     </h2>
                   </div>
                 </div>
@@ -641,7 +641,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400 group-hover:text-amber-600 dark:group-hover:text-amber-400">
                           <UploadCloud className="w-8 h-8 stroke-1" />
                           <div className="text-xs font-semibold">
-                            Click to select image from your Gallery or Folder
+                            Click to choose Course Photo from your Computer
                           </div>
                           <div className="text-[11px] text-gray-400">
                             PNG, JPG, WEBP up to 10MB
@@ -654,7 +654,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   {/* Direct Image URL input */}
                   <div>
                     <label className="block text-[11px] font-medium text-gray-500 mb-1">
-                      Or paste direct image URL / path
+                      Or paste Image web link
                     </label>
                     <input
                       type="text"
@@ -666,7 +666,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   </div>
 
                   <p className="text-[11px] text-gray-400 italic">
-                    If left blank, an authentic typography card will automatically be displayed with zero image clutter.
+                    If you don&apos;t upload a photo, a clean title card will be used automatically.
                   </p>
                 </div>
               </div>
@@ -679,7 +679,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   className="w-full py-3 rounded-xl border border-amber-600/50 dark:border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-xs font-semibold transition flex items-center justify-center gap-2"
                 >
                   <Eye className="w-4 h-4" />
-                  <span>Preview as Student Before Publishing</span>
+                  <span>Preview How Students See This Course</span>
                 </button>
                 <button
                   type="submit"
@@ -691,7 +691,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   ) : (
                     <CheckCircle2 className="w-4 h-4" />
                   )}
-                  <span>{savingCourse ? 'Publishing...' : 'Publish Masterclass Now'}</span>
+                  <span>{savingCourse ? 'Publishing...' : 'Publish Course Now'}</span>
                 </button>
               </div>
             </div>
@@ -712,7 +712,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                 <h3 className="text-sm font-semibold">Student Live Preview</h3>
               </div>
               <p className="text-xs text-amber-700 dark:text-amber-400">
-                This renders exactly how students will see your course across the platform in both Light and Dark mode.
+                Check how your course looks to students on computer and mobile.
               </p>
             </div>
 
@@ -728,7 +728,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  Chhota Preview (Catalog Card)
+                  Course Card (Catalog View)
                 </button>
                 <button
                   type="button"
@@ -739,7 +739,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  Full Page Preview (Landing)
+                  Course Details Page
                 </button>
                 <button
                   type="button"
@@ -750,7 +750,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  Classroom Player View
+                  Student Learning Screen
                 </button>
               </div>
 
@@ -769,7 +769,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
           {previewSubTab === 'card' && (
             <div className="p-8 bg-gray-100/60 dark:bg-ink-900/40 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center space-y-6">
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Simulated Student Catalog Grid View (/courses)
+                How this course looks in the course catalog
               </span>
 
               <div className="w-full max-w-sm">
@@ -872,11 +872,11 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                     <div className="flex flex-wrap items-center gap-5 pt-2 text-xs text-gray-400 border-t border-gray-800/80">
                       <div className="flex items-center gap-1.5">
                         <GraduationCap className="w-4 h-4 text-amber-400" />
-                        <span>Authentic Masterclass</span>
+                        <span>Online Course</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <BookOpen className="w-4 h-4 text-amber-400" />
-                        <span>1 Module &bull; 1 Attached Lecture</span>
+                        <span>1 Module &bull; 1 Class Lesson</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Clock className="w-4 h-4 text-amber-400" />
@@ -912,10 +912,10 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                     </div>
 
                     <div className="w-full py-3 rounded-xl bg-amber-600 text-white font-semibold text-xs text-center shadow cursor-not-allowed opacity-90">
-                      Enroll in Masterclass (Student CTA)
+                      Enroll in Course
                     </div>
                     <p className="text-[11px] text-gray-400 text-center">
-                      Instant lifetime access &bull; Archival slide decks included
+                      Instant lifetime access &bull; Includes all class notes and slides
                     </p>
                   </div>
                 </div>
@@ -925,7 +925,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
               <div className="p-6 sm:p-10 space-y-8 max-w-4xl">
                 <div className="space-y-3">
                   <h3 className="font-serif font-bold text-xl text-gray-900 dark:text-white">
-                    Course Description & Academic Scope
+                    About This Course
                   </h3>
                   <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line">
                     {description || 'Comprehensive course syllabus will be rendered here.'}
@@ -935,7 +935,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                 {/* Syllabus Module Accordion */}
                 <div className="space-y-4">
                   <h3 className="font-serif font-bold text-xl text-gray-900 dark:text-white">
-                    Curriculum & Presentation Decks
+                    Course Lessons & Study Material
                   </h3>
 
                   <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
@@ -943,7 +943,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       <span className="font-serif font-bold text-sm text-gray-900 dark:text-white">
                         {moduleTitle || 'Module 1'}
                       </span>
-                      <span className="text-xs text-gray-500">1 Lecture</span>
+                      <span className="text-xs text-gray-500">1 Class</span>
                     </div>
 
                     <div className="p-4 bg-white dark:bg-ink-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -964,13 +964,13 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                             {fileUrl && (
                               <>
                                 <span>&bull;</span>
-                                <span className="text-amber-600 dark:text-amber-400 font-medium">Slide Deck Attached</span>
+                                <span className="text-amber-600 dark:text-amber-400 font-medium">Class Slides Attached</span>
                               </>
                             )}
                             {videoUrl && (
                               <>
                                 <span>&bull;</span>
-                                <span className="text-blue-600 dark:text-blue-400 font-medium">Video Attached</span>
+                                <span className="text-blue-600 dark:text-blue-400 font-medium">Class Video Attached</span>
                               </>
                             )}
                           </div>
@@ -978,7 +978,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       </div>
 
                       <span className="text-xs px-2.5 py-1 rounded bg-gray-100 dark:bg-ink-800 text-gray-600 dark:text-gray-300 self-start sm:self-auto">
-                        Classroom Preview
+                        Sample Lesson
                       </span>
                     </div>
                   </div>

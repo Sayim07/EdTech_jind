@@ -349,13 +349,13 @@ export function AdminClient({
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-600 mb-1">
             <ShieldCheck className="w-4 h-4" />
-            <span>Master Administrator Control Room</span>
+            <span>Admin Dashboard</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-gray-900 dark:text-white">
-            Curriculum & Student Studio
+            Courses & Students
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Logged in as <span className="font-semibold">{adminUser.email}</span> (Admin privileges)
+            Signed in as <span className="font-semibold">{adminUser.email}</span> (Admin)
           </p>
         </div>
 
@@ -371,10 +371,10 @@ export function AdminClient({
       {/* Navigation Tabs */}
       <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 overflow-x-auto no-scrollbar">
         {[
-          { id: 'analytics', label: 'Overview & Stats', icon: TrendingUp },
-          { id: 'courses', label: `Manage Courses (${courses.length})`, icon: BookOpen },
-          { id: 'students', label: `Students & Logins (${students.length})`, icon: Users },
-          { id: 'payments', label: `Payment History (${initialEnrollments.length})`, icon: CreditCard },
+          { id: 'analytics', label: 'Summary', icon: TrendingUp },
+          { id: 'courses', label: `All Courses (${courses.length})`, icon: BookOpen },
+          { id: 'students', label: `Registered Students (${students.length})`, icon: Users },
+          { id: 'payments', label: `Fee Payments (${initialEnrollments.length})`, icon: CreditCard },
         ].map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -434,26 +434,26 @@ export function AdminClient({
           {/* Quick Shortcuts */}
           <div className="p-6 rounded-2xl bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-800 space-y-3">
             <h3 className="font-serif font-bold text-base text-gray-900 dark:text-white">
-              Admin Quick Actions
+              Quick Actions
             </h3>
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/admin/courses/new"
                 className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium inline-flex items-center gap-1.5"
               >
-                + Add Video / PPT Masterclass
+                + Create New Course
               </Link>
               <button
                 onClick={() => setActiveTab('students')}
                 className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-ink-800 hover:bg-gray-200 text-gray-800 dark:text-gray-200 text-xs font-medium"
               >
-                Manage Student Passwords
+                Reset Student Password
               </button>
               <button
                 onClick={() => setActiveTab('payments')}
                 className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-ink-800 hover:bg-gray-200 text-gray-800 dark:text-gray-200 text-xs font-medium"
               >
-                Review Transaction History
+                View Fee Payments
               </button>
             </div>
           </div>
@@ -466,10 +466,10 @@ export function AdminClient({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-serif font-bold text-lg text-gray-900 dark:text-white">
-                Masterclass Management
+                Course Management
               </h3>
               <p className="text-xs text-gray-500">
-                Create courses, update pricing, add/remove thumbnails, and attach lectures & PPTs.
+                Create courses, set prices, upload course photos, and attach video lessons & slides.
               </p>
             </div>
             <Link

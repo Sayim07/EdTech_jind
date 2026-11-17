@@ -3,6 +3,7 @@
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ThemeToggle } from '@/components/ThemeProvider';
+import { ButtonSpinner } from '@/components/ui/Loaders';
 import { 
   GraduationCap, 
   AlertCircle, 
@@ -147,10 +148,16 @@ function LoginContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-sm transition shadow-sm active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
+            className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-sm transition shadow-sm active:scale-95 disabled:opacity-75 flex items-center justify-center gap-2 mt-1"
           >
-            <span>{loading ? 'Verifying...' : mode === 'register' ? 'Create Account' : 'Sign In'}</span>
-            <ArrowRight className="w-4 h-4" />
+            {loading ? (
+              <ButtonSpinner label="Verifying..." />
+            ) : (
+              <>
+                <span>{mode === 'register' ? 'Create Account' : 'Sign In'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </form>
 

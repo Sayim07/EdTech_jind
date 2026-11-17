@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeProvider';
+import { ButtonSpinner, Spinner } from '@/components/ui/Loaders';
 import { 
   ArrowLeft, 
   PlayCircle, 
@@ -476,10 +477,16 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                         <button
                           type="submit"
                           disabled={submitting}
-                          className="py-2.5 px-5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-sm"
+                          className="py-2.5 px-5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition active:scale-95 disabled:opacity-75 flex items-center gap-2 shadow-sm"
                         >
-                          <Send className="w-3.5 h-3.5" />
-                          <span>{submitting ? 'Submitting...' : 'Submit Assignment'}</span>
+                          {submitting ? (
+                            <ButtonSpinner label="Submitting..." />
+                          ) : (
+                            <>
+                              <Send className="w-3.5 h-3.5" />
+                              <span>Submit Assignment</span>
+                            </>
+                          )}
                         </button>
                       </form>
                     )}

@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
+import { Spinner, ButtonSpinner } from '@/components/ui/Loaders';
 import {
   ShieldCheck,
   BookOpen,
@@ -77,6 +78,7 @@ export function AdminClient({
   const [editVideoUrl, setEditVideoUrl] = useState('');
   const [editFileUrl, setEditFileUrl] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
 
   // Reset Password Modal State
   const [resetModalStudent, setResetModalStudent] = useState<any>(null);
@@ -302,12 +304,15 @@ export function AdminClient({
 
   const handleDeleteCourse = async (id: string) => {
     if (!confirm('Are you sure you want to delete this course?')) return;
+    setDeletingCourseId(id);
     try {
       const res = await fetch(`/api/courses/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete course');
       setCourses(courses.filter((c) => c.id !== id));
     } catch (err: any) {
       alert(err.message || 'Error deleting course');
+    } finally {
+      setDeletingCourseId(null);
     }
   };
 
@@ -542,10 +547,15 @@ export function AdminClient({
                     </button>
                     <button
                       onClick={() => handleDeleteCourse(course.id)}
-                      className="p-2 rounded-lg text-gray-400 hover:text-red-600 transition"
+                      disabled={deletingCourseId === course.id}
+                      className="p-2 rounded-lg text-gray-400 hover:text-red-600 transition disabled:opacity-50"
                       title="Delete Course"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {deletingCourseId === course.id ? (
+                        <Spinner size="xs" variant="primary" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                 </div>

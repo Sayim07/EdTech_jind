@@ -18,6 +18,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Only students enrolled in the assignment's course can submit.
+    const target = await prisma.assignment.findUnique({ where: { id: assignmentId }, select: { module: { select: { courseId: true } } } });
+    if (!target?.module) return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
+    const enrolled = await prisma.enrollment.findUnique({ where: { userId_courseId: { userId: user.id, courseId: target.module.courseId } } });
+    if (!enrolled) return NextResponse.json({ error: 'Enroll in this course to submit assignments' }, { status: 403 });
+
     // Check if submission already exists for this student and assignment
     const existing = await prisma.submission.findFirst({
       where: {

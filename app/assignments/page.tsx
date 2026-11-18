@@ -40,9 +40,9 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
           modules: {
             orderBy: { order: 'asc' },
             include: {
-              lessons: {
+              assignments: {
                 orderBy: { order: 'asc' },
-                include: { assignments: { include: { submissions: { where: { userId: user.id } } } } },
+                include: { submissions: { where: { userId: user.id } } },
               },
             },
           },
@@ -55,11 +55,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
   const groups = enrollments
     .map((e) => ({
       course: e.course,
-      items: e.course.modules.flatMap((m) =>
-        m.lessons.flatMap((l) =>
-          l.assignments.map((a) => ({ assignment: a, lesson: l, submission: a.submissions[0] || null }))
-        )
-      ),
+      items: e.course.modules.flatMap((m) => m.assignments.map((a) => ({ assignment: a, module: m, submission: a.submissions[0] || null }))),
     }))
     .filter((g) => g.items.length > 0);
 
@@ -134,7 +130,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
                   {course.title}
                 </h2>
                 <ul className="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-200">
-                  {items.map(({ assignment, lesson, submission }) => (
+                  {items.map(({ assignment, module: mod, submission }) => (
                     <li key={assignment.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="min-w-0 space-y-1">
                         <div className="flex flex-wrap items-center gap-3">
@@ -142,7 +138,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
                           <StatusBadge status={submission?.status || 'PENDING'} score={submission?.score ?? null} max={assignment.maxScore} />
                         </div>
                         <p className="text-sm text-gray-600">
-                          {lesson.title}
+                          {mod.title}
                           {submission ? ` · Submitted ${fmt(submission.submittedAt)}` : ''}
                         </p>
                         {submission?.feedback && (
@@ -153,7 +149,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
                         )}
                       </div>
                       <Link
-                        href={`/learn/${course.slug}?lesson=${lesson.id}&tab=assignment`}
+                        href={`/learn/${course.slug}?assignment=${assignment.id}`}
                         className="shrink-0 h-10 px-4 rounded-lg border border-amber-600 text-amber-600 hover:bg-amber-50 font-semibold text-sm flex items-center gap-2 transition self-start md:self-auto"
                       >
                         {submission ? 'View / resubmit' : 'Start assignment'} <ArrowRight className="w-4 h-4" />

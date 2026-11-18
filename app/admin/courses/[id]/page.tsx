@@ -4,60 +4,53 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
-import { EditCourseClient } from './EditCourseClient';
-import { loadTestDrafts } from '@/lib/mcq-server';
+import { CourseBuilder } from '@/components/admin/CourseBuilder';
+import { loadCourseContent } from '@/lib/course-content';
+import { courseCategories, activeInstructors } from '@/lib/course-options';
 
 export const metadata = {
-  title: 'Edit Course & Pricing | CIM India Admin',
-  description: 'Update course details, pricing, syllabus, and preview student experience in real time.',
+  title: 'Edit Course | CIM India Admin',
+  description: 'Edit course details, modules, lessons, assignments and tests.',
 };
 
-export default async function AdminEditCoursePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function AdminEditCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getSessionUser();
-
-  if (!user || user.role !== 'ADMIN') {
-    redirect('/login?tab=admin&error=AdminAccessOnly');
-  }
+  if (!user || user.role !== 'ADMIN') redirect('/login?tab=admin&error=AdminAccessOnly');
 
   const { id } = await params;
+  const course = await prisma.course.findFirst({ where: { OR: [{ id }, { slug: id }] } });
+  if (!course) notFound();
 
-  const course = await prisma.course.findFirst({
-    where: {
-      OR: [{ id }, { slug: id }],
-    },
-    include: {
-      modules: {
-        orderBy: { order: 'asc' },
-        include: {
-          lessons: {
-            orderBy: { order: 'asc' },
-            include: { assignments: true },
-          },
-        },
-      },
-      _count: { select: { enrollments: true } },
-    },
-  });
-
-  if (!course) {
-    notFound();
-  }
-
-  const initialTests = await loadTestDrafts(course.id);
+  const [content, categories, instructors] = await Promise.all([loadCourseContent(course.id), courseCategories(), activeInstructors()]);
 
   return (
     <>
       <Navbar />
-
       <main className="flex-1 pb-24 lg:pb-12 bg-gray-50 min-h-screen">
-        <EditCourseClient adminUser={user} initialCourse={course} initialTests={initialTests} />
+        <CourseBuilder
+          mode="edit"
+          course={{
+            id: course.id,
+            slug: course.slug,
+            title: course.title,
+            shortDescription: course.shortDescription,
+            description: course.description,
+            price: course.price,
+            originalPrice: course.originalPrice,
+            category: course.category,
+            level: course.level,
+            instructorName: course.instructorName,
+            thumbnail: course.thumbnail,
+            totalHours: course.totalHours,
+            faqs: course.faqs,
+            published: course.published,
+          }}
+          initialContent={content}
+          categories={categories}
+          instructors={instructors}
+        />
       </main>
-
-      <MobileBottomNav role="ADMIN" isLoggedIn={true} />
+      <MobileBottomNav role="ADMIN" isLoggedIn />
     </>
   );
 }

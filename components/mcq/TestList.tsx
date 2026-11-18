@@ -59,17 +59,20 @@ export async function TestList({ userId }: { userId: string }) {
               const best = done.reduce<number | null>((m, a) => (a.percentage !== null && (m === null || a.percentage > m) ? a.percentage : m), null);
               const latest = done[0];
               const kind = open ? 'IN_PROGRESS' : done.length ? 'COMPLETED' : 'NOT_STARTED';
-              const cta = open ? 'Resume' : done.length ? (t.allowRetakes ? 'Retake / history' : 'View history') : 'Start test';
+              const noun = t.kind === 'ASSIGNMENT' ? 'assignment' : 'test';
+              const cta = open ? 'Resume' : done.length ? (t.allowRetakes ? 'Retake / history' : 'View history') : `Start ${noun}`;
               return (
                 <li key={t.key} className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="min-w-0 space-y-2">
                     <div className="flex flex-wrap items-center gap-3">
                       <h3 className="text-base font-semibold text-gray-900">{t.title}</h3>
                       <Status kind={kind} />
+                      {t.kind === 'ASSIGNMENT' && <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">MCQ assignment</span>}
                       {t.isSample && <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700">Practice test</span>}
                     </div>
                     <dl className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-600">
                       <div className="flex gap-1.5"><dt>Course:</dt><dd className="text-gray-900">{course.title}</dd></div>
+                      {t.moduleTitle && <div className="flex gap-1.5"><dt>Module:</dt><dd className="text-gray-900">{t.moduleTitle}</dd></div>}
                       <div className="flex gap-1.5"><dt>Questions:</dt><dd className="text-gray-900">{t.questions.length}</dd></div>
                       <div className="flex gap-1.5"><dt>Time limit:</dt><dd className="text-gray-900">{t.timeLimit} min</dd></div>
                       <div className="flex gap-1.5"><dt>Passing marks:</dt><dd className="text-gray-900">{t.passingMarks}%</dd></div>

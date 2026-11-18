@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
 import { serializeFaqs } from '@/lib/course';
-import { syncCourseTests } from '@/lib/mcq-server';
-import { validateTest, TestDraft } from '@/lib/mcq';
+import { loadCourseContent, syncCourseContent } from '@/lib/course-content';
+import { CourseContentDraft, validateContent } from '@/lib/course-content-shared';
 
 export async function GET(
   req: NextRequest,
@@ -11,17 +11,23 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const viewer = await getSessionUser();
+    const isAdmin = viewer?.role === 'ADMIN';
     const course = await prisma.course.findFirst({
       where: {
         OR: [{ id }, { slug: id }],
+        ...(isAdmin ? {} : { published: true }),
       },
       include: {
         modules: {
           orderBy: { order: 'asc' },
           include: {
+            // Public callers only get the outline. Video, audio and file addresses are for enrolled students (the classroom page) and admins.
             lessons: {
               orderBy: { order: 'asc' },
-              include: { assignments: true },
+              select: isAdmin
+                ? undefined
+                : { id: true, title: true, type: true, duration: true, order: true },
             },
           },
         },
@@ -52,12 +58,13 @@ export async function PATCH(
     const { id } = await params;
     const body = await req.json();
 
-    const tests: TestDraft[] | null = Array.isArray(body.tests) ? body.tests : null;
-    if (tests) {
-      for (const t of tests) {
-        const problem = validateTest(t);
-        if (problem) return NextResponse.json({ error: problem }, { status: 400 });
-      }
+    const content: CourseContentDraft | null = body.content && Array.isArray(body.content.modules) && Array.isArray(body.content.tests) ? body.content : null;
+    if (content) {
+      const problem = validateContent(content);
+      if (problem) return NextResponse.json({ error: problem }, { status: 400 });
+    }
+    if (body.category !== undefined && (!String(body.category).trim() || String(body.category).trim().length > 60)) {
+      return NextResponse.json({ error: 'Category must be 1 to 60 characters' }, { status: 400 });
     }
 
     const data: any = {};
@@ -88,70 +95,14 @@ export async function PATCH(
       },
     });
 
-    if (tests) {
-      const problem = await syncCourseTests(id, tests);
+    if (content) {
+      const problem = await syncCourseContent(id, content);
       if (problem) return NextResponse.json({ error: problem }, { status: 400 });
     }
 
-    // If lecture media attachments or module titles were updated
-    if (
-      body.videoUrl !== undefined ||
-      body.fileUrl !== undefined ||
-      body.moduleTitle !== undefined ||
-      body.lectureTitle !== undefined ||
-      body.lectureType !== undefined ||
-      body.duration !== undefined
-    ) {
-      let firstModule = await prisma.module.findFirst({
-        where: { courseId: id },
-        orderBy: { order: 'asc' },
-        include: { lessons: { orderBy: { order: 'asc' } } },
-      });
-
-      if (!firstModule) {
-        firstModule = await prisma.module.create({
-          data: {
-            title: body.moduleTitle?.trim() || 'Module 1: Foundations',
-            order: 1,
-            courseId: id,
-          },
-          include: { lessons: true },
-        });
-      } else if (body.moduleTitle) {
-        await prisma.module.update({
-          where: { id: firstModule.id },
-          data: { title: body.moduleTitle.trim() },
-        });
-      }
-
-      if (firstModule.lessons && firstModule.lessons.length > 0) {
-        const lessonData: any = {};
-        if (body.lectureTitle !== undefined) lessonData.title = body.lectureTitle.trim();
-        if (body.videoUrl !== undefined) lessonData.videoUrl = body.videoUrl ? body.videoUrl.trim() : null;
-        if (body.fileUrl !== undefined) lessonData.fileUrl = body.fileUrl ? body.fileUrl.trim() : null;
-        if (body.lectureType !== undefined) lessonData.type = body.lectureType;
-        if (body.duration !== undefined) lessonData.duration = body.duration.trim();
-        await prisma.lesson.update({
-          where: { id: firstModule.lessons[0].id },
-          data: lessonData,
-        });
-      } else if (body.videoUrl || body.fileUrl || body.lectureTitle) {
-        await prisma.lesson.create({
-          data: {
-            title: body.lectureTitle?.trim() || '1.1 Foundations & Overview',
-            slug: (body.lectureTitle?.trim() || '1-1-foundations-overview').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            order: 1,
-            type: body.lectureType || 'VIDEO',
-            videoUrl: body.videoUrl ? body.videoUrl.trim() : null,
-            fileUrl: body.fileUrl ? body.fileUrl.trim() : null,
-            duration: body.duration?.trim() || '30 mins',
-            moduleId: firstModule.id,
-          },
-        });
-      }
-    }
-
-    return NextResponse.json({ success: true, course: updatedCourse });
+    // Hand back the saved tree so the editor picks up the real ids of anything created in this save.
+    const savedContent = content ? await loadCourseContent(id) : undefined;
+    return NextResponse.json({ success: true, course: updatedCourse, content: savedContent });
   } catch (err: any) {
     console.error('Update course error:', err);
     return NextResponse.json({ error: 'Failed to update course' }, { status: 500 });

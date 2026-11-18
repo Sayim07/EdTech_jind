@@ -45,12 +45,12 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
       modules: {
         orderBy: { order: 'asc' },
         include: {
-          lessons: {
-            orderBy: { order: 'asc' },
-            include: { assignments: { select: { id: true } } },
-          },
+          lessons: { orderBy: { order: 'asc' } },
+          assignments: { select: { id: true } },
+          tests: { select: { id: true, kind: true } },
         },
       },
+      mcqTests: { select: { id: true } },
       _count: { select: { enrollments: true } },
     },
   });
@@ -68,7 +68,8 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
 
   const allLessons = course.modules.flatMap((m) => m.lessons);
   const totalLessons = allLessons.length;
-  const totalAssignments = allLessons.reduce((sum, l) => sum + l.assignments.length, 0);
+  const totalAssignments = course.modules.reduce((sum, m) => sum + m.assignments.length + m.tests.filter((t) => t.kind === 'ASSIGNMENT').length, 0);
+  const totalTests = course.modules.reduce((sum, m) => sum + m.tests.filter((t) => t.kind !== 'ASSIGNMENT').length, 0) + course.mcqTests.length;
   const hours = courseTotalHours(course.totalHours, allLessons);
   const faqs = parseFaqs(course.faqs);
   const hasSlides = allLessons.some((l) => l.fileUrl);
@@ -86,6 +87,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
     hasSlides ? 'Downloadable slide decks for every lesson' : null,
     hasAudio ? 'Audio podcast version of each lecture' : null,
     totalAssignments > 0 ? `${totalAssignments} graded assignment${totalAssignments === 1 ? '' : 's'}` : null,
+    totalTests > 0 ? `${totalTests} proctored MCQ test${totalTests === 1 ? '' : 's'}` : null,
     'Certificate of completion',
   ].filter(Boolean) as string[];
 
@@ -265,9 +267,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
                                 <div className="min-w-0">
                                   <div className="text-sm font-semibold text-gray-900">{lesson.title}</div>
                                   <div className="text-xs text-gray-600">
-                                    {[lesson.fileUrl && 'Slides', lesson.audioUrl && 'Audio', lesson.assignments.length > 0 && 'Assignment']
-                                      .filter(Boolean)
-                                      .join(' · ') || 'Video lesson'}
+                                    {lesson.type === 'AUDIO' ? 'Audio lesson' : lesson.type === 'PPT' ? 'Presentation' : lesson.type === 'PDF' ? 'PDF' : 'Video class'}
                                   </div>
                                 </div>
                               </div>

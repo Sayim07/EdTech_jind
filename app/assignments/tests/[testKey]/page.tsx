@@ -70,6 +70,7 @@ export default async function TestPage({ params }: { params: Promise<{ testKey: 
               passingMarks: test.passingMarks,
               allowRetakes: test.allowRetakes,
               isSample: test.isSample,
+              proctored: test.kind !== 'ASSIGNMENT',
             }}
             canStart={!blocked}
             blockedReason={blocked ? 'Retakes are turned off for this test, so it cannot be started again. You can still review your attempt below.' : undefined}

@@ -16,7 +16,9 @@ import {
   Layers,
   Headphones,
   Image as ImageIcon,
-  Award as AwardIcon
+  Award as AwardIcon,
+  ClipboardCheck,
+  PencilLine,
 } from 'lucide-react';
 
 interface Props {
@@ -27,6 +29,7 @@ interface Props {
   canTrackProgress?: boolean;
   initialLessonId?: string;
   initialTab?: 'notes' | 'assignment';
+  initialAssignmentId?: string;
 }
 
 function SlidesViewer({ url }: { url: string }) {
@@ -75,7 +78,6 @@ function PptxViewer({ url, name }: { url: string; name: string }) {
     (async () => {
       try {
         const [{ init }, res] = await Promise.all([
-          // @ts-expect-error pptx-preview has no bundled type declarations
           import('pptx-preview'),
           fetch(url),
         ]);
@@ -125,7 +127,118 @@ function PptxViewer({ url, name }: { url: string; name: string }) {
   );
 }
 
-export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], initialCertificateCode = null, canTrackProgress = true, initialLessonId, initialTab = 'notes' }: Props) {
+
+function TestLink({ test, pad }: { test: any; pad: string }) {
+  const isAssignment = test.kind === 'ASSIGNMENT';
+  return (
+    <Link href={`/assignments/tests/${test.id}`} className={`w-full text-left ${pad} py-3 text-sm flex items-center justify-between gap-3 text-gray-700 hover:bg-gray-100 transition`}>
+      <span className="flex items-center gap-2.5 truncate">
+        <ClipboardCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+        <span className="truncate">{test.title}</span>
+      </span>
+      <span className="text-xs font-semibold text-emerald-800 bg-emerald-100 rounded px-1.5 py-0.5 shrink-0">{isAssignment ? 'MCQ assignment' : 'Test'}</span>
+    </Link>
+  );
+}
+
+/** Assignments and tests that sit inside a module, listed under its lessons. */
+function ModuleExtras({ mod, activeAssignmentId, submittedIds, onOpenAssignment, pad }: { mod: any; activeAssignmentId: string | null; submittedIds: string[]; onOpenAssignment: (id: string) => void; pad: string }) {
+  return (
+    <>
+      {mod.assignments?.map((a: any) => (
+        <button
+          key={a.id}
+          onClick={() => onOpenAssignment(a.id)}
+          className={`w-full text-left ${pad} py-3 text-sm flex items-center justify-between gap-3 transition ${activeAssignmentId === a.id ? 'bg-amber-50 text-amber-800 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+        >
+          <span className="flex items-center gap-2.5 truncate">
+            {submittedIds.includes(a.id) ? <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" /> : <PencilLine className="w-4 h-4 text-amber-700 shrink-0" />}
+            <span className="truncate">{a.title}</span>
+          </span>
+          <span className="text-xs font-semibold text-amber-800 bg-amber-100 rounded px-1.5 py-0.5 shrink-0">Assignment</span>
+        </button>
+      ))}
+      {mod.tests?.map((t: any) => (
+        <TestLink key={t.id} test={t} pad={pad} />
+      ))}
+    </>
+  );
+}
+
+function AssignmentPanel({ assignment: a, submitted, justSubmitted, text, setText, submitting, onSubmit, canSubmit }: { assignment: any; submitted: boolean; justSubmitted: boolean; text: string; setText: (v: string) => void; submitting: boolean; onSubmit: () => void; canSubmit: boolean }) {
+  let attachments: { name: string; url: string }[] = [];
+  try {
+    attachments = JSON.parse(a.attachments || '[]');
+  } catch {}
+  const previous = a.submissions?.[0];
+  return (
+    <div className="w-full px-5 sm:px-8 lg:px-12 py-8 sm:py-10 space-y-6 max-w-4xl">
+      <div className="space-y-2">
+        <span className="text-xs font-semibold text-amber-700">{a.moduleTitle} · Assignment</span>
+        <h2 className="text-2xl font-semibold text-gray-900">{a.title}</h2>
+        <p className="text-sm text-gray-600">Maximum score: {a.maxScore} points</p>
+      </div>
+      {a.description && <p className="text-base text-gray-700">{a.description}</p>}
+      {a.instructions && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-gray-900">Instructions</h3>
+          <p className="text-base text-gray-700 leading-relaxed whitespace-pre-line max-w-prose">{a.instructions}</p>
+        </div>
+      )}
+      {attachments.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-gray-900">Attachments</h3>
+          <ul className="space-y-2">
+            {attachments.map((f) => (
+              <li key={f.url}>
+                <a href={f.url} target="_blank" rel="noreferrer" download className="inline-flex items-center gap-2 text-sm font-semibold text-amber-700 hover:underline">
+                  <Download className="w-4 h-4" /> {f.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {previous && !justSubmitted && (
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-900 space-y-1">
+          <p className="font-semibold">You submitted this assignment.</p>
+          {previous.status === 'GRADED' && <p>Score: {previous.score}/{a.maxScore}{previous.feedback ? ` · ${previous.feedback}` : ''}</p>}
+          {previous.content && <p className="text-gray-700 whitespace-pre-line">{previous.content}</p>}
+        </div>
+      )}
+      {justSubmitted ? (
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+          <div>
+            <div className="font-semibold">Assignment submitted</div>
+            <div className="text-gray-700 mt-0.5">Your answer is with the faculty for grading.</div>
+          </div>
+        </div>
+      ) : canSubmit ? (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSubmit();
+          }}
+          className="space-y-3"
+        >
+          <label htmlFor="answer" className="block text-sm font-semibold text-gray-700">
+            {submitted ? 'Submit a new answer' : 'Your answer'}
+          </label>
+          <textarea id="answer" rows={8} required value={text} onChange={(e) => setText(e.target.value)} placeholder="Write your answer here" className="w-full p-3.5 rounded-xl bg-white border border-gray-300 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:shadow-[0_0_0_3px_#e3eeff]" />
+          <button type="submit" disabled={submitting} className="py-2.5 px-5 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-semibold text-sm transition active:scale-95 disabled:opacity-75 inline-flex items-center gap-2">
+            {submitting ? <ButtonSpinner label="Submitting..." /> : (<><Send className="w-3.5 h-3.5" /><span>Submit assignment</span></>)}
+          </button>
+        </form>
+      ) : (
+        <p className="text-sm text-gray-600">Preview only: students submit their answers here.</p>
+      )}
+    </div>
+  );
+}
+
+export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], initialCertificateCode = null, canTrackProgress = true, initialLessonId, initialAssignmentId }: Props) {
   // Collect all lessons in a flat list
   const allLessons: any[] = [];
   course.modules?.forEach((mod: any) => {
@@ -135,7 +248,6 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
   });
 
   const [activeLesson, setActiveLesson] = useState<any>(allLessons.find((l) => l.id === initialLessonId) || allLessons[0] || null);
-  const [activeTab, setActiveTab] = useState<'notes' | 'slides' | 'audio' | 'infographic' | 'assignment'>(initialTab);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>(initialCompletedIds);
   const [certificateCode, setCertificateCode] = useState<string | null>(initialCertificateCode);
   const [savingProgress, setSavingProgress] = useState(false);
@@ -145,6 +257,30 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
   const [submissionText, setSubmissionText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
+
+  // Lesson types decide what opens first: slides and PDFs show the document, audio lessons show the player.
+  const tabFor = (l: any): 'notes' | 'slides' | 'audio' => (l?.type === 'PPT' || l?.type === 'PDF' ? 'slides' : l?.type === 'AUDIO' ? 'audio' : 'notes');
+  const [activeTab, setActiveTab] = useState<'notes' | 'slides' | 'audio' | 'infographic'>(tabFor(allLessons.find((l) => l.id === initialLessonId) || allLessons[0]));
+
+  // Written assignments live inside modules and open in the main area, like a lesson does.
+  const allAssignments: any[] = [];
+  course.modules?.forEach((mod: any) => mod.assignments?.forEach((a: any) => allAssignments.push({ ...a, moduleTitle: mod.title })));
+  const [activeAssignmentId, setActiveAssignmentId] = useState<string | null>(allAssignments.some((a) => a.id === initialAssignmentId) ? (initialAssignmentId as string) : null);
+  const activeAssignment = allAssignments.find((a) => a.id === activeAssignmentId) || null;
+  const [submittedIds, setSubmittedIds] = useState<string[]>(allAssignments.filter((a) => a.submissions?.length).map((a) => a.id));
+
+  const openLesson = (lesson: any) => {
+    setActiveLesson(lesson);
+    setActiveAssignmentId(null);
+    setActiveTab(tabFor(lesson));
+    setSubmissionSuccess(false);
+    setSubmissionText('');
+  };
+  const openAssignment = (id: string) => {
+    setActiveAssignmentId(id);
+    setSubmissionSuccess(false);
+    setSubmissionText('');
+  };
 
   const toggleComplete = async (id: string) => {
     const nowCompleted = !completedLessonIds.includes(id);
@@ -185,6 +321,7 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
 
       if (!res.ok) throw new Error('Submission failed');
       setSubmissionSuccess(true);
+      setSubmittedIds((cur) => (cur.includes(assignmentId) ? cur : [...cur, assignmentId]));
     } catch (err: any) {
       alert(err.message || 'Error submitting assignment');
     } finally {
@@ -208,7 +345,6 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
     }
   };
 
-  const currentAssignment = activeLesson?.assignments?.[0];
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col transition-colors">
@@ -227,7 +363,7 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
               {course.title}
             </span>
             <span className="text-sm font-sans font-bold text-gray-900 truncate block mt-0.5">
-              {activeLesson?.title || 'Classroom Player'}
+              {activeAssignment?.title || activeLesson?.title || 'Classroom Player'}
             </span>
           </div>
         </div>
@@ -242,6 +378,7 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
             <span>Syllabus</span>
           </button>
 
+          {!activeAssignment && (
           <button
             onClick={() => activeLesson && toggleComplete(activeLesson.id)}
             disabled={savingProgress}
@@ -256,6 +393,7 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
               {completedLessonIds.includes(activeLesson?.id) ? 'Completed' : 'Mark Complete'}
             </span>
           </button>
+          )}
         </div>
       </header>
 
@@ -275,6 +413,19 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left Side: Video Player Stage & Lesson Content */}
         <div className="flex-1 flex flex-col overflow-y-auto">
+          {activeAssignment ? (
+            <AssignmentPanel
+              assignment={activeAssignment}
+              submitted={submittedIds.includes(activeAssignment.id)}
+              justSubmitted={submissionSuccess}
+              text={submissionText}
+              setText={setSubmissionText}
+              submitting={submitting}
+              onSubmit={() => handleAssignmentSubmit(activeAssignment.id)}
+              canSubmit={canTrackProgress}
+            />
+          ) : (
+          <>
           {/* VIDEO PLAYER SCREEN */}
           <div className="px-5 sm:px-8 lg:px-12 pt-6 sm:pt-8">
           <div className="w-full bg-black aspect-video max-h-[60vh] rounded-2xl overflow-hidden flex items-center justify-center relative">
@@ -297,12 +448,12 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
               />
             ) : (
               <div className="text-center p-8 space-y-3">
-                <FileText className="w-12 h-12 text-amber-500 mx-auto" />
+                {activeLesson?.type === 'AUDIO' ? <Headphones className="w-12 h-12 text-amber-500 mx-auto" /> : <FileText className="w-12 h-12 text-amber-500 mx-auto" />}
                 <div className="text-base font-sans font-bold text-gray-100">
-                  Slide Presentation Lesson
+                  {activeLesson?.type === 'AUDIO' ? 'Audio Lesson' : activeLesson?.type === 'PDF' ? 'PDF Lesson' : 'Presentation Lesson'}
                 </div>
                 <p className="text-xs text-gray-300 max-w-sm">
-                  This class is based on the presentation slides and lecture notes below.
+                  {activeLesson?.type === 'AUDIO' ? 'Press play on the audio player below.' : 'This class is based on the document below.'}
                 </p>
               </div>
             )}
@@ -370,17 +521,6 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
                     <span>Infographic</span>
                   </button>
                 )}
-                <button
-                  onClick={() => setActiveTab('assignment')}
-                  className={`px-4 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${
-                    activeTab === 'assignment'
-                      ? 'bg-amber-600 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Award className="w-3.5 h-3.5" />
-                  <span>Assignment</span>
-                </button>
               </div>
             </div>
 
@@ -539,83 +679,9 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
               </div>
             )}
 
-            {/* TAB 3: ASSIGNMENT & SUBMISSION */}
-            {activeTab === 'assignment' && (
-              <div className="space-y-6">
-                {currentAssignment ? (
-                  <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-5">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-amber-700">
-                          Homework / Assignment
-                        </span>
-                        <span className="text-xs text-gray-500 font-semibold">
-                          Max Score: {currentAssignment.maxScore} pts
-                        </span>
-                      </div>
-                      <h3 className="font-sans text-lg font-bold text-gray-900">
-                        {currentAssignment.title}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                        {currentAssignment.description}
-                      </p>
-                    </div>
-
-                    {submissionSuccess ? (
-                      <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
-                        <div>
-                          <div className="font-bold">Assignment Submitted Successfully!</div>
-                          <div className="text-gray-600 mt-0.5">
-                            Your submission has been securely delivered to the faculty queue for grading.
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          handleAssignmentSubmit(currentAssignment.id);
-                        }}
-                        className="space-y-3"
-                      >
-                        <label className="block text-xs font-semibold text-gray-700">
-                          Your Research Essay or Analysis Response:
-                        </label>
-                        <textarea
-                          rows={6}
-                          required
-                          value={submissionText}
-                          onChange={(e) => setSubmissionText(e.target.value)}
-                          placeholder="Type your historical analysis, thesis argument, or cited findings here..."
-                          className="w-full p-3.5 rounded-xl bg-gray-50 border border-gray-300 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                        />
-
-                        <button
-                          type="submit"
-                          disabled={submitting}
-                          className="py-2.5 px-5 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-semibold text-sm transition active:scale-95 disabled:opacity-75 flex items-center gap-2 shadow-sm"
-                        >
-                          {submitting ? (
-                            <ButtonSpinner label="Submitting..." />
-                          ) : (
-                            <>
-                              <Send className="w-3.5 h-3.5" />
-                              <span>Submit Assignment</span>
-                            </>
-                          )}
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                ) : (
-                  <div className="p-8 text-center bg-white rounded-2xl border border-gray-200 text-gray-500 text-xs">
-                    No assignment required for this lesson. Proceed to the next lecture.
-                  </div>
-                )}
-              </div>
-            )}
           </div>
+          </>
+          )}
         </div>
 
         {/* Right Side: Desktop Fixed Syllabus Drawer */}
@@ -623,7 +689,7 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
           <div className="px-6 py-5 border-b border-gray-200">
             <h3 className="text-base font-semibold text-gray-900">Course Curriculum</h3>
             <div className="text-xs text-gray-500 mt-0.5">
-              {allLessons.length} total lectures
+              {allLessons.length} lectures{allAssignments.length ? ` · ${allAssignments.length} assignments` : ''}
             </div>
           </div>
 
@@ -641,13 +707,9 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
                     return (
                       <button
                         key={lesson.id}
-                        onClick={() => {
-                          setActiveLesson(lesson);
-                          setSubmissionSuccess(false);
-                          setSubmissionText('');
-                        }}
+                        onClick={() => openLesson(lesson)}
                         className={`w-full text-left px-6 py-3.5 text-sm flex items-center justify-between gap-3 transition ${
-                          isSelected
+                          isSelected && !activeAssignment
                             ? 'bg-amber-50 text-amber-800 font-semibold'
                             : 'text-gray-700 hover:bg-gray-100'
                         }`}
@@ -666,9 +728,20 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
                       </button>
                     );
                   })}
+                  <ModuleExtras mod={mod} activeAssignmentId={activeAssignmentId} submittedIds={submittedIds} onOpenAssignment={openAssignment} pad="px-6" />
                 </div>
               </div>
             ))}
+            {course.tests?.length > 0 && (
+              <div className="py-3">
+                <div className="px-6 py-2 text-sm font-semibold text-gray-600">Course tests</div>
+                <div className="space-y-0.5">
+                  {course.tests.map((t: any) => (
+                    <TestLink key={t.id} test={t} pad="px-6" />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </aside>
       </div>
@@ -700,10 +773,8 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
                     <button
                       key={lesson.id}
                       onClick={() => {
-                        setActiveLesson(lesson);
+                        openLesson(lesson);
                         setMobileSyllabusOpen(false);
-                        setSubmissionSuccess(false);
-                        setSubmissionText('');
                       }}
                       className={`w-full text-left p-3 rounded-lg text-xs flex items-center justify-between gap-2 ${
                         activeLesson?.id === lesson.id
@@ -720,8 +791,17 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
                       </span>
                     </button>
                   ))}
+                  <ModuleExtras mod={mod} activeAssignmentId={activeAssignmentId} submittedIds={submittedIds} onOpenAssignment={(id) => { openAssignment(id); setMobileSyllabusOpen(false); }} pad="px-3" />
                 </div>
               ))}
+              {course.tests?.length > 0 && (
+                <div className="py-2">
+                  <div className="px-3 py-1.5 text-xs font-bold text-gray-500">Course tests</div>
+                  {course.tests.map((t: any) => (
+                    <TestLink key={t.id} test={t} pad="px-3" />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

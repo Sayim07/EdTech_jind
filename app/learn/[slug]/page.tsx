@@ -9,10 +9,10 @@ export default async function CourseClassroomPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ lesson?: string; tab?: string }>;
+  searchParams: Promise<{ lesson?: string; assignment?: string }>;
 }) {
   const { slug } = await params;
-  const { lesson, tab } = await searchParams;
+  const { lesson, assignment } = await searchParams;
   const user = await getSessionUser();
 
   if (!user) {
@@ -25,20 +25,15 @@ export default async function CourseClassroomPage({
       modules: {
         orderBy: { order: 'asc' },
         include: {
-          lessons: {
+          lessons: { orderBy: { order: 'asc' } },
+          assignments: {
             orderBy: { order: 'asc' },
-            include: {
-              assignments: {
-                include: {
-                  submissions: {
-                    where: { userId: user.id },
-                  },
-                },
-              },
-            },
+            include: { submissions: { where: { userId: user.id }, orderBy: { submittedAt: 'desc' }, take: 1 } },
           },
+          tests: { where: { questions: { some: {} } }, orderBy: { order: 'asc' }, select: { id: true, title: true, kind: true } },
         },
       },
+      mcqTests: { where: { questions: { some: {} } }, orderBy: { order: 'asc' }, select: { id: true, title: true, kind: true } },
     },
   });
 
@@ -67,10 +62,10 @@ export default async function CourseClassroomPage({
 
   return (
     <ClassroomPlayerClient
-      course={course}
+      course={{ ...course, tests: course.mcqTests }}
       user={user}
       initialLessonId={lesson}
-      initialTab={tab === 'assignment' ? 'assignment' : 'notes'}
+      initialAssignmentId={assignment}
       canTrackProgress={!!enrollment}
       initialCompletedIds={progress.map((p) => p.lessonId)}
       initialCertificateCode={enrollment?.certificateCode ?? null}

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
 import { serializeFaqs } from '@/lib/course';
-import { syncCourseTests } from '@/lib/mcq-server';
-import { validateTest, TestDraft } from '@/lib/mcq';
+import { syncCourseContent } from '@/lib/course-content';
+import { CourseContentDraft, validateContent } from '@/lib/course-content-shared';
 
 export async function GET(req: NextRequest) {
   try {
@@ -67,17 +67,19 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { title, description, shortDescription, price, originalPrice, level, category, thumbnail, modules } = body;
+    const { title, description, shortDescription, price, originalPrice, level, category, thumbnail } = body;
 
     if (!title || !description) {
       return NextResponse.json({ error: 'Title and description are required' }, { status: 400 });
     }
 
-    const tests: TestDraft[] = Array.isArray(body.tests) ? body.tests : [];
-    for (const t of tests) {
-      const problem = validateTest(t);
-      if (problem) return NextResponse.json({ error: problem }, { status: 400 });
+    if (category !== undefined && (!String(category).trim() || String(category).trim().length > 60)) {
+      return NextResponse.json({ error: 'Category must be 1 to 60 characters' }, { status: 400 });
     }
+
+    const content: CourseContentDraft = body.content && Array.isArray(body.content.modules) && Array.isArray(body.content.tests) ? body.content : { modules: [], tests: [] };
+    const contentProblem = validateContent(content);
+    if (contentProblem) return NextResponse.json({ error: contentProblem }, { status: 400 });
 
     const slug = title
       .toLowerCase()
@@ -93,29 +95,11 @@ export async function POST(req: NextRequest) {
         price: parseFloat(price) || 0,
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
         level: level || 'All Levels',
-        category: category || 'History & Food',
+        category: category ? String(category).trim() : 'History & Food',
         thumbnail: thumbnail && thumbnail.trim() !== '' ? thumbnail.trim() : null,
         published: true,
         totalHours: body.totalHours ? parseFloat(body.totalHours) || null : null,
         faqs: serializeFaqs(body.faqs),
-        modules: modules ? {
-          create: modules.map((m: any, mIdx: number) => ({
-            title: m.title,
-            order: mIdx + 1,
-            lessons: m.lessons ? {
-              create: m.lessons.map((l: any, lIdx: number) => ({
-                title: l.title,
-                slug: l.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-                order: lIdx + 1,
-                type: l.type || 'VIDEO',
-                videoUrl: l.videoUrl || null,
-                fileUrl: l.fileUrl || null,
-                duration: l.duration || '10:00',
-                content: l.content || '',
-              })),
-            } : undefined,
-          })),
-        } : undefined,
       },
       include: {
         modules: {
@@ -124,8 +108,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (tests.length) {
-      const problem = await syncCourseTests(course.id, tests);
+    if (content.modules.length || content.tests.length) {
+      const problem = await syncCourseContent(course.id, content);
       if (problem) return NextResponse.json({ error: problem }, { status: 400 });
     }
 

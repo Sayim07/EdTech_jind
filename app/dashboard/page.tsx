@@ -36,8 +36,9 @@ export default async function DashboardPage({
             include: {
               lessons: {
                 orderBy: { order: 'asc' },
-                select: { id: true, title: true, type: true, duration: true, assignments: { select: { id: true, title: true, submissions: { where: { userId: user.id }, select: { id: true } } } } },
+                select: { id: true, title: true, type: true, duration: true },
               },
+              assignments: { orderBy: { order: 'asc' }, select: { id: true, title: true, submissions: { where: { userId: user.id }, select: { id: true } } } },
             },
           },
         },
@@ -80,9 +81,9 @@ export default async function DashboardPage({
     progress[e.courseId] = lessons.length ? Math.min(100, Math.round((done / lessons.length) * 100)) : 0;
     const next = lessons.find((l) => !doneIds.has(l.id)) || null;
     nextLesson[e.courseId] = next ? { id: next.id, title: next.title, type: next.type, duration: next.duration } : null;
-    for (const l of lessons) {
-      for (const a of l.assignments) {
-        if (a.submissions.length === 0) todo.push({ kind: 'assignment', title: a.title, course: e.course.title, href: `/learn/${e.course.slug}?lesson=${l.id}&tab=assignment` });
+    for (const m of e.course.modules) {
+      for (const a of m.assignments) {
+        if (a.submissions.length === 0) todo.push({ kind: 'assignment', title: a.title, course: e.course.title, href: `/learn/${e.course.slug}?assignment=${a.id}` });
       }
     }
   }
@@ -94,7 +95,7 @@ export default async function DashboardPage({
   const submittedKeys = new Set(attempts.filter((a) => a.status === 'SUBMITTED').map((a) => a.testKey));
   for (const e of enrollments) {
     for (const t of await resolveCourseTests(e.course)) {
-      if (!submittedKeys.has(t.key)) todo.push({ kind: 'test', title: t.title, course: e.course.title, href: `/assignments/tests/${t.key}` });
+      if (!submittedKeys.has(t.key)) todo.push({ kind: t.kind === 'ASSIGNMENT' ? 'assignment' : 'test', title: t.title, course: e.course.title, href: `/assignments/tests/${t.key}` });
     }
   }
 

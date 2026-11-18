@@ -19,6 +19,8 @@ export interface TestInfo {
   passingMarks: number;
   allowRetakes: boolean;
   isSample: boolean;
+  /** MCQ assignments run without full screen or camera. Real tests are proctored. */
+  proctored?: boolean;
 }
 
 interface Session {
@@ -55,7 +57,8 @@ export function TestPlayer({ test, canStart, blockedReason, inProgress }: { test
   const submittingRef = useRef(false);
   const streamRef = useRef<MediaStream | null>(null);
   streamRef.current = stream;
-  const fsSupported = typeof window !== 'undefined' ? fullscreenSupported() : true;
+  const proctored = test.proctored !== false;
+  const fsSupported = proctored && (typeof window !== 'undefined' ? fullscreenSupported() : true);
 
   const submit = useCallback(
     async (reason: 'TIME_UP' | 'PROCTORING' | null) => {
@@ -93,7 +96,7 @@ export function TestPlayer({ test, canStart, blockedReason, inProgress }: { test
   );
 
   const proctor = useProctoring({
-    active: phase === 'running',
+    active: proctored && phase === 'running',
     stream,
     elapsedSeconds: session?.startedElapsed ?? 0,
     initialViolations: session?.violations ?? 0,
@@ -205,7 +208,7 @@ export function TestPlayer({ test, canStart, blockedReason, inProgress }: { test
 
   /* ------------------------------ intro ------------------------------ */
   if (phase === 'intro') {
-    const cameraReady = Boolean(stream);
+    const cameraReady = !proctored || Boolean(stream);
     return (
       <div className="space-y-6 max-w-3xl">
         <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
@@ -214,12 +217,16 @@ export function TestPlayer({ test, canStart, blockedReason, inProgress }: { test
             <li>
               You have <strong>{test.timeLimit} minutes</strong> for {test.questionCount} questions. The test is submitted automatically at 00:00.
             </li>
-            <li>
-              The test runs in <strong>full screen</strong>. Leaving full screen gives a warning; the third time submits your test automatically.
-            </li>
-            <li>
-              Your <strong>camera</strong> takes a small photo at random moments during the test. Photos are only visible to your instructors.
-            </li>
+            {proctored && (
+              <>
+                <li>
+                  The test runs in <strong>full screen</strong>. Leaving full screen gives a warning; the third time submits your test automatically.
+                </li>
+                <li>
+                  Your <strong>camera</strong> takes a small photo at random moments during the test. Photos are only visible to your instructors.
+                </li>
+              </>
+            )}
             <li>One answer per question. You can move back, change answers and flag questions for review.</li>
           </ul>
           {!fsSupported && (
@@ -229,6 +236,7 @@ export function TestPlayer({ test, canStart, blockedReason, inProgress }: { test
           )}
         </section>
 
+        {proctored && (
         <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4" aria-labelledby="camera-step">
           <h2 id="camera-step" className="text-xl font-semibold text-gray-900">Step 1: allow your camera</h2>
           {cameraReady ? (
@@ -248,9 +256,10 @@ export function TestPlayer({ test, canStart, blockedReason, inProgress }: { test
             </>
           )}
         </section>
+        )}
 
         <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4" aria-labelledby="start-step">
-          <h2 id="start-step" className="text-xl font-semibold text-gray-900">Step 2: {inProgress ? 'resume' : 'start'}</h2>
+          <h2 id="start-step" className="text-xl font-semibold text-gray-900">{proctored ? 'Step 2: ' : ''}{inProgress ? (proctored ? 'resume' : 'Resume') : (proctored ? 'start' : 'Start')}</h2>
           {error && (
             <p role="alert" className="flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 max-w-prose">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /> {error}
@@ -258,9 +267,9 @@ export function TestPlayer({ test, canStart, blockedReason, inProgress }: { test
           )}
           {!canStart && blockedReason && <p className="text-sm text-gray-700">{blockedReason}</p>}
           <button type="button" onClick={start} disabled={!cameraReady || starting || !canStart} className={primaryBtn}>
-            {starting ? <ButtonSpinner label="Starting..." /> : (<><Maximize className="w-4 h-4" /> {inProgress ? 'Resume test in full screen' : 'Start test in full screen'}</>)}
+            {starting ? <ButtonSpinner label="Starting..." /> : proctored ? (<><Maximize className="w-4 h-4" /> {inProgress ? 'Resume test in full screen' : 'Start test in full screen'}</>) : (inProgress ? 'Resume' : 'Start')}
           </button>
-          {!cameraReady && canStart && <p className="text-xs text-gray-600">Allow your camera first to enable the start button.</p>}
+          {proctored && !cameraReady && canStart && <p className="text-xs text-gray-600">Allow your camera first to enable the start button.</p>}
         </section>
       </div>
     );
@@ -299,13 +308,17 @@ export function TestPlayer({ test, canStart, blockedReason, inProgress }: { test
             <h1 className="truncate text-base sm:text-lg font-semibold text-gray-900">{test.title}</h1>
             <p className="text-xs text-gray-600">
               Question {current + 1} of {ids.length}
-              <span className="mx-2">·</span>
-              <span className={proctor.violations > 0 ? 'text-red-700 font-semibold' : ''}>
-                Warnings {proctor.violations}/{MAX_VIOLATIONS}
-              </span>
+              {proctored && (
+                <>
+                  <span className="mx-2">·</span>
+                  <span className={proctor.violations > 0 ? 'text-red-700 font-semibold' : ''}>
+                    Warnings {proctor.violations}/{MAX_VIOLATIONS}
+                  </span>
+                </>
+              )}
             </p>
           </div>
-          <CameraPreview videoRef={proctor.videoRef} />
+          {proctored && <CameraPreview videoRef={proctor.videoRef} />}
           <div role="timer" aria-label="Time remaining" className={`h-10 px-3 rounded-lg inline-flex items-center gap-2 text-base font-semibold tabular-nums ${low ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'}`}>
             <Clock className="w-4 h-4" aria-hidden /> {formatClock(remaining)}
           </div>
@@ -398,9 +411,11 @@ export function TestPlayer({ test, canStart, blockedReason, inProgress }: { test
           <button type="button" onClick={() => setConfirmOpen(true)} className={`${primaryBtn} w-full sm:hidden`}>
             Submit test
           </button>
-          <p className="flex items-start gap-2 text-xs text-gray-600">
-            <ShieldCheck className="w-4 h-4 shrink-0 text-amber-600" aria-hidden /> Proctored: full screen and camera snapshots.
-          </p>
+          {proctored && (
+            <p className="flex items-start gap-2 text-xs text-gray-600">
+              <ShieldCheck className="w-4 h-4 shrink-0 text-amber-600" aria-hidden /> Proctored: full screen and camera snapshots.
+            </p>
+          )}
         </aside>
       </div>
 

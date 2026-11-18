@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { sampleQuestionsFor } from '@/lib/mcq-sample';
-import { AttemptResult, StoredQuestion, TestDraft, gradeAnswers, validateTest } from '@/lib/mcq';
+import { AttemptResult, StoredQuestion, gradeAnswers } from '@/lib/mcq';
 
 export interface ResolvedTest {
   key: string; // McqTest.id, or "sample-<courseId>"
@@ -10,6 +10,9 @@ export interface ResolvedTest {
   passingMarks: number;
   allowRetakes: boolean;
   isSample: boolean;
+  /** TEST is proctored; ASSIGNMENT (an MCQ assignment inside a module) is not. */
+  kind: 'TEST' | 'ASSIGNMENT';
+  moduleTitle: string | null;
   questions: StoredQuestion[];
 }
 
@@ -39,29 +42,36 @@ function compact(options: string[], correctIndex: number) {
  * The fallback disappears on its own once a real test exists: no code or config change needed.
  */
 export async function resolveCourseTests(course: { id: string; title: string; slug: string; category?: string | null }): Promise<ResolvedTest[]> {
+  // Course-level tests plus everything inside the course's modules (tests and MCQ assignments).
   const real = await prisma.mcqTest.findMany({
-    where: { courseId: course.id },
-    orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-    include: { questions: { orderBy: { order: 'asc' } } },
+    where: { OR: [{ courseId: course.id }, { module: { courseId: course.id } }] },
+    include: { questions: { orderBy: { order: 'asc' } }, module: { select: { title: true, order: true } } },
   });
+  // Module order first, course-level tests last, then the admin's own ordering.
+  real.sort((a, b) => (a.module?.order ?? 9999) - (b.module?.order ?? 9999) || a.order - b.order || a.createdAt.getTime() - b.createdAt.getTime());
+
   const usable = real.filter((t) => t.questions.length > 0);
-  if (usable.length > 0) {
-    return usable.map((t) => ({
-      key: t.id,
-      courseId: course.id,
-      title: t.title,
-      timeLimit: t.timeLimit,
-      passingMarks: t.passingMarks,
-      allowRetakes: t.allowRetakes,
-      isSample: false,
-      questions: t.questions.map((q) => {
-        const c = compact(parseOptions(q.options), q.correctIndex);
-        return { id: q.id, text: q.text, options: c.options, correctIndex: c.correctIndex, explanation: q.explanation };
-      }),
-    }));
-  }
+  const mapped: ResolvedTest[] = usable.map((t) => ({
+    key: t.id,
+    courseId: course.id,
+    title: t.title,
+    timeLimit: t.timeLimit,
+    passingMarks: t.passingMarks,
+    allowRetakes: t.allowRetakes,
+    isSample: false,
+    kind: t.kind === 'ASSIGNMENT' ? 'ASSIGNMENT' : 'TEST',
+    moduleTitle: t.module?.title ?? null,
+    questions: t.questions.map((q) => {
+      const c = compact(parseOptions(q.options), q.correctIndex);
+      return { id: q.id, text: q.text, options: c.options, correctIndex: c.correctIndex, explanation: q.explanation };
+    }),
+  }));
+
+  // The built-in practice test only stands in while a course has no real test (MCQ assignments do not count).
+  if (mapped.some((t) => t.kind === 'TEST')) return mapped;
   const sample = sampleQuestionsFor(course);
   return [
+    ...mapped,
     {
       key: `sample-${course.id}`,
       courseId: course.id,
@@ -70,85 +80,26 @@ export async function resolveCourseTests(course: { id: string; title: string; sl
       passingMarks: 60,
       allowRetakes: true,
       isSample: true,
+      kind: 'TEST',
+      moduleTitle: null,
       questions: sample.map((q, i) => ({ id: `s${i + 1}`, text: q.text, options: q.options, correctIndex: q.correctIndex, explanation: q.explanation })),
     },
   ];
 }
 
 export async function findTestByKey(userId: string, key: string): Promise<ResolvedTest | null> {
-  const courseId = key.startsWith('sample-')
-    ? key.slice('sample-'.length)
-    : (await prisma.mcqTest.findUnique({ where: { id: key }, select: { courseId: true } }))?.courseId;
+  let courseId: string | null | undefined;
+  if (key.startsWith('sample-')) courseId = key.slice('sample-'.length);
+  else {
+    const t = await prisma.mcqTest.findUnique({ where: { id: key }, select: { courseId: true, module: { select: { courseId: true } } } });
+    courseId = t?.courseId ?? t?.module?.courseId;
+  }
   if (!courseId) return null;
   const enrollment = await prisma.enrollment.findUnique({ where: { userId_courseId: { userId, courseId } } });
   if (!enrollment) return null;
   const course = await prisma.course.findUnique({ where: { id: courseId } });
   if (!course) return null;
   return (await resolveCourseTests(course)).find((t) => t.key === key) || null;
-}
-
-/** Replaces a course's tests with the given drafts (create / update / delete in one go). */
-export async function syncCourseTests(courseId: string, tests: TestDraft[]): Promise<string | null> {
-  for (const t of tests) {
-    const problem = validateTest(t);
-    if (problem) return problem;
-  }
-  const existing = await prisma.mcqTest.findMany({ where: { courseId }, select: { id: true } });
-  const existingIds = new Set(existing.map((t) => t.id));
-  const keepIds = new Set(tests.filter((t) => existingIds.has(t.id)).map((t) => t.id));
-
-  await prisma.$transaction(async (tx) => {
-    const toDelete = [...existingIds].filter((id) => !keepIds.has(id));
-    if (toDelete.length) await tx.mcqTest.deleteMany({ where: { id: { in: toDelete } } });
-
-    for (let i = 0; i < tests.length; i++) {
-      const t = tests[i];
-      const data = {
-        title: t.title.trim(),
-        timeLimit: Math.round(t.timeLimit),
-        passingMarks: Math.round(t.passingMarks),
-        allowRetakes: Boolean(t.allowRetakes),
-        order: i + 1,
-      };
-      const questions = t.questions.map((q, qi) => ({
-        order: qi + 1,
-        text: q.text.trim(),
-        options: JSON.stringify(q.options.map((o) => o.trim())),
-        correctIndex: q.correctIndex as number,
-        explanation: q.explanation.trim() || null,
-      }));
-      if (keepIds.has(t.id)) {
-        await tx.mcqTest.update({ where: { id: t.id }, data });
-        await tx.mcqQuestion.deleteMany({ where: { testId: t.id } });
-        await tx.mcqQuestion.createMany({ data: questions.map((q) => ({ ...q, testId: t.id })) });
-      } else {
-        await tx.mcqTest.create({ data: { ...data, courseId, questions: { create: questions } } });
-      }
-    }
-  });
-  return null;
-}
-
-export async function loadTestDrafts(courseId: string): Promise<TestDraft[]> {
-  const tests = await prisma.mcqTest.findMany({
-    where: { courseId },
-    orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-    include: { questions: { orderBy: { order: 'asc' } } },
-  });
-  return tests.map((t) => ({
-    id: t.id,
-    title: t.title,
-    timeLimit: t.timeLimit,
-    passingMarks: t.passingMarks,
-    allowRetakes: t.allowRetakes,
-    questions: t.questions.map((q) => ({
-      id: q.id,
-      text: q.text,
-      options: parseOptions(q.options),
-      correctIndex: q.correctIndex,
-      explanation: q.explanation || '',
-    })),
-  }));
 }
 
 export function parseJson<T>(raw: string | null | undefined, fallback: T): T {

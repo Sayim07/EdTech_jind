@@ -106,6 +106,8 @@ input, textarea, select {
   body.sidebar-collapsed .sidebar-link { justify-content: center; padding-left: 0; padding-right: 0; gap: 0; }
   body.sidebar-collapsed .sidebar-user { flex-direction: column; justify-content: center; padding: 0.75rem 0; gap: 0.5rem; }
   body.sidebar-collapsed .sidebar-collapsed-only { display: flex; }
+  body.role-sidebar:has(.app-sidebar) .app-save-bar { left: 16rem; }
+  body.role-sidebar.sidebar-collapsed:has(.app-sidebar) .app-save-bar { left: 4.5rem; }
   body.role-sidebar .nav-brand,
   body.role-sidebar .nav-center,
   body.role-sidebar .nav-user-text,

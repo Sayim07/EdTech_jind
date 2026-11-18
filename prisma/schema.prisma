@@ -67,6 +67,8 @@ model Module {
   courseId  String
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons   Lesson[]
+  assignments Assignment[]
+  tests     McqTest[]
 }
 
 model Lesson {
@@ -103,10 +105,16 @@ model Assignment {
   title        String
   description  String
   instructions String?
+  attachments  String?      // JSON: [{ "name": string, "url": string }]
   maxScore     Int          @default(100)
-  lessonId     String
-  lesson       Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  order        Int          @default(1)
+  moduleId     String?      // assignments live inside a module (MCQ assignments are McqTest rows with kind ASSIGNMENT)
+  module       Module?      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  lessonId     String?      // legacy: older assignments were attached to a lesson
+  lesson       Lesson?      @relation(fields: [lessonId], references: [id], onDelete: SetNull)
   submissions  Submission[]
+
+  @@index([moduleId])
 }
 
 model Submission {
@@ -139,9 +147,12 @@ model Enrollment {
   @@unique([userId, courseId])
 }
 
+// A test or MCQ assignment belongs to a course OR a module, never both (enforced by a CHECK constraint in the database).
 model McqTest {
   id           String        @id @default(uuid())
-  courseId     String
+  courseId     String?       // course-level (standalone) test
+  moduleId     String?       // module-level test or MCQ assignment
+  kind         String        @default("TEST") // "TEST" | "ASSIGNMENT" (assignments are only allowed inside a module)
   title        String
   timeLimit    Int           @default(30) // minutes
   passingMarks Int           @default(50) // percent
@@ -149,8 +160,11 @@ model McqTest {
   order        Int           @default(1)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course       Course?       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  module       Module?       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   questions    McqQuestion[]
+
+  @@index([moduleId])
 }
 
 model McqQuestion {
@@ -206,6 +220,9 @@ model Payment {
   currency         String    @default("INR")
   status           String    @default("CREATED") // "CREATED" | "PAID" | "FAILED"
   failureReason    String?
+  method           String?   // "upi" | "card" | "netbanking" | "wallet" | "emi" | ... as reported by the gateway
+  methodDetail     String?   // e.g. "Visa credit card ending 4242", "UPI: name@bank", "HDFC Bank"
+  gatewayFee       Int?      // paise charged by the gateway (incl. tax), when reported
   paidAt           DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -213,6 +230,7 @@ model Payment {
   course           Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([userId, courseId])
+  @@index([createdAt])
 }
 
 // People who teach or run the academy. This is a directory managed by admins, not a login account.

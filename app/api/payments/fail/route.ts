@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
-import { failPayment } from '@/lib/payments/fulfill';
+import { failPayment, recordMethod } from '@/lib/payments/fulfill';
 
 /** The browser reports a declined payment so the attempt shows up as failed. It cannot affect a paid payment. */
 export async function POST(req: NextRequest) {
@@ -13,5 +13,6 @@ export async function POST(req: NextRequest) {
   if (!payment || payment.userId !== user.id) return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
 
   await failPayment(payment.id, typeof body.reason === 'string' && body.reason ? body.reason : 'Payment was not completed');
+  if (typeof body.gatewayPaymentId === 'string' && body.gatewayPaymentId) await recordMethod(payment.id, body.gatewayPaymentId);
   return NextResponse.json({ ok: true });
 }

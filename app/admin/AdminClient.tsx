@@ -6,6 +6,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { Spinner, ButtonSpinner } from '@/components/ui/Loaders';
 import { AdminDashboard, type AdminDashboardData } from '@/components/admin/AdminDashboard';
+import { PaymentsPanel, type PaymentRow } from '@/components/admin/PaymentsPanel';
+import { Chips, FilterBar, Select } from '@/components/admin/FilterBar';
+import { formatDate } from '@/lib/format';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -41,6 +44,7 @@ interface Props {
   initialEnrollments: any[];
   totalRevenue: number;
   dashboard: AdminDashboardData;
+  payments: PaymentRow[];
 }
 
 export function AdminClient({
@@ -50,6 +54,7 @@ export function AdminClient({
   initialEnrollments,
   totalRevenue,
   dashboard,
+  payments,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -170,6 +175,60 @@ export function AdminClient({
 
   const [courses, setCourses] = useState(initialCourses);
   const [students, setStudents] = useState(initialStudents);
+
+  // Search and filters for the Courses and Students tabs.
+  const [cQuery, setCQuery] = useState('');
+  const [cStatus, setCStatus] = useState<'ALL' | 'LIVE' | 'HIDDEN'>('ALL');
+  const [cCategory, setCCategory] = useState('ALL');
+  const [cLevel, setCLevel] = useState('ALL');
+  const [cPrice, setCPrice] = useState('ALL');
+  const [cSort, setCSort] = useState('new');
+  const [sQuery, setSQuery] = useState('');
+  const [sCourse, setSCourse] = useState('ALL');
+  const [sHas, setSHas] = useState<'ALL' | 'WITH' | 'NONE'>('ALL');
+  const [sSort, setSSort] = useState('new');
+
+  const courseCategories = Array.from(new Set(courses.map((c) => c.category).filter(Boolean))).sort();
+  const courseLevels = Array.from(new Set(courses.map((c) => c.level).filter(Boolean))).sort();
+  const filteredCourses = (() => {
+    const q = cQuery.trim().toLowerCase();
+    const list = courses.filter((c) => {
+      if (cStatus === 'LIVE' && !c.published) return false;
+      if (cStatus === 'HIDDEN' && c.published) return false;
+      if (cCategory !== 'ALL' && c.category !== cCategory) return false;
+      if (cLevel !== 'ALL' && c.level !== cLevel) return false;
+      if (cPrice === 'FREE' && c.price > 0) return false;
+      if (cPrice === 'PAID' && c.price <= 0) return false;
+      return !q || [c.title, c.category, c.level, c.instructorName, c.shortDescription].some((f: string | null) => f?.toLowerCase().includes(q));
+    });
+    const by: Record<string, (a: any, b: any) => number> = {
+      new: (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      title: (a, b) => a.title.localeCompare(b.title),
+      low: (a, b) => a.price - b.price,
+      high: (a, b) => b.price - a.price,
+      popular: (a, b) => (b._count?.enrollments || 0) - (a._count?.enrollments || 0),
+    };
+    return [...list].sort(by[cSort]);
+  })();
+  const coursesFiltered = Boolean(cQuery || cStatus !== 'ALL' || cCategory !== 'ALL' || cLevel !== 'ALL' || cPrice !== 'ALL' || cSort !== 'new');
+
+  const filteredStudents = (() => {
+    const q = sQuery.trim().toLowerCase();
+    const list = students.filter((st) => {
+      if (sHas === 'WITH' && st.enrollments.length === 0) return false;
+      if (sHas === 'NONE' && st.enrollments.length > 0) return false;
+      if (sCourse !== 'ALL' && !st.enrollments.some((e: any) => e.course.id === sCourse)) return false;
+      return !q || st.name.toLowerCase().includes(q) || st.email.toLowerCase().includes(q) || st.id.toLowerCase().includes(q) || st.enrollments.some((e: any) => e.course.title.toLowerCase().includes(q));
+    });
+    const by: Record<string, (a: any, b: any) => number> = {
+      new: (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      old: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      name: (a, b) => a.name.localeCompare(b.name),
+      most: (a, b) => b.enrollments.length - a.enrollments.length,
+    };
+    return [...list].sort(by[sSort]);
+  })();
+  const studentsFiltered = Boolean(sQuery || sCourse !== 'ALL' || sHas !== 'ALL' || sSort !== 'new');
 
   // New Course Modal Form State
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
@@ -496,8 +555,59 @@ export function AdminClient({
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+            <FilterBar
+              query={cQuery}
+              onQuery={setCQuery}
+              placeholder="Search title, category, level or instructor"
+              shown={filteredCourses.length}
+              total={courses.length}
+              noun="courses"
+              active={coursesFiltered}
+              onClear={() => {
+                setCQuery('');
+                setCStatus('ALL');
+                setCCategory('ALL');
+                setCLevel('ALL');
+                setCPrice('ALL');
+                setCSort('new');
+              }}
+            >
+              <Select label="Category" value={cCategory} onChange={setCCategory} options={[{ value: 'ALL', label: 'All categories' }, ...courseCategories.map((c) => ({ value: c, label: c }))]} />
+              <Select label="Level" value={cLevel} onChange={setCLevel} options={[{ value: 'ALL', label: 'All levels' }, ...courseLevels.map((c) => ({ value: c, label: c }))]} />
+              <Select label="Price" value={cPrice} onChange={setCPrice} options={[{ value: 'ALL', label: 'Free and paid' }, { value: 'PAID', label: 'Paid only' }, { value: 'FREE', label: 'Free only' }]} />
+              <Select
+                label="Sort courses"
+                value={cSort}
+                onChange={setCSort}
+                options={[
+                  { value: 'new', label: 'Newest first' },
+                  { value: 'popular', label: 'Most enrolled' },
+                  { value: 'title', label: 'Title A to Z' },
+                  { value: 'low', label: 'Price low to high' },
+                  { value: 'high', label: 'Price high to low' },
+                ]}
+              />
+            </FilterBar>
+            <div className="px-4 sm:px-5 py-3 border-b border-gray-200">
+              <Chips<'ALL' | 'LIVE' | 'HIDDEN'>
+                label="Filter by visibility"
+                value={cStatus}
+                onChange={setCStatus}
+                options={[
+                  { value: 'ALL', label: 'All', count: courses.length },
+                  { value: 'LIVE', label: 'Live', count: courses.filter((c) => c.published).length },
+                  { value: 'HIDDEN', label: 'Hidden', count: courses.filter((c) => !c.published).length },
+                ]}
+              />
+            </div>
+            {filteredCourses.length === 0 && (
+              <div className="p-10 text-center">
+                <p className="font-semibold text-gray-900">{courses.length === 0 ? 'No courses yet' : 'No courses match these filters'}</p>
+                <p className="text-sm text-gray-600 mt-1">{courses.length === 0 ? 'Add your first course to get started.' : 'Try a different search or clear the filters.'}</p>
+              </div>
+            )}
             <div className="divide-y divide-gray-100">
-              {courses.map((course) => (
+              {filteredCourses.map((course) => (
                 <div
                   key={course.id}
                   className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition"
@@ -577,6 +687,52 @@ export function AdminClient({
       {/* TAB 3: STUDENT MANAGEMENT */}
       {activeTab === 'students' && (
         <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+          <FilterBar
+            query={sQuery}
+            onQuery={setSQuery}
+            placeholder="Search name, email, student ID or course"
+            shown={filteredStudents.length}
+            total={students.length}
+            noun="students"
+            active={studentsFiltered}
+            onClear={() => {
+              setSQuery('');
+              setSCourse('ALL');
+              setSHas('ALL');
+              setSSort('new');
+            }}
+          >
+            <Select label="Enrolled course" value={sCourse} onChange={setSCourse} options={[{ value: 'ALL', label: 'Any course' }, ...courses.map((c) => ({ value: c.id, label: c.title }))]} />
+            <Select
+              label="Sort students"
+              value={sSort}
+              onChange={setSSort}
+              options={[
+                { value: 'new', label: 'Newest first' },
+                { value: 'old', label: 'Oldest first' },
+                { value: 'name', label: 'Name A to Z' },
+                { value: 'most', label: 'Most courses' },
+              ]}
+            />
+          </FilterBar>
+          <div className="px-4 sm:px-5 py-3 border-b border-gray-200">
+            <Chips<'ALL' | 'WITH' | 'NONE'>
+              label="Filter by enrollment"
+              value={sHas}
+              onChange={setSHas}
+              options={[
+                { value: 'ALL', label: 'All', count: students.length },
+                { value: 'WITH', label: 'Enrolled', count: students.filter((x) => x.enrollments.length > 0).length },
+                { value: 'NONE', label: 'No courses', count: students.filter((x) => x.enrollments.length === 0).length },
+              ]}
+            />
+          </div>
+          {filteredStudents.length === 0 && (
+            <div className="p-10 text-center">
+              <p className="font-semibold text-gray-900">{students.length === 0 ? 'No students yet' : 'No students match these filters'}</p>
+              <p className="text-sm text-gray-600 mt-1">{students.length === 0 ? 'Students appear here after they register.' : 'Try a different search or clear the filters.'}</p>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-gray-50 text-gray-500 font-semibold border-b border-gray-200">
@@ -589,7 +745,7 @@ export function AdminClient({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {students.map((student) => (
+                {filteredStudents.map((student) => (
                   <tr key={student.id} className="hover:bg-gray-50/50">
                     <td className="p-4">
                       <div className="font-bold text-gray-900">{student.name}</div>
@@ -613,7 +769,7 @@ export function AdminClient({
                       )}
                     </td>
                     <td className="p-4 text-gray-500">
-                      {new Date(student.createdAt).toLocaleDateString()}
+                      {formatDate(student.createdAt)}
                     </td>
                     <td className="p-4 text-right">
                       <button
@@ -636,52 +792,8 @@ export function AdminClient({
         </section>
       )}
 
-      {/* TAB 4: PAYMENT HISTORY */}
-      {activeTab === 'payments' && (
-        <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50 text-gray-500 font-semibold border-b border-gray-200">
-                <tr>
-                  <th className="p-4">Transaction ID</th>
-                  <th className="p-4">Student</th>
-                  <th className="p-4">Course Enrolled</th>
-                  <th className="p-4">Amount Paid</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {initialEnrollments.map((txn) => (
-                  <tr key={txn.id} className="hover:bg-gray-50/50">
-                    <td className="p-4 font-mono text-xs text-gray-600">
-                      {txn.paymentId || txn.id.substring(0, 12)}
-                    </td>
-                    <td className="p-4">
-                      <div className="font-bold text-gray-900">{txn.user.name}</div>
-                      <div className="text-xs text-gray-400">{txn.user.email}</div>
-                    </td>
-                    <td className="p-4 font-medium text-gray-800">
-                      {txn.course.title}
-                    </td>
-                    <td className="p-4 font-bold text-gray-900">
-                      {formatPrice(txn.amountPaid)}
-                    </td>
-                    <td className="p-4">
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs">
-                        COMPLETED
-                      </span>
-                    </td>
-                    <td className="p-4 text-gray-500">
-                      {new Date(txn.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+      {/* TAB 4: PAYMENTS */}
+      {activeTab === 'payments' && <PaymentsPanel payments={payments} />}
 
       {/* TAB 5: ADMIN PROFILE */}
       {activeTab === 'profile' && (

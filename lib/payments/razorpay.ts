@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import type { PaymentGateway, WebhookEvent } from './types';
+import type { PaymentDetails, PaymentGateway, WebhookEvent } from './types';
 
 const API = 'https://api.razorpay.com/v1';
 
@@ -43,6 +43,26 @@ export const razorpay: PaymentGateway = {
       // Only the public key id goes to the browser; the secret stays on the server.
       clientConfig: { key: keyId() },
     };
+  },
+
+  async fetchPaymentDetails(paymentId): Promise<PaymentDetails | null> {
+    try {
+      const res = await fetch(`${API}/payments/${encodeURIComponent(paymentId)}`, {
+        headers: { Authorization: `Basic ${Buffer.from(`${keyId()}:${keySecret()}`).toString('base64')}` },
+        cache: 'no-store',
+      });
+      if (!res.ok) return null;
+      const p = await res.json();
+      const cap = (t: unknown) => (typeof t === 'string' && t ? t.charAt(0).toUpperCase() + t.slice(1) : '');
+      let detail = '';
+      if (p.method === 'card' && p.card) detail = `${cap(p.card.network)} ${p.card.type || ''} card ending ${p.card.last4 || '----'}`.replace(/\s+/g, ' ').trim();
+      else if (p.method === 'upi') detail = p.vpa ? `UPI ID ${p.vpa}` : 'UPI';
+      else if (p.method === 'netbanking') detail = p.bank ? `Bank code ${p.bank}` : 'Netbanking';
+      else if (p.method === 'wallet') detail = cap(p.wallet) || 'Wallet';
+      return { method: p.method || undefined, detail: detail || undefined, fee: typeof p.fee === 'number' ? p.fee : undefined };
+    } catch {
+      return null;
+    }
   },
 
   // Razorpay signs "<order_id>|<payment_id>" with the key secret.

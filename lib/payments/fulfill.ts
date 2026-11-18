@@ -1,11 +1,12 @@
 import { prisma } from '@/lib/prisma';
+import { getGateway } from '@/lib/payments';
 
 /**
  * Marks a payment as paid and enrolls the student. Safe to call more than once for the same payment
  * (browser verify and the webhook both call it), so access is granted exactly once.
  */
 export async function fulfillPayment(paymentRowId: string, gatewayPaymentId: string) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const payment = await tx.payment.findUnique({ where: { id: paymentRowId } });
     if (!payment) throw new Error('Payment not found');
 
@@ -29,6 +30,24 @@ export async function fulfillPayment(paymentRowId: string, gatewayPaymentId: str
     });
     return { payment, enrollment };
   });
+  await recordMethod(paymentRowId, gatewayPaymentId);
+  return result;
+}
+
+/** Saves how the customer paid. Best effort: enrollment must never depend on this lookup. */
+export async function recordMethod(paymentRowId: string, gatewayPaymentId: string) {
+  try {
+    const p = await prisma.payment.findUnique({ where: { id: paymentRowId }, select: { gateway: true, method: true } });
+    if (!p || p.method) return;
+    const details = await getGateway(p.gateway)?.fetchPaymentDetails?.(gatewayPaymentId);
+    if (!details) return;
+    await prisma.payment.update({
+      where: { id: paymentRowId },
+      data: { method: details.method ?? null, methodDetail: details.detail ?? null, gatewayFee: details.fee ?? null },
+    });
+  } catch (err) {
+    console.error('Could not record payment method:', err);
+  }
 }
 
 /** Records a failed attempt. Never downgrades a payment that already succeeded. */

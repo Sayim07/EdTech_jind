@@ -24,6 +24,14 @@ export interface WebhookEvent {
   reason?: string;
 }
 
+/** What the gateway reports about how a payment was made. All fields are optional: it is best effort. */
+export interface PaymentDetails {
+  method?: string;
+  detail?: string;
+  /** Gateway fee including tax, in paise. */
+  fee?: number;
+}
+
 export interface PaymentGateway {
   /** Stable id stored on Payment.gateway, e.g. "razorpay". */
   id: string;
@@ -32,6 +40,8 @@ export interface PaymentGateway {
   /** True when the credentials needed to take payments are present. */
   isConfigured(): boolean;
   createOrder(args: { amount: number; currency: string; receipt: string; notes: Record<string, string> }): Promise<GatewayOrder>;
+  /** Looks up how the customer paid (UPI, card, netbanking...). Never throws: returns null when unavailable. */
+  fetchPaymentDetails?(paymentId: string): Promise<PaymentDetails | null>;
   /** Checks the signature the gateway returned to the browser after payment. */
   verifyPayment(input: VerifyInput): boolean;
   /** Parses and authenticates a server-to-server webhook. Returns null when the signature is invalid. */

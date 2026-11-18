@@ -7,6 +7,7 @@ import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { AdminDashboardSkeleton } from '@/components/ui/Loaders';
 import { AdminClient } from './AdminClient';
 import type { AdminDashboardData } from '@/components/admin/AdminDashboard';
+import type { PaymentRow } from '@/components/admin/PaymentsPanel';
 
 export default async function AdminStudioPage() {
   const user = await getSessionUser();
@@ -22,6 +23,11 @@ export default async function AdminStudioPage() {
     prisma.mcqAttempt.findMany({ where: { status: 'SUBMITTED' }, select: { passed: true } }),
     prisma.payment.groupBy({ by: ['status'], _count: { _all: true } }),
     prisma.lessonProgress.count(),
+    prisma.payment.findMany({
+      include: { user: { select: { id: true, name: true, email: true } }, course: { select: { id: true, title: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 1000,
+    }),
   ]);
   const [courses, students, enrollments] = await Promise.all([
     prisma.course.findMany({
@@ -63,7 +69,7 @@ export default async function AdminStudioPage() {
     }),
   ]);
 
-  const [lessonGroups, submissionGroups, attemptRows, paymentGroups, lessonsCompleted] = await extrasPromise;
+  const [lessonGroups, submissionGroups, attemptRows, paymentGroups, lessonsCompleted, paymentRecords] = await extrasPromise;
 
   const totalRevenue = enrollments.reduce((sum, e) => sum + (e.amountPaid || 0), 0);
 
@@ -91,6 +97,50 @@ export default async function AdminStudioPage() {
     cur.revenue += e.amountPaid || 0;
     perCourse.set(e.courseId, cur);
   }
+
+  // Every online checkout attempt, plus enrollments that predate online payments so no purchase goes missing.
+  const paidKeys = new Set(paymentRecords.filter((p) => p.status === 'PAID').map((p) => `${p.userId}:${p.courseId}`));
+  const onlineRows: PaymentRow[] = paymentRecords.map((p) => ({
+    id: p.id,
+    source: 'online',
+    status: p.status === 'PAID' ? 'PAID' : p.status === 'FAILED' ? 'FAILED' : 'PENDING',
+    student: p.user,
+    course: p.course,
+    amount: p.amount / 100,
+    currency: p.currency,
+    gateway: p.gateway,
+    method: p.method,
+    methodDetail: p.methodDetail,
+    fee: p.gatewayFee !== null ? p.gatewayFee / 100 : null,
+    orderId: p.gatewayOrderId,
+    paymentId: p.gatewayPaymentId,
+    failureReason: p.failureReason,
+    initiatedAt: p.createdAt.toISOString(),
+    paidAt: p.paidAt ? p.paidAt.toISOString() : null,
+    updatedAt: p.updatedAt.toISOString(),
+  }));
+  const legacyRows: PaymentRow[] = enrollments
+    .filter((e) => !paidKeys.has(`${e.userId}:${e.courseId}`))
+    .map((e) => ({
+      id: `enrollment-${e.id}`,
+      source: 'legacy',
+      status: 'PAID',
+      student: { id: e.user.id, name: e.user.name, email: e.user.email },
+      course: { id: e.course.id, title: e.course.title },
+      amount: e.amountPaid || 0,
+      currency: 'INR',
+      gateway: 'manual',
+      method: 'recorded',
+      methodDetail: null,
+      fee: null,
+      orderId: null,
+      paymentId: e.paymentId,
+      failureReason: null,
+      initiatedAt: e.createdAt.toISOString(),
+      paidAt: e.createdAt.toISOString(),
+      updatedAt: e.createdAt.toISOString(),
+    }));
+  const paymentRows = [...onlineRows, ...legacyRows];
 
   const dashboard: AdminDashboardData = {
     firstName: (user.name || 'Admin').split(' ')[0],
@@ -135,6 +185,7 @@ export default async function AdminStudioPage() {
             initialEnrollments={enrollments}
             totalRevenue={totalRevenue}
             dashboard={dashboard}
+            payments={paymentRows}
           />
         </Suspense>
       </main>

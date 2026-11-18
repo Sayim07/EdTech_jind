@@ -103,7 +103,7 @@ export function CheckoutClient({ courseId, courseSlug, gateways, price }: Props)
       });
       rzp.on('payment.failed', async (r: any) => {
         const reason = r?.error?.description || 'Payment failed';
-        await post('/api/payments/fail', { paymentId: o.paymentId, reason });
+        await post('/api/payments/fail', { paymentId: o.paymentId, reason, gatewayPaymentId: r?.error?.metadata?.payment_id });
         router.push(`/checkout/result/${o.paymentId}`);
       });
 

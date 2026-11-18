@@ -3,9 +3,10 @@
 import React, { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { AlertCircle, CheckCircle2, GraduationCap } from 'lucide-react';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { ButtonSpinner } from '@/components/ui/Loaders';
+import { Logo } from '@/components/Logo';
 
 const inputCls =
   'w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:border-amber-600 focus:shadow-[0_0_0_3px_#e3eeff] transition';
@@ -45,10 +46,7 @@ function ResetContent() {
   return (
     <div className="w-full max-w-md mx-auto my-auto flex flex-col gap-4 sm:gap-5">
       <div className="flex items-center justify-center gap-2.5">
-        <div className="w-9 h-9 rounded-lg bg-amber-600 text-white flex items-center justify-center shrink-0">
-          <GraduationCap className="w-5 h-5" />
-        </div>
-        <span className="text-xl font-semibold text-gray-900">CIM India</span>
+        <Logo className="h-14 sm:h-20" />
       </div>
 
       <div className="text-center">

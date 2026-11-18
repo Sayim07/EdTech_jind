@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, ArrowLeft, CheckCircle2, GraduationCap } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { ButtonSpinner } from '@/components/ui/Loaders';
+import { Logo } from '@/components/Logo';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -38,10 +39,7 @@ export default function ForgotPasswordPage() {
     <AuthShell>
       <div className="w-full max-w-md mx-auto my-auto flex flex-col gap-4 sm:gap-5">
         <div className="flex items-center justify-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-amber-600 text-white flex items-center justify-center shrink-0">
-            <GraduationCap className="w-5 h-5" />
-          </div>
-          <span className="text-xl font-semibold text-gray-900">CIM India</span>
+          <Logo className="h-14 sm:h-20" />
         </div>
 
         <div className="text-center">

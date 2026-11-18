@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Download, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 interface Props {
   studentName: string;
@@ -36,9 +37,7 @@ export function CertificateView({ studentName, courseTitle, instructor, complete
       >
         <div className="border border-amber-300 h-full px-6 sm:px-14 py-10 sm:py-14 text-center flex flex-col items-center justify-center gap-5">
           <div className="flex items-center gap-2 text-amber-800">
-            <div className="w-10 h-10 rounded-lg bg-amber-600 text-white flex items-center justify-center">
-              <GraduationCap className="w-6 h-6" />
-            </div>
+            <Logo className="h-16" />
             <span className="text-2xl font-semibold">CIM India</span>
           </div>
 

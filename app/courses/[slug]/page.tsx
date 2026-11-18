@@ -133,6 +133,30 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
                     </div>
                   ))}
                 </dl>
+
+                <section aria-labelledby="about-heading" className="space-y-3 pt-4 border-t border-amber-200">
+                  <h2 id="about-heading" className="text-2xl font-semibold text-gray-900">
+                    About this course
+                  </h2>
+                  <p className="text-base text-gray-800 leading-relaxed max-w-3xl whitespace-pre-line">{course.description}</p>
+                  <div className="flex flex-wrap gap-4 pt-1 text-sm text-gray-800">
+                    {hasSlides && (
+                      <span className="flex items-center gap-1.5">
+                        <FileText className="w-4 h-4 text-amber-600" /> Slide decks
+                      </span>
+                    )}
+                    {hasAudio && (
+                      <span className="flex items-center gap-1.5">
+                        <Headphones className="w-4 h-4 text-amber-600" /> Audio lectures
+                      </span>
+                    )}
+                    {totalAssignments > 0 && (
+                      <span className="flex items-center gap-1.5">
+                        <Award className="w-4 h-4 text-amber-600" /> Assignments
+                      </span>
+                    )}
+                  </div>
+                </section>
               </div>
 
               {/* Cover + purchase card */}
@@ -193,31 +217,6 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
 
         <div className="w-full px-4 sm:px-6 lg:px-10 py-10 sm:py-14 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
           <div className="lg:col-span-7 space-y-12">
-            {/* About */}
-            <section aria-labelledby="about-heading" className="space-y-4">
-              <h2 id="about-heading" className="text-2xl sm:text-3xl font-semibold text-gray-900">
-                About this course
-              </h2>
-              <p className="text-base text-gray-700 leading-relaxed max-w-3xl whitespace-pre-line">{course.description}</p>
-              <div className="flex flex-wrap gap-4 pt-1 text-sm text-gray-700">
-                {hasSlides && (
-                  <span className="flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-amber-600" /> Slide decks
-                  </span>
-                )}
-                {hasAudio && (
-                  <span className="flex items-center gap-1.5">
-                    <Headphones className="w-4 h-4 text-amber-600" /> Audio lectures
-                  </span>
-                )}
-                {totalAssignments > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <Award className="w-4 h-4 text-amber-600" /> Assignments
-                  </span>
-                )}
-              </div>
-            </section>
-
             {/* Syllabus / roadmap */}
             <section aria-labelledby="syllabus-heading" className="space-y-4">
               <div>

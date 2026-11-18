@@ -6,12 +6,12 @@ import { AuthShell } from '@/components/auth/AuthShell';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ButtonSpinner } from '@/components/ui/Loaders';
 import {
-  GraduationCap,
   AlertCircle,
   ArrowRight,
   Eye,
   EyeOff,
 } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 function LoginContent() {
   const router = useRouter();
@@ -87,10 +87,7 @@ function LoginContent() {
   return (
     <div className="w-full max-w-md mx-auto my-auto flex flex-col gap-2.5 sm:gap-5">
       <div className="hidden [@media(min-height:760px)]:flex lg:flex items-center justify-center gap-2.5">
-        <div className="w-9 h-9 rounded-lg bg-amber-600 text-white flex items-center justify-center shrink-0">
-          <GraduationCap className="w-5 h-5" />
-        </div>
-        <span className="text-xl font-semibold text-gray-900">CIM India</span>
+        <Logo className="h-14 sm:h-20" />
       </div>
 
       <div role="tablist" aria-label="Account" className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-gray-100">

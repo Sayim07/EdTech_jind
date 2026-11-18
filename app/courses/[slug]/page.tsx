@@ -6,23 +6,36 @@ import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { formatPrice } from '@/lib/utils';
 import { getSessionUser } from '@/lib/auth';
+import { courseTotalHours, durationToMinutes, formatHours, parseFaqs } from '@/lib/course';
 import { EnrollButton } from './EnrollButton';
-import { 
-  PlayCircle, 
-  FileText, 
-  Award, 
-  Clock, 
-  BookOpen, 
-  CheckCircle2, 
+import {
+  PlayCircle,
+  FileText,
+  Award,
+  Clock,
+  Layers,
+  BarChart3,
+  CheckCircle2,
   ArrowLeft,
-  GraduationCap
+  ChevronDown,
+  BookOpen,
+  Headphones,
 } from 'lucide-react';
 
-export default async function CourseDetailPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const course = await prisma.course.findUnique({ where: { slug }, select: { title: true, shortDescription: true } });
+  return { title: course ? `${course.title} | CIM India` : 'Course | CIM India', description: course?.shortDescription || undefined };
+}
+
+function formatModuleTime(minutes: number) {
+  if (!minutes) return null;
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes % 60);
+  return h ? `${h}h ${m ? `${m}m` : ''}`.trim() : `${m}m`;
+}
+
+export default async function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const user = await getSessionUser();
 
@@ -34,230 +47,265 @@ export default async function CourseDetailPage({
         include: {
           lessons: {
             orderBy: { order: 'asc' },
-            include: { assignments: true },
+            include: { assignments: { select: { id: true } } },
           },
         },
       },
+      _count: { select: { enrollments: true } },
     },
   });
 
-  if (!course) notFound();
+  // Details are public, but unpublished courses stay hidden from everyone except admins.
+  if (!course || (!course.published && user?.role !== 'ADMIN')) notFound();
 
-  // Check if current user is enrolled
   let isEnrolled = false;
   if (user) {
     const enrollment = await prisma.enrollment.findUnique({
-      where: {
-        userId_courseId: {
-          userId: user.id,
-          courseId: course.id,
-        },
-      },
+      where: { userId_courseId: { userId: user.id, courseId: course.id } },
     });
     isEnrolled = !!enrollment;
   }
 
-  const totalLessons = course.modules.reduce((sum, m) => sum + m.lessons.length, 0);
-  const totalAssignments = course.modules.reduce(
-    (sum, m) => sum + m.lessons.reduce((lSum, l) => lSum + l.assignments.length, 0),
-    0
-  );
+  const allLessons = course.modules.flatMap((m) => m.lessons);
+  const totalLessons = allLessons.length;
+  const totalAssignments = allLessons.reduce((sum, l) => sum + l.assignments.length, 0);
+  const hours = courseTotalHours(course.totalHours, allLessons);
+  const faqs = parseFaqs(course.faqs);
+  const hasSlides = allLessons.some((l) => l.fileUrl);
+  const hasAudio = allLessons.some((l) => l.audioUrl);
+
+  const stats = [
+    { icon: Clock, label: 'Total duration', value: formatHours(hours) },
+    { icon: Layers, label: 'Modules', value: String(course.modules.length) },
+    { icon: PlayCircle, label: 'Lessons', value: String(totalLessons) },
+    { icon: BarChart3, label: 'Difficulty', value: course.level },
+  ];
+
+  const includes = [
+    'Lifetime access on mobile and desktop',
+    hasSlides ? 'Downloadable slide decks for every lesson' : null,
+    hasAudio ? 'Audio podcast version of each lecture' : null,
+    totalAssignments > 0 ? `${totalAssignments} graded assignment${totalAssignments === 1 ? '' : 's'}` : null,
+    'Certificate of completion',
+  ].filter(Boolean) as string[];
 
   return (
     <>
       <Navbar />
 
-      <main className="flex-1 pb-28 md:pb-16 bg-parchment-50">
-        {/* Course Banner */}
-        <section className="bg-ink-950 text-white border-b border-gray-800 py-10 md:py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <main className="flex-1 pb-28 lg:pb-16">
+        {/* Hero */}
+        <section className="bg-amber-100">
+          <div className="w-full px-4 sm:px-6 lg:px-10 py-8 sm:py-12 space-y-6">
             <Link
               href="/courses"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:text-amber-300 transition"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-600 hover:underline"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to all courses</span>
+              <ArrowLeft className="w-4 h-4" />
+              <span>All courses</span>
             </Link>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-8 space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">
-                    {course.category}
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded bg-gray-800 text-gray-300 text-xs font-medium">
-                    {course.level}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    Taught by {course.instructorName}
-                  </span>
-                </div>
-
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-sans font-bold text-white tracking-tight leading-tight">
-                  {course.title}
-                </h1>
-
-                <p className="text-sm sm:text-base text-gray-300 max-w-3xl leading-relaxed">
-                  {course.description}
-                </p>
-
-                <div className="flex flex-wrap items-center gap-5 text-xs sm:text-sm text-gray-400 pt-2">
-                  <div className="flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-amber-400" />
-                    <span>{course.modules.length} Modules</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <PlayCircle className="w-4 h-4 text-amber-400" />
-                    <span>{totalLessons} Lessons</span>
-                  </div>
-                  {totalAssignments > 0 && (
-                    <div className="flex items-center gap-1.5">
-                      <Award className="w-4 h-4 text-amber-400" />
-                      <span>{totalAssignments} Assignments</span>
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+              <div className="lg:col-span-7 space-y-5">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="px-2.5 py-1 rounded-md bg-white text-amber-800 font-semibold">{course.category}</span>
+                  {!course.published && (
+                    <span className="px-2.5 py-1 rounded-md bg-warm text-gray-900 font-semibold">Unpublished (admin preview)</span>
                   )}
                 </div>
-              </div>
+                <h1 className="text-3xl sm:text-5xl font-semibold text-amber-800 leading-tight sm:leading-[56px]">
+                  {course.title}
+                </h1>
+                <p className="text-lg text-gray-700 max-w-3xl">{course.shortDescription || course.description}</p>
+                <p className="text-sm text-gray-600">
+                  Taught by <span className="font-semibold text-gray-900">{course.instructorName}</span>
+                  {course._count.enrollments > 0 && <> · {course._count.enrollments} enrolled</>}
+                </p>
 
-              {/* Action / Pricing Box */}
-              <div className="lg:col-span-4 bg-white text-gray-900 p-6 rounded-2xl border border-gray-200 shadow-xl space-y-5">
-                {course.thumbnail ? (
-                  <div className="aspect-video relative rounded-xl overflow-hidden bg-gray-100">
-                    <img
-                      src={course.thumbnail}
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-amber-600 text-white flex items-center justify-center shadow-lg">
-                        <PlayCircle className="w-6 h-6 ml-0.5" />
+                <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                  {stats.map((s) => (
+                    <div key={s.label} className="bg-white rounded-xl p-4 flex items-center gap-3">
+                      <s.icon className="w-5 h-5 text-amber-600 shrink-0" aria-hidden="true" />
+                      <div className="min-w-0">
+                        <dd className="text-base font-semibold text-gray-900 truncate">{s.value}</dd>
+                        <dt className="text-xs text-gray-600">{s.label}</dt>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="aspect-video relative rounded-xl overflow-hidden bg-amber-50 border border-amber-500/20 flex flex-col items-center justify-center p-6 text-center">
-                    <div className="w-12 h-12 rounded-full bg-amber-600 text-white flex items-center justify-center shadow-md mb-2">
-                      <PlayCircle className="w-6 h-6 ml-0.5" />
-                    </div>
-                    <span className="text-xs font-bold text-amber-700">
-                      Video & Slide Lessons
-                    </span>
-                  </div>
-                )}
+                  ))}
+                </dl>
+              </div>
 
-                <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl sm:text-3xl font-sans font-bold text-gray-900">
-                      {course.price > 0 ? formatPrice(course.price) : 'Free Enrollment'}
-                    </span>
-                    {course.originalPrice && (
-                      <span className="text-sm text-gray-400 line-through">
-                        {formatPrice(course.originalPrice)}
-                      </span>
+              {/* Cover + purchase card */}
+              <aside className="lg:col-span-5 lg:sticky lg:top-24">
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md">
+                  <div className="relative aspect-video bg-amber-50">
+                    {course.thumbnail ? (
+                      <img src={course.thumbnail} alt={`Cover image for ${course.title}`} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-amber-600">
+                        <BookOpen className="w-12 h-12" />
+                      </div>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Lifetime access to all video lessons and slides.
-                  </p>
-                </div>
+                  <div className="p-6 space-y-5">
+                    <div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-semibold text-gray-900">
+                          {course.price > 0 ? formatPrice(course.price) : 'Free'}
+                        </span>
+                        {course.originalPrice && course.originalPrice > course.price && (
+                          <span className="text-sm text-gray-500 line-through">{formatPrice(course.originalPrice)}</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">One-time payment. Lifetime access.</p>
+                    </div>
 
-                {isEnrolled ? (
-                  <Link
-                    href={`/learn/${course.slug}`}
-                    className="w-full block text-center py-2.5 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-medium text-xs sm:text-sm transition shadow-sm active:scale-95"
-                  >
-                    Go to Class
-                  </Link>
-                ) : (
-                  <EnrollButton
-                    courseId={course.id}
-                    courseSlug={course.slug}
-                    coursePrice={course.price}
-                    isLoggedIn={!!user}
-                  />
-                )}
+                    {isEnrolled ? (
+                      <Link
+                        href={`/learn/${course.slug}`}
+                        className="w-full h-11 rounded-lg bg-amber-600 hover:bg-[#0060eb] text-white font-semibold flex items-center justify-center transition active:scale-[0.98]"
+                      >
+                        Go to class
+                      </Link>
+                    ) : (
+                      <EnrollButton
+                        courseId={course.id}
+                        courseSlug={course.slug}
+                        coursePrice={course.price}
+                        isLoggedIn={!!user}
+                      />
+                    )}
 
-                <div className="text-xs sm:text-xs text-gray-500 space-y-1 border-t border-gray-100 pt-3">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span>Mobile & desktop access</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span>Downloadable slides</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span>Course certificate</span>
+                    <ul className="text-sm text-gray-700 space-y-2 border-t border-gray-200 pt-4">
+                      {includes.map((item) => (
+                        <li key={item} className="flex items-start gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
-              </div>
+              </aside>
             </div>
           </div>
         </section>
 
-        {/* Syllabus / Curriculum Section */}
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
-          <div className="space-y-0.5">
-            <h2 className="text-xl sm:text-2xl font-sans font-bold text-gray-900">
-              Course Content
-            </h2>
-            <p className="text-xs text-gray-500">
-              {course.modules.length} modules • {totalLessons} lessons
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {course.modules.map((mod, mIdx) => (
-              <div
-                key={mod.id}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm"
-              >
-                <div className="p-4 sm:p-5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                  <h3 className="font-sans font-bold text-sm sm:text-base text-gray-900">
-                    {mod.title}
-                  </h3>
-                  <span className="text-xs font-medium text-gray-500">
-                    {mod.lessons.length} lessons
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-10 sm:py-14 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
+          <div className="lg:col-span-7 space-y-12">
+            {/* About */}
+            <section aria-labelledby="about-heading" className="space-y-4">
+              <h2 id="about-heading" className="text-2xl sm:text-3xl font-semibold text-gray-900">
+                About this course
+              </h2>
+              <p className="text-base text-gray-700 leading-relaxed max-w-3xl whitespace-pre-line">{course.description}</p>
+              <div className="flex flex-wrap gap-4 pt-1 text-sm text-gray-700">
+                {hasSlides && (
+                  <span className="flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-amber-600" /> Slide decks
                   </span>
-                </div>
-
-                <div className="divide-y divide-gray-100">
-                  {mod.lessons.map((lesson) => (
-                    <div
-                      key={lesson.id}
-                      className="p-4 flex items-start sm:items-center justify-between gap-3 text-xs sm:text-sm"
-                    >
-                      <div className="flex items-start sm:items-center gap-3">
-                        {lesson.type === 'VIDEO' || lesson.type === 'YOUTUBE' ? (
-                          <PlayCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
-                        ) : lesson.type === 'PPT' ? (
-                          <FileText className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
-                        ) : (
-                          <Award className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
-                        )}
-                        <div>
-                          <span className="font-medium text-gray-800 block">
-                            {lesson.title}
-                          </span>
-                          <span className="text-xs text-gray-400 capitalize">
-                            {lesson.type.toLowerCase()} format
-                            {lesson.fileUrl && ' • Includes PPT Deck'}
-                            {lesson.assignments.length > 0 && ' • Includes Assignment'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="text-xs text-gray-400 shrink-0">
-                        {lesson.duration || '15 min'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                )}
+                {hasAudio && (
+                  <span className="flex items-center gap-1.5">
+                    <Headphones className="w-4 h-4 text-amber-600" /> Audio lectures
+                  </span>
+                )}
+                {totalAssignments > 0 && (
+                  <span className="flex items-center gap-1.5">
+                    <Award className="w-4 h-4 text-amber-600" /> Assignments
+                  </span>
+                )}
               </div>
-            ))}
+            </section>
+
+            {/* Syllabus / roadmap */}
+            <section aria-labelledby="syllabus-heading" className="space-y-4">
+              <div>
+                <h2 id="syllabus-heading" className="text-2xl sm:text-3xl font-semibold text-gray-900">
+                  Syllabus &amp; roadmap
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  {course.modules.length} modules · {totalLessons} lessons · {formatHours(hours)}
+                </p>
+              </div>
+
+              {course.modules.length === 0 ? (
+                <p className="text-gray-600">The syllabus for this course will be published soon.</p>
+              ) : (
+                <div className="space-y-3">
+                  {course.modules.map((mod, i) => {
+                    const minutes = mod.lessons.reduce((sum, l) => sum + durationToMinutes(l.duration), 0);
+                    const time = formatModuleTime(minutes);
+                    return (
+                      <details
+                        key={mod.id}
+                        open={i === 0}
+                        className="group bg-white rounded-xl border border-gray-200 overflow-hidden"
+                      >
+                        <summary className="cursor-pointer list-none p-5 flex items-center justify-between gap-4 hover:bg-gray-50 transition">
+                          <div className="min-w-0">
+                            <h3 className="text-base font-semibold text-gray-900">{mod.title}</h3>
+                            <p className="text-sm text-gray-600">
+                              {mod.lessons.length} {mod.lessons.length === 1 ? 'lesson' : 'lessons'}
+                              {time && ` · ${time}`}
+                            </p>
+                          </div>
+                          <ChevronDown className="w-5 h-5 text-gray-500 shrink-0 transition-transform group-open:rotate-180" />
+                        </summary>
+                        <ol className="border-t border-gray-200 divide-y divide-gray-100">
+                          {mod.lessons.map((lesson) => (
+                            <li key={lesson.id} className="px-5 py-3.5 flex items-start justify-between gap-4">
+                              <div className="flex items-start gap-3 min-w-0">
+                                {lesson.type === 'PPT' || lesson.type === 'PDF' ? (
+                                  <FileText className="w-4 h-4 text-amber-600 shrink-0 mt-1" />
+                                ) : lesson.type === 'ASSIGNMENT' ? (
+                                  <Award className="w-4 h-4 text-amber-600 shrink-0 mt-1" />
+                                ) : (
+                                  <PlayCircle className="w-4 h-4 text-amber-600 shrink-0 mt-1" />
+                                )}
+                                <div className="min-w-0">
+                                  <div className="text-sm font-semibold text-gray-900">{lesson.title}</div>
+                                  <div className="text-xs text-gray-600">
+                                    {[lesson.fileUrl && 'Slides', lesson.audioUrl && 'Audio', lesson.assignments.length > 0 && 'Assignment']
+                                      .filter(Boolean)
+                                      .join(' · ') || 'Video lesson'}
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="text-xs text-gray-600 shrink-0 tabular-nums">{lesson.duration || ''}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </details>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
           </div>
-        </section>
+
+          {/* FAQ */}
+          <section aria-labelledby="faq-heading" className="lg:col-span-5 space-y-4">
+            <h2 id="faq-heading" className="text-2xl sm:text-3xl font-semibold text-gray-900">
+              Frequently asked questions
+            </h2>
+            {faqs.length === 0 ? (
+              <p className="text-gray-600">No questions yet. Reach out to the CIM India team if you need help deciding.</p>
+            ) : (
+              <div className="space-y-3">
+                {faqs.map((f, i) => (
+                  <details key={i} className="group bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <summary className="cursor-pointer list-none p-5 flex items-center justify-between gap-4 hover:bg-gray-50 transition">
+                      <h3 className="text-base font-semibold text-gray-900">{f.q}</h3>
+                      <ChevronDown className="w-5 h-5 text-gray-500 shrink-0 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <p className="px-5 pb-5 text-sm text-gray-700 leading-relaxed whitespace-pre-line">{f.a}</p>
+                  </details>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </main>
 
       <MobileBottomNav role={user?.role} isLoggedIn={!!user} />

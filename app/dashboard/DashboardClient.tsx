@@ -31,12 +31,37 @@ interface Props {
   };
   enrollments: any[];
   popularCourses: any[];
+  progress: Record<string, number>;
+  initialTab?: 'explore' | 'my_courses';
 }
 
-export function DashboardClient({ user, enrollments, popularCourses }: Props) {
+function CourseCover({ course, badge }: { course: any; badge?: React.ReactNode }) {
+  return (
+    <div className="relative aspect-video bg-amber-100 overflow-hidden">
+      {course.thumbnail ? (
+        <img
+          src={course.thumbnail}
+          alt={course.title}
+          loading="lazy"
+          className="w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-out"
+        />
+      ) : (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-amber-700 bg-amber-100">
+          <BookOpen className="w-8 h-8" />
+        </div>
+      )}
+      <span className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-md bg-white text-amber-800 shadow-sm">
+        {course.category}
+      </span>
+      {badge && <div className="absolute top-3 right-3">{badge}</div>}
+    </div>
+  );
+}
+
+export function DashboardClient({ user, enrollments, popularCourses, progress, initialTab = 'explore' }: Props) {
   const router = useRouter();
   // Default to 'explore' so fresh students see the catalog & popular courses first!
-  const [activeTab, setActiveTab] = useState<'explore' | 'my_courses'>('explore');
+  const [activeTab, setActiveTab] = useState<'explore' | 'my_courses'>(initialTab);
   const [showNoPurchaseModal, setShowNoPurchaseModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
@@ -81,7 +106,7 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 sm:space-y-8">
+    <div className="w-full px-4 sm:px-6 lg:px-10 py-5 sm:py-8 space-y-6 sm:space-y-8">
       {/* Student Welcome Header */}
       <section className="bg-amber-100 rounded-2xl p-6 sm:p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
@@ -213,14 +238,14 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
         <section className="space-y-5">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-sans font-bold text-gray-900">
-              Popular Courses
+              All Courses
             </h2>
             <span className="text-xs text-gray-500">
               {filteredPopularCourses.length} courses
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredPopularCourses.map((course) => {
               const isPurchased = enrollments.some((e) => e.courseId === course.id);
               const lessonCount = course.modules?.reduce(
@@ -231,52 +256,15 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
               return (
                 <article
                   key={course.id}
-                  className="flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-md transition group"
+                  className="relative flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-md transition group"
                 >
-                  {/* Thumbnail: only rendered if admin specifically uploaded/provided one */}
-                  {course.thumbnail ? (
-                    <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden border-b border-gray-100">
-                      <img
-                        src={course.thumbnail}
-                        alt={course.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                      />
-                      <div className="absolute inset-0  pointer-events-none" />
-                      <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between pointer-events-none">
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-black/60 text-amber-300 border border-white/10">
-                          {course.category}
-                        </span>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-black/60 text-gray-200 border border-white/10">
-                          {course.level}
-                        </span>
-                      </div>
-                      {isPurchased && (
-                        <div className="absolute top-2.5 right-3 bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow">
-                          Enrolled
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    /* Clean typography header when no thumbnail is set by admin */
-                    <div className="p-4 sm:p-5 pb-0 flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
-                        {course.category}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600">
-                          {course.level}
-                        </span>
-                        {isPurchased && (
-                          <span className="bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow-sm">
-                            Enrolled
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  <Link href={`/courses/${course.slug}`} aria-label={`View details: ${course.title}`} className="absolute inset-0 z-[1] rounded-2xl" />
+                  <CourseCover
+                    course={course}
+                    badge={isPurchased ? <span className="bg-emerald-600 text-white text-xs font-semibold px-2.5 py-1 rounded-md shadow-sm">Enrolled</span> : undefined}
+                  />
 
-                  {/* Body */}
-                  <div className={`p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3 ${course.thumbnail ? 'pt-4' : 'pt-2'}`}>
+<div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
                     <div className="space-y-1.5">
                       <h3 className="font-sans text-base sm:text-lg font-bold text-gray-900 group-hover:text-amber-600 transition leading-snug line-clamp-2">
                         {course.title}
@@ -311,7 +299,7 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                   </div>
 
                   {/* Action Button */}
-                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
+                  <div className="relative z-10 px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
                     {isPurchased ? (
                       <Link
                         href={`/learn/${course.slug}`}
@@ -378,8 +366,9 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
             </div>
           ) : (
             /* List of purchased courses */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {filteredMyCourses.map(({ course, id, createdAt }) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
+              {filteredMyCourses.map(({ course, id, courseId, certificateCode }) => {
+                const pct = progress[courseId] ?? 0;
                 const lessonCount = course.modules?.reduce(
                   (sum: number, m: any) => sum + (m.lessons?.length || 0),
                   0
@@ -388,37 +377,15 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                 return (
                   <article
                     key={id}
-                    className="flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-md transition group"
+                    className="relative flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-md transition group"
                   >
-                    {course.thumbnail ? (
-                      <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden border-b border-gray-100">
-                        <img
-                          src={course.thumbnail}
-                          alt={course.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                        />
-                        <div className="absolute inset-0  pointer-events-none" />
-                        <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between pointer-events-none">
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-black/60 text-emerald-300 border border-white/10">
-                            {course.category}
-                          </span>
-                        </div>
-                        <div className="absolute top-2.5 right-3 bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow">
-                          Enrolled
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-4 sm:p-5 pb-0 flex items-center justify-between gap-2">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                          {course.category}
-                        </span>
-                        <span className="bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow-sm">
-                          Enrolled
-                        </span>
-                      </div>
-                    )}
+                    <Link href={`/courses/${course.slug}`} aria-label={`View details: ${course.title}`} className="absolute inset-0 z-[1] rounded-2xl" />
+                    <CourseCover
+                      course={course}
+                      badge={pct === 100 ? <span className="bg-emerald-600 text-white text-xs font-semibold px-2.5 py-1 rounded-md shadow-sm">Completed</span> : undefined}
+                    />
 
-                    <div className={`p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3 ${course.thumbnail ? 'pt-4' : 'pt-2'}`}>
+<div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
                       <div className="space-y-1">
                         <h3 className="font-sans text-base sm:text-lg font-bold text-gray-900 group-hover:text-amber-600 transition line-clamp-2">
                           {course.title}
@@ -428,7 +395,7 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                         </p>
                       </div>
 
-                      <div className="pt-3 border-t border-gray-100 space-y-2.5">
+                      <div className="relative z-10 pt-3 border-t border-gray-100 space-y-2.5">
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span className="flex items-center gap-1 text-xs">
                             <Layers className="w-3.5 h-3.5 text-amber-600" />
@@ -444,10 +411,10 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                         <div className="space-y-1">
                           <div className="flex justify-between text-xs font-semibold text-gray-500">
                             <span>Progress</span>
-                            <span>30% Completed</span>
+                            <span>{pct}% Completed</span>
                           </div>
                           <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-amber-600 rounded-full w-[30%]" />
+                            <div className="h-full bg-amber-600 rounded-full transition-all" style={{ width: `${pct}%` }} />
                           </div>
                         </div>
 
@@ -455,8 +422,17 @@ export function DashboardClient({ user, enrollments, popularCourses }: Props) {
                           href={`/learn/${course.slug}`}
                           className="w-full block text-center py-2.5 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-semibold text-sm shadow-sm transition active:scale-95"
                         >
-                          Go to Class
+                          {pct === 100 ? 'Review course' : pct > 0 ? 'Continue learning' : 'Start learning'}
                         </Link>
+                        {certificateCode && (
+                          <Link
+                            href={`/certificates/${certificateCode}`}
+                            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-amber-600 text-amber-600 hover:bg-amber-50 font-semibold text-sm transition"
+                          >
+                            <Award className="w-4 h-4" />
+                            View certificate
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </article>

@@ -49,7 +49,8 @@ async function main() {
       slug: 'origin-of-food-evolution',
       shortDescription: 'How fire, ancient hearths, animal domestication, and first crops re-engineered human anatomy and culture.',
       description: 'Explore half a million years of kitchen engineering, the biological trap of early farming, and the culinary revolutions that formed civilization. Features authentic master recordings, interactive slide decks, master audio podcasts, and high-res infographics from CIM Jindal.',
-      thumbnail: null, // Admin controlled (clean typography mode)
+      thumbnail: '/covers/origin-of-food.jpg',
+      faqs: JSON.stringify([{"q": "Do I need any prior knowledge of history or nutrition?", "a": "No. The course starts from the beginning and builds up. It suits curious beginners as well as readers who already know the basics."}, {"q": "What do I receive with the course?", "a": "Video lectures, downloadable slide decks, an audio podcast version of each lecture, summary infographics and assignments for every module."}, {"q": "How long do I have access?", "a": "Access is for life. You can learn at your own pace on mobile or desktop and come back to any lesson."}, {"q": "Will I get a certificate?", "a": "Yes. Finish every lesson and your certificate of completion is released automatically. You can view and print it from the Purchases & Certificates page."}]),
       price: 1999,
       originalPrice: 3999,
       level: 'All Levels',
@@ -260,7 +261,8 @@ async function main() {
       slug: 'ancient-civilizations-food',
       shortDescription: 'From Mesopotamian tablets and Egyptian beer pyramids to Greek symposia, Roman banquets, Persian courts, and Chinese dynasties.',
       description: 'Journey across the ancient Mediterranean, Near East, and East Asia to study how grand empires wielded cuisine as politics, religious spectacle, and social hierarchy. Features 8 authentic master recordings, PPT slide decks, audio podcasts, and historical infographics from CIM Jindal.',
-      thumbnail: null, // Admin controlled
+      thumbnail: '/covers/ancient-civilizations.jpg',
+      faqs: JSON.stringify([{"q": "Is this course connected to the Origin of Food course?", "a": "They complement each other, but each stands alone. You can take them in any order."}, {"q": "Are the assignments graded?", "a": "Yes. Submit your written answer for each assignment and you will see your score and feedback on the Assignments page."}, {"q": "Can I download the slides?", "a": "Every lesson with a slide deck has a Download Slides button, so you can study offline."}, {"q": "Will I get a certificate?", "a": "Yes. Complete every lesson to unlock your certificate of completion."}]),
       price: 1499,
       originalPrice: 2999,
       level: 'Intermediate',

@@ -201,7 +201,7 @@ export function CourseGridSkeleton({ count = 6 }: { count?: number }) {
  */
 export function DashboardSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 sm:space-y-8">
+    <div className="w-full px-4 sm:px-6 lg:px-10 py-5 sm:py-8 space-y-6 sm:space-y-8">
       {/* Welcome Banner Skeleton */}
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-200 p-5 sm:p-7 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -250,7 +250,7 @@ export function DashboardSkeleton() {
  */
 export function CoursesCatalogSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-8 pb-20 md:pb-10 space-y-5 sm:space-y-6">
+    <div className="w-full px-4 sm:px-6 lg:px-10 py-5 md:py-8 pb-20 lg:pb-10 space-y-5 sm:space-y-6">
       {/* Header */}
       <div className="space-y-2">
         <Skeleton className="h-8 w-40 rounded-lg" />
@@ -285,7 +285,7 @@ export function CourseDetailsSkeleton() {
     <div className="min-h-screen bg-parchment-50 pb-20">
       {/* Hero Header */}
       <div className="bg-ink-950 border-b border-gray-800 py-10 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="w-full px-4 sm:px-6 lg:px-10 space-y-6">
           <Skeleton className="h-4 w-32 rounded bg-gray-800" />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -325,7 +325,7 @@ export function CourseDetailsSkeleton() {
       </div>
 
       {/* Syllabus Modules Skeleton */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
+      <div className="w-full px-4 sm:px-6 lg:px-10 py-8 space-y-4">
         <Skeleton className="h-7 w-48 rounded-lg" />
         <Skeleton className="h-3.5 w-64 rounded" />
         <div className="space-y-3 pt-2">
@@ -409,7 +409,7 @@ export function ClassroomPlayerSkeleton() {
  */
 export function AdminDashboardSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+    <div className="w-full px-4 sm:px-6 lg:px-10 py-6 sm:py-8 space-y-6 sm:space-y-8">
       {/* Admin Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-200">
         <div className="space-y-2">

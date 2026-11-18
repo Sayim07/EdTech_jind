@@ -41,3 +41,6 @@ public/uploads/*
 # Exclude video files (GitHub blocks files > 100MB without Git LFS)
 *.mp4
 *.webm
+
+# Runtime user data (profile pictures)
+/storage/

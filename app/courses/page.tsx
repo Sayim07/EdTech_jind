@@ -57,7 +57,7 @@ export default async function CoursesCatalogPage({
     <>
       <Navbar />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-8 pb-20 md:pb-10 space-y-5 sm:space-y-6">
+      <main className="flex-1 w-full px-4 sm:px-6 lg:px-10 py-5 md:py-8 pb-20 lg:pb-10 space-y-5 sm:space-y-6">
         {/* Header */}
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-sans font-bold text-gray-900">

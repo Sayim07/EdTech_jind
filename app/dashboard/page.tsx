@@ -6,7 +6,12 @@ import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { DashboardClient } from './DashboardClient';
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
   const user = await getSessionUser();
 
   if (!user) {
@@ -42,18 +47,35 @@ export default async function DashboardPage() {
       _count: { select: { enrollments: true } },
     },
     orderBy: { enrollments: { _count: 'desc' } },
-    take: 4,
   });
+
+  // Per-course progress for the signed-in student
+  const doneRows = await prisma.lessonProgress.findMany({
+    where: { userId: user.id },
+    select: { lesson: { select: { module: { select: { courseId: true } } } } },
+  });
+  const doneByCourse: Record<string, number> = {};
+  for (const r of doneRows) {
+    const cid = r.lesson.module.courseId;
+    doneByCourse[cid] = (doneByCourse[cid] || 0) + 1;
+  }
+  const progress: Record<string, number> = {};
+  for (const e of enrollments) {
+    const total = e.course.modules.reduce((n, m) => n + m.lessons.length, 0);
+    progress[e.courseId] = total ? Math.min(100, Math.round(((doneByCourse[e.courseId] || 0) / total) * 100)) : 0;
+  }
 
   return (
     <>
-      <Navbar />
+      <Navbar wide />
 
-      <main className="flex-1 pb-24 md:pb-12 bg-parchment-50">
+      <main className="flex-1 pb-24 lg:pb-12 bg-parchment-50">
         <DashboardClient
           user={user}
           enrollments={enrollments}
           popularCourses={popularCourses}
+          progress={progress}
+          initialTab={tab === 'my_courses' ? 'my_courses' : 'explore'}
         />
       </main>
 

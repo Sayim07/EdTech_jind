@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ThemeToggle } from '@/components/ThemeProvider';
 import { ButtonSpinner, Spinner } from '@/components/ui/Loaders';
 import { 
   ArrowLeft, 
@@ -16,15 +15,113 @@ import {
   Send,
   Layers,
   Headphones,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Award as AwardIcon
 } from 'lucide-react';
 
 interface Props {
   course: any;
   user: any;
+  initialCompletedIds?: string[];
+  initialCertificateCode?: string | null;
+  canTrackProgress?: boolean;
+  initialLessonId?: string;
+  initialTab?: 'notes' | 'assignment';
 }
 
-export function ClassroomPlayerClient({ course, user }: Props) {
+function SlidesViewer({ url }: { url: string }) {
+  const clean = url.split('?')[0].toLowerCase();
+  const isPdf = clean.endsWith('.pdf');
+  const name = url.split('/').pop();
+
+  if (isPdf) {
+    return (
+      <iframe
+        src={`${url}#view=FitH`}
+        title={`Slides: ${name}`}
+        className="w-full h-[70vh] min-h-[420px] rounded-xl border border-gray-200 bg-gray-100"
+      />
+    );
+  }
+
+  if (clean.endsWith('.pptx')) {
+    return <PptxViewer url={url} name={name || 'slides.pptx'} />;
+  }
+
+  return (
+    <div className="w-full aspect-video rounded-xl border border-gray-200 bg-gray-100 flex flex-col items-center justify-center p-6 text-center gap-3">
+      <FileText className="w-12 h-12 text-amber-600" />
+      <div className="text-base font-semibold text-gray-900">{name}</div>
+      <p className="text-sm text-gray-600 max-w-md">
+        An in-page preview is not available for this file type. Use Download Slides to open it.
+      </p>
+    </div>
+  );
+}
+
+// Renders a .pptx entirely in the browser (the file never leaves this site).
+function PptxViewer({ url, name }: { url: string; name: string }) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    let cancelled = false;
+    let previewer: { destroy: () => void } | null = null;
+    setStatus('loading');
+    host.innerHTML = '';
+
+    (async () => {
+      try {
+        const [{ init }, res] = await Promise.all([import('pptx-preview'), fetch(url)]);
+        if (!res.ok) throw new Error('Could not load the file');
+        const buffer = await res.arrayBuffer();
+        if (cancelled) return;
+        const width = host.clientWidth || 960;
+        previewer = init(host, { width, height: Math.round((width * 9) / 16), mode: 'slide' });
+        await (previewer as any).preview(buffer);
+        if (!cancelled) setStatus('ready');
+      } catch {
+        if (!cancelled) setStatus('error');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      try {
+        previewer?.destroy();
+      } catch {
+        /* ignore */
+      }
+    };
+  }, [url]);
+
+  return (
+    <div className="space-y-3">
+      <div className="relative w-full rounded-xl border border-gray-200 bg-gray-100 overflow-hidden min-h-[240px]">
+        <div ref={hostRef} className="w-full flex justify-center" />
+        {status === 'loading' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-600 text-sm">
+            <Spinner />
+            <span>Loading slides...</span>
+          </div>
+        )}
+        {status === 'error' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+            <FileText className="w-10 h-10 text-amber-600" />
+            <div className="text-base font-semibold text-gray-900">{name}</div>
+            <p className="text-sm text-gray-600 max-w-md">
+              The preview could not be displayed. Use Download Slides to open the file.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], initialCertificateCode = null, canTrackProgress = true, initialLessonId, initialTab = 'notes' }: Props) {
   // Collect all lessons in a flat list
   const allLessons: any[] = [];
   course.modules?.forEach((mod: any) => {
@@ -33,9 +130,11 @@ export function ClassroomPlayerClient({ course, user }: Props) {
     });
   });
 
-  const [activeLesson, setActiveLesson] = useState<any>(allLessons[0] || null);
-  const [activeTab, setActiveTab] = useState<'notes' | 'slides' | 'audio' | 'infographic' | 'assignment'>('notes');
-  const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
+  const [activeLesson, setActiveLesson] = useState<any>(allLessons.find((l) => l.id === initialLessonId) || allLessons[0] || null);
+  const [activeTab, setActiveTab] = useState<'notes' | 'slides' | 'audio' | 'infographic' | 'assignment'>(initialTab);
+  const [completedLessonIds, setCompletedLessonIds] = useState<string[]>(initialCompletedIds);
+  const [certificateCode, setCertificateCode] = useState<string | null>(initialCertificateCode);
+  const [savingProgress, setSavingProgress] = useState(false);
   const [mobileSyllabusOpen, setMobileSyllabusOpen] = useState(false);
 
   // Assignment submission state
@@ -43,11 +142,27 @@ export function ClassroomPlayerClient({ course, user }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const toggleComplete = (id: string) => {
-    if (completedLessonIds.includes(id)) {
-      setCompletedLessonIds(completedLessonIds.filter((item) => item !== id));
-    } else {
-      setCompletedLessonIds([...completedLessonIds, id]);
+  const toggleComplete = async (id: string) => {
+    const nowCompleted = !completedLessonIds.includes(id);
+    const previous = completedLessonIds;
+    setCompletedLessonIds(nowCompleted ? [...previous, id] : previous.filter((item) => item !== id));
+    if (!canTrackProgress) return; // admin preview: nothing to persist
+
+    setSavingProgress(true);
+    try {
+      const res = await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessonId: id, completed: nowCompleted }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save progress');
+      setCompletedLessonIds(data.completedLessonIds);
+      if (data.certificateCode) setCertificateCode(data.certificateCode);
+    } catch {
+      setCompletedLessonIds(previous); // roll back so the UI matches what was saved
+    } finally {
+      setSavingProgress(false);
     }
   };
 
@@ -94,7 +209,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col transition-colors">
       {/* Top Classroom Bar */}
-      <header className="h-16 bg-white border-b border-gray-200 px-4 sm:px-6 flex items-center justify-between z-30 shrink-0 shadow-sm transition-colors">
+      <header className="h-[72px] bg-white border-b border-gray-200 px-5 sm:px-8 flex items-center justify-between z-30 shrink-0 shadow-sm transition-colors">
         <div className="flex items-center gap-3 overflow-hidden">
           <Link
             href="/dashboard"
@@ -114,7 +229,6 @@ export function ClassroomPlayerClient({ course, user }: Props) {
         </div>
 
         <div className="flex items-center gap-3">
-          <ThemeToggle />
           {/* Mobile Syllabus Button */}
           <button
             onClick={() => setMobileSyllabusOpen(true)}
@@ -126,7 +240,8 @@ export function ClassroomPlayerClient({ course, user }: Props) {
 
           <button
             onClick={() => activeLesson && toggleComplete(activeLesson.id)}
-            className={`hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition border ${
+            disabled={savingProgress}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition border disabled:opacity-60 ${
               completedLessonIds.includes(activeLesson?.id)
                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200'
@@ -140,12 +255,25 @@ export function ClassroomPlayerClient({ course, user }: Props) {
         </div>
       </header>
 
+      {certificateCode && (
+        <div className="bg-emerald-50 border-b border-emerald-200 px-5 sm:px-8 py-3 flex items-center justify-between gap-3 text-sm text-emerald-800">
+          <span className="flex items-center gap-2 font-semibold">
+            <AwardIcon className="w-4 h-4 shrink-0" />
+            Course completed. Your certificate is ready.
+          </span>
+          <Link href={`/certificates/${certificateCode}`} className="shrink-0 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition">
+            View certificate
+          </Link>
+        </div>
+      )}
+
       {/* Main Workspace: Video + Syllabus */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left Side: Video Player Stage & Lesson Content */}
         <div className="flex-1 flex flex-col overflow-y-auto">
           {/* VIDEO PLAYER SCREEN */}
-          <div className="w-full bg-black aspect-video max-h-[60vh] flex items-center justify-center relative">
+          <div className="px-5 sm:px-8 lg:px-12 pt-6 sm:pt-8">
+          <div className="w-full bg-black aspect-video max-h-[60vh] rounded-2xl overflow-hidden flex items-center justify-center relative">
             {activeLesson?.type === 'YOUTUBE' && activeLesson.videoUrl ? (
               <iframe
                 src={getYouTubeEmbedUrl(activeLesson.videoUrl)}
@@ -175,24 +303,25 @@ export function ClassroomPlayerClient({ course, user }: Props) {
               </div>
             )}
           </div>
+          </div>
 
           {/* LESSON DETAILS & INTERACTION TABS */}
-          <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-5xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-4">
-              <div>
+          <div className="w-full px-5 sm:px-8 lg:px-12 py-8 sm:py-10 space-y-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-8 border-b border-gray-200 pb-6">
+              <div className="min-w-0 md:flex-1">
                 <span className="text-xs font-semibold text-amber-700">
                   {activeLesson?.moduleTitle}
                 </span>
-                <h2 className="text-xl sm:text-2xl font-sans font-bold text-gray-900 mt-0.5">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mt-1 md:truncate" title={activeLesson?.title}>
                   {activeLesson?.title}
                 </h2>
               </div>
 
               {/* Lesson Action Tabs */}
-              <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-gray-100 border border-gray-200 self-start sm:self-auto text-xs font-semibold">
+              <div className="flex flex-nowrap items-center gap-1.5 p-1.5 rounded-xl bg-gray-100 border border-gray-200 text-sm font-semibold overflow-x-auto no-scrollbar md:shrink-0 max-w-full whitespace-nowrap">
                 <button
                   onClick={() => setActiveTab('notes')}
-                  className={`px-3 py-1.5 rounded-lg transition ${
+                  className={`px-4 py-2 rounded-lg transition shrink-0 ${
                     activeTab === 'notes'
                       ? 'bg-amber-600 text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
@@ -202,7 +331,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                 </button>
                 <button
                   onClick={() => setActiveTab('slides')}
-                  className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                  className={`px-4 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${
                     activeTab === 'slides'
                       ? 'bg-amber-600 text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
@@ -214,7 +343,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                 {activeLesson?.audioUrl && (
                   <button
                     onClick={() => setActiveTab('audio')}
-                    className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                    className={`px-4 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${
                       activeTab === 'audio'
                         ? 'bg-amber-600 text-white shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
@@ -227,7 +356,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                 {activeLesson?.infographicUrl && (
                   <button
                     onClick={() => setActiveTab('infographic')}
-                    className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                    className={`px-4 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${
                       activeTab === 'infographic'
                         ? 'bg-amber-600 text-white shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
@@ -239,7 +368,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                 )}
                 <button
                   onClick={() => setActiveTab('assignment')}
-                  className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                  className={`px-4 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${
                     activeTab === 'assignment'
                       ? 'bg-amber-600 text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
@@ -253,14 +382,14 @@ export function ClassroomPlayerClient({ course, user }: Props) {
 
             {/* TAB 1: LECTURE OVERVIEW & NOTES */}
             {activeTab === 'notes' && (
-              <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
-                <p>
+              <div className="space-y-6 text-base text-gray-700 leading-relaxed">
+                <p className="max-w-3xl">
                   {activeLesson?.content ||
                     'Welcome to this lecture module. Watch the archival recording and take notes on the biological transformations and social structures.'}
                 </p>
 
                 {activeLesson?.fileUrl && (
-                  <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-between">
+                  <div className="p-5 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <FileText className="w-6 h-6 text-amber-600 shrink-0" />
                       <div>
@@ -289,10 +418,10 @@ export function ClassroomPlayerClient({ course, user }: Props) {
             {activeTab === 'slides' && (
               <div className="space-y-4">
                 {activeLesson?.fileUrl ? (
-                  <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="p-5 sm:p-8 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1">
-                        <h4 className="font-sans font-bold text-base text-gray-900">
+                        <h4 className="text-lg font-semibold text-gray-900">
                           Class Slides & Presentation
                         </h4>
                         <p className="text-xs text-gray-500">
@@ -302,30 +431,14 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                       <a
                         href={activeLesson.fileUrl}
                         download
-                        className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white text-xs font-semibold flex items-center gap-2 transition shadow-sm self-start sm:self-auto"
+                        className="h-10 px-5 rounded-lg bg-amber-600 hover:bg-[#0060eb] text-white text-sm font-semibold flex items-center gap-2 transition active:scale-[0.98] self-start sm:self-auto shrink-0"
                       >
                         <Download className="w-4 h-4" />
                         <span>Download Slides</span>
                       </a>
                     </div>
 
-                    <div className="aspect-[16/9] bg-gray-100 rounded-xl border border-gray-200 flex flex-col items-center justify-center p-6 text-center space-y-3">
-                      <FileText className="w-14 h-14 text-amber-600" />
-                      <div className="text-sm font-semibold text-gray-800">
-                        {activeLesson.fileUrl.split('/').pop()}
-                      </div>
-                      <p className="text-xs text-gray-500 max-w-sm">
-                        This presentation includes visual slide diagrams, primary archaeological citations, and artifact analyses used in university seminars.
-                      </p>
-                      <a
-                        href={activeLesson.fileUrl}
-                        download
-                        className="inline-flex items-center gap-2 text-xs font-bold text-amber-700 hover:underline pt-1"
-                      >
-                        <span>Open & Download Slides for Offline Study</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
+                    <SlidesViewer url={activeLesson.fileUrl} />
                   </div>
                 ) : (
                   <div className="p-8 text-center bg-white rounded-2xl border border-gray-200 text-gray-500 text-xs">
@@ -502,9 +615,9 @@ export function ClassroomPlayerClient({ course, user }: Props) {
         </div>
 
         {/* Right Side: Desktop Fixed Syllabus Drawer */}
-        <aside className="hidden lg:flex w-80 border-l border-gray-200 bg-white flex-col overflow-y-auto shrink-0 transition-colors">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="font-sans font-bold text-sm text-gray-900">Course Curriculum</h3>
+        <aside className="hidden lg:flex w-96 border-l border-gray-200 bg-white flex-col overflow-y-auto shrink-0 transition-colors">
+          <div className="px-6 py-5 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-900">Course Curriculum</h3>
             <div className="text-xs text-gray-500 mt-0.5">
               {allLessons.length} total lectures
             </div>
@@ -512,8 +625,8 @@ export function ClassroomPlayerClient({ course, user }: Props) {
 
           <div className="divide-y divide-gray-100">
             {course.modules?.map((mod: any) => (
-              <div key={mod.id} className="py-2">
-                <div className="px-4 py-2 text-xs font-bold text-gray-500">
+              <div key={mod.id} className="py-3">
+                <div className="px-6 py-2 text-sm font-semibold text-gray-600">
                   {mod.title}
                 </div>
                 <div className="space-y-0.5">
@@ -529,7 +642,7 @@ export function ClassroomPlayerClient({ course, user }: Props) {
                           setSubmissionSuccess(false);
                           setSubmissionText('');
                         }}
-                        className={`w-full text-left px-4 py-3 text-xs flex items-center justify-between gap-2 transition ${
+                        className={`w-full text-left px-6 py-3.5 text-sm flex items-center justify-between gap-3 transition ${
                           isSelected
                             ? 'bg-amber-50 text-amber-800 font-semibold'
                             : 'text-gray-700 hover:bg-gray-100'

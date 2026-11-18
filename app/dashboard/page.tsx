@@ -6,7 +6,7 @@ import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { DashboardClient } from './DashboardClient';
 import { durationToMinutes } from '@/lib/course';
-import { resolveCourseTests } from '@/lib/mcq-server';
+import { listCourseTestsLight } from '@/lib/mcq-server';
 
 export default async function DashboardPage({
   searchParams,
@@ -25,8 +25,9 @@ export default async function DashboardPage({
     redirect('/admin?tab=home');
   }
 
-  // Fetch enrolled courses for this student
-  const enrollments = await prisma.enrollment.findMany({
+  // Everything below only needs the user id, so run it all at once: each round trip to the database costs real time.
+  const [enrollments, popularCourses, doneRows, attempts] = await Promise.all([
+  prisma.enrollment.findMany({
     where: { userId: user.id },
     include: {
       course: {
@@ -45,10 +46,10 @@ export default async function DashboardPage({
       },
     },
     orderBy: { createdAt: 'desc' },
-  });
+  }),
 
-  // Fetch popular/recommended courses for catalog exploration
-  const popularCourses = await prisma.course.findMany({
+  // Popular/recommended courses for catalog exploration
+  prisma.course.findMany({
     where: { published: true },
     include: {
       modules: {
@@ -59,13 +60,20 @@ export default async function DashboardPage({
       _count: { select: { enrollments: true } },
     },
     orderBy: { enrollments: { _count: 'desc' } },
-  });
+    take: 12,
+  }),
 
   // Per-course progress + activity feed for the signed-in student
-  const doneRows = await prisma.lessonProgress.findMany({
+  prisma.lessonProgress.findMany({
     where: { userId: user.id },
     select: { lessonId: true, completedAt: true, lesson: { select: { duration: true } } },
-  });
+  }),
+
+  prisma.mcqAttempt.findMany({
+    where: { userId: user.id },
+    select: { testKey: true, status: true, startedAt: true, submittedAt: true },
+  }),
+  ]);
   const doneIds = new Set(doneRows.map((r) => r.lessonId));
 
   const progress: Record<string, number> = {};
@@ -88,16 +96,13 @@ export default async function DashboardPage({
     }
   }
 
-  const attempts = await prisma.mcqAttempt.findMany({
-    where: { userId: user.id },
-    select: { testKey: true, status: true, startedAt: true, submittedAt: true },
-  });
   const submittedKeys = new Set(attempts.filter((a) => a.status === 'SUBMITTED').map((a) => a.testKey));
-  for (const e of enrollments) {
-    for (const t of await resolveCourseTests(e.course)) {
+  const courseTests = await Promise.all(enrollments.map((e) => listCourseTestsLight(e.course)));
+  enrollments.forEach((e, i) => {
+    for (const t of courseTests[i]) {
       if (!submittedKeys.has(t.key)) todo.push({ kind: t.kind === 'ASSIGNMENT' ? 'assignment' : 'test', title: t.title, course: e.course.title, href: `/assignments/tests/${t.key}` });
     }
-  }
+  });
 
   // Timestamped activity (last ~6 months) feeds the calendar and statistics widgets
   const since = Date.now() - 190 * 24 * 3600 * 1000;

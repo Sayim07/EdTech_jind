@@ -87,6 +87,22 @@ export async function resolveCourseTests(course: { id: string; title: string; sl
   ];
 }
 
+/**
+ * Just the tests a course offers (id, title, kind), without loading any questions. For lists such as the dashboard
+ * to-do, where pulling every question of every test only to show a title was the slowest part of the page.
+ */
+export async function listCourseTestsLight(course: { id: string; title: string }): Promise<{ key: string; title: string; kind: 'TEST' | 'ASSIGNMENT' }[]> {
+  const rows = await prisma.mcqTest.findMany({
+    where: { OR: [{ courseId: course.id }, { module: { courseId: course.id } }], questions: { some: {} } },
+    select: { id: true, title: true, kind: true, order: true, createdAt: true, module: { select: { order: true } } },
+  });
+  rows.sort((a, b) => (a.module?.order ?? 9999) - (b.module?.order ?? 9999) || a.order - b.order || a.createdAt.getTime() - b.createdAt.getTime());
+  const list = rows.map((t) => ({ key: t.id, title: t.title, kind: (t.kind === 'ASSIGNMENT' ? 'ASSIGNMENT' : 'TEST') as 'TEST' | 'ASSIGNMENT' }));
+  // The built-in practice test stands in until a course has a real test (same rule as resolveCourseTests).
+  if (!list.some((t) => t.kind === 'TEST')) list.push({ key: `sample-${course.id}`, title: `${course.title}: Practice Test`, kind: 'TEST' });
+  return list;
+}
+
 export async function findTestByKey(userId: string, key: string): Promise<ResolvedTest | null> {
   let courseId: string | null | undefined;
   if (key.startsWith('sample-')) courseId = key.slice('sample-'.length);

@@ -26,17 +26,14 @@ export default async function AdminStudioPage() {
     prisma.payment.findMany({
       include: { user: { select: { id: true, name: true, email: true } }, course: { select: { id: true, title: true } } },
       orderBy: { createdAt: 'desc' },
-      take: 1000,
+      take: 500,
     }),
   ]);
   const [courses, students, enrollments] = await Promise.all([
     prisma.course.findMany({
       include: {
-        modules: {
-          include: {
-            lessons: true,
-          },
-        },
+        // The list only shows a module count, so do not pull every lesson row (that was two extra round trips).
+        modules: { select: { id: true } },
         _count: { select: { enrollments: true } },
       },
       orderBy: { createdAt: 'desc' },

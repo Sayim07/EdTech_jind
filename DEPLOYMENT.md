@@ -8,7 +8,7 @@ Set these on the host. Never commit them. `.env.example` lists every name.
 |---|---|---|
 | `JWT_SECRET` | **Required** | 32+ random characters. The app refuses to sign anyone in without it. Different value per environment. |
 | `APP_URL` | **Required** | Public `https://` address, no trailing slash. Used in reset emails and Google sign-in. |
-| `DATABASE_URL` | **Required** | Supabase transaction pooler (port 6543, `?pgbouncer=true`). |
+| `DATABASE_URL` | **Required** | One or a few long-running servers: Supabase **session** pooler (port 5432, `?connection_limit=5`), about 4x faster. Serverless with many instances: transaction pooler (port 6543, `?pgbouncer=true&connection_limit=1`). |
 | `DIRECT_URL` | **Required** | Supabase session pooler (port 5432). Used by migrations. |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | For payments | `rzp_test_` on staging, `rzp_live_` on production. |
 | `RAZORPAY_WEBHOOK_SECRET` | For payments | Without it the webhook rejects every call and enrollment relies on the browser redirect alone. |

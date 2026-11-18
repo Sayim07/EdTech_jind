@@ -12,6 +12,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
+import { refreshSessionUser } from '@/components/useSessionUser';
 
 function LoginContent() {
   const router = useRouter();
@@ -50,6 +51,7 @@ function LoginContent() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to create account');
+        refreshSessionUser();
         router.push(redirectTo || '/dashboard');
         router.refresh();
       } else {
@@ -61,6 +63,7 @@ function LoginContent() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Invalid email or password');
 
+        refreshSessionUser();
         // Route according to the role detected from the credentials.
         if (data.user?.role === 'ADMIN') {
           router.push('/admin?tab=home');

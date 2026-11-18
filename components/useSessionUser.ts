@@ -25,6 +25,8 @@ interface Snapshot {
 let state: Snapshot = { user: null, loaded: false };
 const listeners = new Set<() => void>();
 let inflight: Promise<void> | null = null;
+let lastCheck = 0;
+const RECHECK_MS = 5 * 60_000;
 
 const emit = () => listeners.forEach((l) => l());
 const set = (next: Snapshot) => {
@@ -35,6 +37,7 @@ const set = (next: Snapshot) => {
 
 function refresh() {
   if (!inflight) {
+    lastCheck = Date.now();
     inflight = fetch('/api/auth/me', { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -49,6 +52,11 @@ function refresh() {
       });
   }
   return inflight;
+}
+
+/** Call right after a successful sign in or sign up so the sidebar and header pick up the new account. */
+export function refreshSessionUser() {
+  return refresh();
 }
 
 export function clearSessionUser() {
@@ -66,10 +74,21 @@ export function useSessionUser() {
     () => state,
   );
 
-  // Re-check on every navigation, quietly.
+  // While nobody is known to be signed in, look again on each page change (this is how a fresh sign in is noticed;
+  // with no cookie the server answers without touching the database). Once a user is known, stop: re-checking on
+  // every click cost a database round trip per navigation for no benefit.
   useEffect(() => {
-    refresh();
+    if (!state.user) refresh();
   }, [pathname]);
+
+  // Otherwise only re-check when the tab regains focus after a few minutes.
+  useEffect(() => {
+    const onFocus = () => {
+      if (Date.now() - lastCheck > RECHECK_MS) refresh();
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
 
   const reload = useCallback(() => refresh(), []);
   return { user: snap.user, loaded: snap.loaded, reload };

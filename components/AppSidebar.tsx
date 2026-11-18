@@ -8,6 +8,7 @@ import { Logo } from '@/components/Logo';
 import { linksFor } from '@/components/nav-links';
 import { clearSessionUser, useSessionUser } from '@/components/useSessionUser';
 import { useInitialRole } from '@/components/SessionRole';
+import { softTabNav } from '@/components/tab-nav';
 
 /** Pages that use the app shell. Everything else (login, classroom, certificates, home) has no sidebar. */
 const SHELL_PREFIXES = ['/admin', '/assignments', '/checkout', '/courses', '/dashboard', '/profile', '/purchases'];
@@ -24,6 +25,7 @@ function Links({ role, pathname, tab }: { role?: string; pathname: string; tab: 
             href={l.href}
             aria-current={active ? 'page' : undefined}
             title={l.label}
+            onClick={(e) => softTabNav(e, l.href, pathname)}
             className={`sidebar-link flex items-center gap-3 px-3.5 h-11 rounded-lg text-sm font-semibold transition focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_#e3eeff] ${
               active ? 'bg-amber-100 text-amber-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
             }`}

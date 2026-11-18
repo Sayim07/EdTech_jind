@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ADMIN_LINKS } from '@/components/nav-links';
+import { softTabNav } from '@/components/tab-nav';
 import { Compass, LayoutDashboard, Award, User, ClipboardList } from 'lucide-react';
 
 interface Props {
@@ -55,6 +56,7 @@ function BottomNav({ role, isLoggedIn }: Props) {
             <Link
               key={item.label}
               href={item.href}
+              onClick={(e) => softTabNav(e, item.href, pathname)}
               className={`flex flex-col items-center justify-center gap-1 transition ${
                 item.active
                   ? 'text-amber-600 font-semibold'

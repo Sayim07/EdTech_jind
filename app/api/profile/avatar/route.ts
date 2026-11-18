@@ -4,6 +4,7 @@ import path from 'path';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
 import { AVATAR_BUCKET, deleteObject, isSupabaseStorageConfigured, objectPathFromUrl, uploadObject } from '@/lib/supabase-storage';
+import { deleteStoredObject, isS3Configured, keyFromPublicUrl, putObject } from '@/lib/s3';
 
 const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
 const AVATAR_DIR = path.join(process.cwd(), 'storage', 'avatars');
@@ -19,6 +20,8 @@ function sniffImage(buf: Buffer): 'jpg' | 'png' | 'webp' | null {
 async function removeOldAvatar(url: string | null | undefined) {
   const remote = objectPathFromUrl(url);
   if (remote) return deleteObject(AVATAR_BUCKET, remote);
+  const stored = keyFromPublicUrl(url);
+  if (stored) return deleteStoredObject(stored);
   if (!url || !url.startsWith('/api/avatars/')) return;
   const name = path.basename(url);
   await fs.unlink(path.join(AVATAR_DIR, name)).catch(() => {});
@@ -39,13 +42,20 @@ export async function POST(req: NextRequest) {
     if (!ext) return NextResponse.json({ error: 'Please upload a JPG, PNG or WebP image' }, { status: 400 });
 
     const name = `${user.id}-${Date.now()}.${ext}`;
+    const mime = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[ext];
     let avatarUrl: string;
     if (isSupabaseStorageConfigured()) {
-      // Production: public Supabase Storage bucket. Objects are namespaced by user id.
-      const mime = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[ext];
+      // Supabase Storage (public "avatars" bucket), objects namespaced by user id.
       avatarUrl = await uploadObject(AVATAR_BUCKET, `${user.id}/${name}`, buffer, mime);
+    } else if (isS3Configured()) {
+      // Same cloud bucket as course media (Cloudflare R2 or AWS S3), under avatars/.
+      avatarUrl = await putObject(`avatars/${user.id}/${name}`, buffer, mime);
+    } else if (process.env.NODE_ENV === 'production') {
+      // A production server's disk is read-only or thrown away on every deploy, so a file written there would be lost.
+      console.error('Avatar upload: no cloud storage configured (set SUPABASE_SERVICE_ROLE_KEY or the R2_* variables).');
+      return NextResponse.json({ error: 'Profile pictures are not available right now. Please try again later.' }, { status: 503 });
     } else {
-      // Local development without Supabase keys: keep the file on disk.
+      // Local development with no cloud keys: keep the file on disk.
       await fs.mkdir(AVATAR_DIR, { recursive: true });
       await fs.writeFile(path.join(AVATAR_DIR, name), buffer);
       avatarUrl = `/api/avatars/${name}`;

@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
+import { AVATAR_BUCKET, deleteObject, isSupabaseStorageConfigured, objectPathFromUrl, uploadObject } from '@/lib/supabase-storage';
 
 const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
 const AVATAR_DIR = path.join(process.cwd(), 'storage', 'avatars');
@@ -16,6 +17,8 @@ function sniffImage(buf: Buffer): 'jpg' | 'png' | 'webp' | null {
 }
 
 async function removeOldAvatar(url: string | null | undefined) {
+  const remote = objectPathFromUrl(url);
+  if (remote) return deleteObject(AVATAR_BUCKET, remote);
   if (!url || !url.startsWith('/api/avatars/')) return;
   const name = path.basename(url);
   await fs.unlink(path.join(AVATAR_DIR, name)).catch(() => {});
@@ -35,12 +38,20 @@ export async function POST(req: NextRequest) {
     const ext = sniffImage(buffer);
     if (!ext) return NextResponse.json({ error: 'Please upload a JPG, PNG or WebP image' }, { status: 400 });
 
-    await fs.mkdir(AVATAR_DIR, { recursive: true });
     const name = `${user.id}-${Date.now()}.${ext}`;
-    await fs.writeFile(path.join(AVATAR_DIR, name), buffer);
+    let avatarUrl: string;
+    if (isSupabaseStorageConfigured()) {
+      // Production: public Supabase Storage bucket. Objects are namespaced by user id.
+      const mime = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[ext];
+      avatarUrl = await uploadObject(AVATAR_BUCKET, `${user.id}/${name}`, buffer, mime);
+    } else {
+      // Local development without Supabase keys: keep the file on disk.
+      await fs.mkdir(AVATAR_DIR, { recursive: true });
+      await fs.writeFile(path.join(AVATAR_DIR, name), buffer);
+      avatarUrl = `/api/avatars/${name}`;
+    }
 
     await removeOldAvatar(user.avatarUrl);
-    const avatarUrl = `/api/avatars/${name}`;
     await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
 
     return NextResponse.json({ success: true, avatarUrl });

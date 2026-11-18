@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooled runtime connection
+  directUrl = env("DIRECT_URL")   // used by prisma migrate / db push
 }
 
 model User {
@@ -22,6 +23,7 @@ model User {
   progress     LessonProgress[]
   resetTokens  PasswordResetToken[]
   mcqAttempts  McqAttempt[]
+  payments     Payment[]
 }
 
 model PasswordResetToken {
@@ -55,6 +57,7 @@ model Course {
   modules          Module[]
   enrollments      Enrollment[]
   mcqTests         McqTest[]
+  payments         Payment[]
 }
 
 model Module {
@@ -188,4 +191,40 @@ model McqAttempt {
 
   @@index([userId, testKey])
   @@index([courseId])
+}
+
+// One checkout attempt for a paid course, through any gateway. Amounts are stored in the smallest currency unit (paise).
+// The server sets the amount from Course.price; the browser never decides what is charged.
+model Payment {
+  id               String    @id @default(uuid())
+  userId           String
+  courseId         String
+  gateway          String    // "razorpay" (more gateways plug in via lib/payments)
+  gatewayOrderId   String?   @unique
+  gatewayPaymentId String?   @unique
+  amount           Int       // paise
+  currency         String    @default("INR")
+  status           String    @default("CREATED") // "CREATED" | "PAID" | "FAILED"
+  failureReason    String?
+  paidAt           DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course           Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([userId, courseId])
+}
+
+// People who teach or run the academy. This is a directory managed by admins, not a login account.
+model StaffMember {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  role        String   @default("INSTRUCTOR") // "INSTRUCTOR" | "STAFF"
+  designation String?  // e.g. "Culinary Historian", "Student Support Lead"
+  bio         String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

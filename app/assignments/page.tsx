@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { TestList } from '@/components/mcq/TestList';
 
 export const metadata = { title: 'Assignments | CIM India' };
 
@@ -25,9 +26,11 @@ function StatusBadge({ status, score, max }: { status: string; score: number | n
   return <span className="inline-flex px-2.5 py-0.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-700">Not submitted</span>;
 }
 
-export default async function AssignmentsPage() {
+export default async function AssignmentsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams;
+  const activeTab = tab === 'tests' ? 'tests' : 'assignments';
   const user = await getSessionUser();
-  if (!user) redirect('/login?redirect=/assignments');
+  if (!user) redirect(`/login?redirect=/assignments${activeTab === 'tests' ? '?tab=tests' : ''}`);
 
   const enrollments = await prisma.enrollment.findMany({
     where: { userId: user.id },
@@ -89,7 +92,27 @@ export default async function AssignmentsPage() {
             </dl>
           </section>
 
-          {groups.length === 0 ? (
+          <nav aria-label="Assignment types" className="flex gap-1 border-b border-gray-200">
+            {[
+              { id: 'assignments', label: 'Assignments', href: '/assignments' },
+              { id: 'tests', label: 'MCQ Tests', href: '/assignments?tab=tests' },
+            ].map((t) => (
+              <Link
+                key={t.id}
+                href={t.href}
+                aria-current={activeTab === t.id ? 'page' : undefined}
+                className={`px-4 py-2.5 text-sm font-semibold -mb-px border-b-2 transition focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_#e3eeff] rounded-t-lg ${
+                  activeTab === t.id ? 'border-amber-600 text-amber-600' : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {t.label}
+              </Link>
+            ))}
+          </nav>
+
+          {activeTab === 'tests' ? (
+            <TestList userId={user.id} />
+          ) : groups.length === 0 ? (
             <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center space-y-3">
               <ClipboardList className="w-8 h-8 text-amber-600 mx-auto" />
               <p className="text-gray-600">

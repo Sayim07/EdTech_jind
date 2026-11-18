@@ -27,6 +27,8 @@ import {
 import { formatPrice } from '@/lib/utils';
 import { CourseDetailsFields, FaqDraft } from '@/components/admin/CourseDetailsFields';
 import { parseFaqs } from '@/lib/course';
+import { AdminTestBuilder } from '@/components/admin/AdminTestBuilder';
+import { TestDraft, validateTest } from '@/lib/mcq';
 import { Spinner, ButtonSpinner } from '@/components/ui/Loaders';
 
 interface AdminUser {
@@ -85,9 +87,11 @@ const LEVELS = ['All Levels', 'Beginner', 'Intermediate', 'Advanced'];
 export function EditCourseClient({
   adminUser,
   initialCourse,
+  initialTests = [],
 }: {
   adminUser: AdminUser;
   initialCourse: CourseData;
+  initialTests?: TestDraft[];
 }) {
   const router = useRouter();
 
@@ -113,6 +117,7 @@ export function EditCourseClient({
   const [published, setPublished] = useState(initialCourse.published ?? true);
   const [totalHours, setTotalHours] = useState(initialCourse.totalHours ? String(initialCourse.totalHours) : '');
   const [faqs, setFaqs] = useState<FaqDraft[]>(parseFaqs(initialCourse.faqs));
+  const [tests, setTests] = useState<TestDraft[]>(initialTests);
 
   // First Module & Lesson Details
   const firstModule = initialCourse.modules?.[0];
@@ -180,6 +185,15 @@ export function EditCourseClient({
       return;
     }
 
+    for (const t of tests) {
+      const problem = validateTest(t);
+      if (problem) {
+        alert(problem);
+        setMainMode('editor');
+        return;
+      }
+    }
+
     setSavingCourse(true);
     setSaveSuccess(false);
 
@@ -197,6 +211,7 @@ export function EditCourseClient({
         published,
         totalHours: totalHours ? parseFloat(totalHours) : null,
         faqs,
+        tests,
         moduleTitle: moduleTitle.trim(),
         lectureTitle: lectureTitle.trim(),
         lectureType,
@@ -687,6 +702,8 @@ export function EditCourseClient({
               </div>
 
               <CourseDetailsFields totalHours={totalHours} setTotalHours={setTotalHours} faqs={faqs} setFaqs={setFaqs} />
+
+              <AdminTestBuilder tests={tests} setTests={setTests} courseId={initialCourse.id} />
 
               {/* Section 5: Cover Photo */}
               <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-sm space-y-3.5 transition-colors">

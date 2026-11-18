@@ -21,6 +21,7 @@ model User {
   submissions  Submission[]
   progress     LessonProgress[]
   resetTokens  PasswordResetToken[]
+  mcqAttempts  McqAttempt[]
 }
 
 model PasswordResetToken {
@@ -53,6 +54,7 @@ model Course {
   updatedAt        DateTime     @updatedAt
   modules          Module[]
   enrollments      Enrollment[]
+  mcqTests         McqTest[]
 }
 
 model Module {
@@ -132,4 +134,58 @@ model Enrollment {
   course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
+}
+
+model McqTest {
+  id           String        @id @default(uuid())
+  courseId     String
+  title        String
+  timeLimit    Int           @default(30) // minutes
+  passingMarks Int           @default(50) // percent
+  allowRetakes Boolean       @default(true)
+  order        Int           @default(1)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions    McqQuestion[]
+}
+
+model McqQuestion {
+  id            String  @id @default(uuid())
+  testId        String
+  order         Int     @default(1)
+  text          String
+  options       String  // JSON: string[4] (A-D); blank entries are unused
+  correctIndex  Int
+  explanation   String?
+  test          McqTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+}
+
+// One attempt of a real test (testKey = McqTest.id) or of the built-in sample test (testKey = "sample-<courseId>").
+// Questions are snapshotted so history stays accurate after the admin edits the test.
+model McqAttempt {
+  id             String    @id @default(uuid())
+  userId         String
+  courseId       String
+  testKey        String
+  testTitle      String
+  timeLimit      Int
+  passingMarks   Int
+  questions      String    // JSON snapshot incl. correct answers (never sent to the client while in progress)
+  answers        String    @default("{}") // JSON: { [questionId]: optionIndex }
+  status         String    @default("IN_PROGRESS") // "IN_PROGRESS" | "SUBMITTED"
+  score          Int?
+  total          Int?
+  percentage     Float?
+  passed         Boolean?
+  violations     Int       @default(0)
+  autoSubmitted  Boolean   @default(false)
+  autoReason     String?   // "TIME_UP" | "PROCTORING"
+  snapshots      String    @default("[]") // JSON: [{ t: ISO string, img: data URL }]
+  startedAt      DateTime  @default(now())
+  submittedAt    DateTime?
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, testKey])
+  @@index([courseId])
 }

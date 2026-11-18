@@ -5,6 +5,7 @@ import { getSessionUser } from '@/lib/auth';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { EditCourseClient } from './EditCourseClient';
+import { loadTestDrafts } from '@/lib/mcq-server';
 
 export const metadata = {
   title: 'Edit Course & Pricing | CIM India Admin',
@@ -46,12 +47,14 @@ export default async function AdminEditCoursePage({
     notFound();
   }
 
+  const initialTests = await loadTestDrafts(course.id);
+
   return (
     <>
       <Navbar />
 
       <main className="flex-1 pb-24 lg:pb-12 bg-gray-50 min-h-screen">
-        <EditCourseClient adminUser={user} initialCourse={course} />
+        <EditCourseClient adminUser={user} initialCourse={course} initialTests={initialTests} />
       </main>
 
       <MobileBottomNav role="ADMIN" isLoggedIn={true} />

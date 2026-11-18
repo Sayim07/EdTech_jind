@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { CourseDetailsFields, FaqDraft } from '@/components/admin/CourseDetailsFields';
+import { AdminTestBuilder } from '@/components/admin/AdminTestBuilder';
+import { TestDraft, validateTest } from '@/lib/mcq';
 import { Spinner, ButtonSpinner } from '@/components/ui/Loaders';
 
 interface AdminUser {
@@ -68,6 +70,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
   const [thumbnail, setThumbnail] = useState('');
   const [totalHours, setTotalHours] = useState('');
   const [faqs, setFaqs] = useState<FaqDraft[]>([]);
+  const [tests, setTests] = useState<TestDraft[]>([]);
 
   // First Module & Lecture Details
   const [moduleTitle, setModuleTitle] = useState('Module 1: Foundations & Archeology');
@@ -126,9 +129,18 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
       return;
     }
 
+    for (const t of tests) {
+      const problem = validateTest(t);
+      if (problem) {
+        alert(problem);
+        return;
+      }
+    }
+
     setSavingCourse(true);
     try {
       const payload: any = {
+        tests,
         title: title.trim(),
         shortDescription: shortDescription.trim() || undefined,
         description: description.trim(),
@@ -590,6 +602,8 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
               </div>
 
               <CourseDetailsFields totalHours={totalHours} setTotalHours={setTotalHours} faqs={faqs} setFaqs={setFaqs} />
+
+              <AdminTestBuilder tests={tests} setTests={setTests} />
 
               {/* Section 5: Thumbnail Image Upload & URL */}
               <div className="bg-white p-6 sm:p-7 rounded-2xl border border-gray-200 shadow-sm space-y-4 transition-colors">

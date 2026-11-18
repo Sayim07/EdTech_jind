@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
 import { serializeFaqs } from '@/lib/course';
+import { syncCourseTests } from '@/lib/mcq-server';
+import { validateTest, TestDraft } from '@/lib/mcq';
 
 export async function GET(
   req: NextRequest,
@@ -50,6 +52,14 @@ export async function PATCH(
     const { id } = await params;
     const body = await req.json();
 
+    const tests: TestDraft[] | null = Array.isArray(body.tests) ? body.tests : null;
+    if (tests) {
+      for (const t of tests) {
+        const problem = validateTest(t);
+        if (problem) return NextResponse.json({ error: problem }, { status: 400 });
+      }
+    }
+
     const data: any = {};
     if (body.title !== undefined) data.title = body.title.trim();
     if (body.description !== undefined) data.description = body.description.trim();
@@ -77,6 +87,11 @@ export async function PATCH(
         _count: { select: { enrollments: true } },
       },
     });
+
+    if (tests) {
+      const problem = await syncCourseTests(id, tests);
+      if (problem) return NextResponse.json({ error: problem }, { status: 400 });
+    }
 
     // If lecture media attachments or module titles were updated
     if (

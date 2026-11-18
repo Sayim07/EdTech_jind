@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
 import { serializeFaqs } from '@/lib/course';
+import { syncCourseTests } from '@/lib/mcq-server';
+import { validateTest, TestDraft } from '@/lib/mcq';
 
 export async function GET(req: NextRequest) {
   try {
@@ -71,6 +73,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Title and description are required' }, { status: 400 });
     }
 
+    const tests: TestDraft[] = Array.isArray(body.tests) ? body.tests : [];
+    for (const t of tests) {
+      const problem = validateTest(t);
+      if (problem) return NextResponse.json({ error: problem }, { status: 400 });
+    }
+
     const slug = title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -115,6 +123,11 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    if (tests.length) {
+      const problem = await syncCourseTests(course.id, tests);
+      if (problem) return NextResponse.json({ error: problem }, { status: 400 });
+    }
 
     return NextResponse.json({ success: true, course }, { status: 201 });
   } catch (err: any) {

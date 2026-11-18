@@ -27,6 +27,7 @@ import {
   Award
 } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
+import { CourseDetailsFields, FaqDraft } from '@/components/admin/CourseDetailsFields';
 import { Spinner, ButtonSpinner } from '@/components/ui/Loaders';
 
 interface AdminUser {
@@ -65,6 +66,8 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
   const [level, setLevel] = useState(LEVELS[0]);
   const [instructorName, setInstructorName] = useState('CIM India Faculty');
   const [thumbnail, setThumbnail] = useState('');
+  const [totalHours, setTotalHours] = useState('');
+  const [faqs, setFaqs] = useState<FaqDraft[]>([]);
 
   // First Module & Lecture Details
   const [moduleTitle, setModuleTitle] = useState('Module 1: Foundations & Archeology');
@@ -134,6 +137,8 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
         level,
         category,
         thumbnail: thumbnail.trim() !== '' ? thumbnail.trim() : null,
+        totalHours: totalHours ? parseFloat(totalHours) : null,
+        faqs,
       };
 
       if (moduleTitle.trim() && lectureTitle.trim()) {
@@ -184,7 +189,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
       : null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="w-full px-4 sm:px-6 lg:px-10 py-8 space-y-8">
       {/* Top Navigation & Mode Switcher Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm transition-colors">
         <div className="flex items-center gap-3">
@@ -583,6 +588,8 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   </div>
                 )}
               </div>
+
+              <CourseDetailsFields totalHours={totalHours} setTotalHours={setTotalHours} faqs={faqs} setFaqs={setFaqs} />
 
               {/* Section 5: Thumbnail Image Upload & URL */}
               <div className="bg-white p-6 sm:p-7 rounded-2xl border border-gray-200 shadow-sm space-y-4 transition-colors">

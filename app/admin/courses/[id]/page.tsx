@@ -50,7 +50,7 @@ export default async function AdminEditCoursePage({
     <>
       <Navbar />
 
-      <main className="flex-1 pb-24 md:pb-12 bg-gray-50 min-h-screen">
+      <main className="flex-1 pb-24 lg:pb-12 bg-gray-50 min-h-screen">
         <EditCourseClient adminUser={user} initialCourse={course} />
       </main>
 

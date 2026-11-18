@@ -12,11 +12,25 @@ model User {
   email        String       @unique
   passwordHash String
   name         String
+  avatarUrl    String?
+  googleId     String?      @unique
   role         String       @default("STUDENT") // "STUDENT" | "ADMIN"
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   enrollments  Enrollment[]
   submissions  Submission[]
+  progress     LessonProgress[]
+  resetTokens  PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique // sha256 of the emailed token; the raw token is never stored
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Course {
@@ -33,6 +47,8 @@ model Course {
   instructorName   String       @default("CIM India Faculty")
   published        Boolean      @default(true)
   featured         Boolean      @default(false)
+  totalHours       Float?       // optional override; otherwise computed from lesson durations
+  faqs             String?      // JSON: [{ "q": string, "a": string }]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   modules          Module[]
@@ -63,6 +79,18 @@ model Lesson {
   moduleId       String
   module      Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   assignments Assignment[]
+  progress    LessonProgress[]
+}
+
+model LessonProgress {
+  id          String   @id @default(uuid())
+  userId      String
+  lessonId    String
+  completedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
 }
 
 model Assignment {
@@ -97,6 +125,8 @@ model Enrollment {
   amountPaid Float    @default(0.0)
   paymentId  String?
   status     String   @default("ACTIVE") // "ACTIVE" | "COMPLETED"
+  completedAt     DateTime?
+  certificateCode String?  @unique // issued once every lesson is completed
   createdAt  DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)

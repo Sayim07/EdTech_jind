@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
+import { serializeFaqs } from '@/lib/course';
 
 export async function GET(req: NextRequest) {
   try {
@@ -87,6 +88,8 @@ export async function POST(req: NextRequest) {
         category: category || 'History & Food',
         thumbnail: thumbnail && thumbnail.trim() !== '' ? thumbnail.trim() : null,
         published: true,
+        totalHours: body.totalHours ? parseFloat(body.totalHours) || null : null,
+        faqs: serializeFaqs(body.faqs),
         modules: modules ? {
           create: modules.map((m: any, mIdx: number) => ({
             title: m.title,

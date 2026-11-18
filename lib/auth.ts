@@ -46,6 +46,7 @@ export async function getSessionUser() {
         email: true,
         name: true,
         role: true,
+        avatarUrl: true,
         createdAt: true,
       },
     });
@@ -55,3 +56,17 @@ export async function getSessionUser() {
     return null;
   }
 }
+
+/** Only allow same-site relative redirects (prevents open redirects after login). */
+export function safeRedirectPath(value: string | null | undefined, fallback: string): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes(String.fromCharCode(92))) return fallback;
+  return value;
+}
+
+export const AUTH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+  maxAge: 7 * 24 * 60 * 60,
+  path: '/',
+};

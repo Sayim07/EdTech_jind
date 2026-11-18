@@ -81,3 +81,9 @@ input, textarea, select {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Slide viewer (pptx-preview): no inner scrollbar; slides are paged with the arrows */
+.pptx-preview-wrapper {
+  overflow: hidden !important;
+  border-radius: 8px;
+}

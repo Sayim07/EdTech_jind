@@ -1,7 +1,15 @@
 import type { Metadata, Viewport } from 'next';
+import { Source_Sans_3 } from 'next/font/google';
 import './globals.css';
 import { AgentationDev } from '@/AgentationDev';
 import { ThemeProvider } from '@/components/ThemeProvider';
+
+const sourceSans = Source_Sans_3({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'CIM India | Masterclasses in Food History & Gastronomy',
@@ -20,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="antialiased min-h-screen bg-gray-50 dark:bg-ink-950 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <html lang="en" className={sourceSans.variable} suppressHydrationWarning>
+      <body className="antialiased min-h-screen bg-gray-100 text-gray-900">
         <ThemeProvider>
           {children}
         </ThemeProvider>

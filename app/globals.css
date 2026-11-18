@@ -2,18 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Tokens from DESIGN.md. Light only: the system publishes no dark surface. */
 :root {
-  --background: #faf8f5;
-  --foreground: #111827;
-  --accent: #d97706;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #090d16;
-    --foreground: #f3f4f6;
-  }
+  --primary: #0056d2;
+  --primary-hover: #0060eb;
+  --primary-deep: #0b408b;
+  --navy: #002457;
+  --ink: #0d0f12;
+  --ink-muted: #48546e;
+  --canvas: #ffffff;
+  --canvas-subtle: #f2f5fa;
+  --tint: #e3eeff;
+  --border: #dae1ed;
+  --positive: #1e6a16;
+  color-scheme: light;
 }
 
 html,
@@ -24,44 +26,51 @@ body {
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
+  background-color: var(--canvas-subtle);
+  color: var(--ink);
+  font-family: var(--font-sans), 'Source Sans Pro', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
   min-height: 100vh;
 }
 
-/* Impeccable Craft Floor: Themed selection */
+h1, h2, h3, h4 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+button, [role='button'], a[class*='bg-'] {
+  letter-spacing: 0.01em;
+}
+
 ::selection {
-  background-color: #fde68a;
-  color: #78350f;
+  background-color: var(--tint);
+  color: var(--primary-deep);
 }
 
-/* Accessible focus ring */
+/* Focus is a blue spread shadow, not a hard outline. */
 *:focus-visible {
-  outline: 2px solid #d97706;
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--primary);
+  border-radius: inherit;
 }
 
-/* Custom minimal scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+input, textarea, select {
+  caret-color: var(--primary);
+  accent-color: var(--primary);
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c5cfe0; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #8591a9; }
+* { scrollbar-color: #c5cfe0 transparent; }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
 /* Hide scrollbar utility for mobile horizontal chips */

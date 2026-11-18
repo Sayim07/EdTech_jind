@@ -49,7 +49,7 @@ export default async function DashboardPage() {
     <>
       <Navbar />
 
-      <main className="flex-1 pb-24 md:pb-12 bg-parchment-50 dark:bg-ink-950">
+      <main className="flex-1 pb-24 md:pb-12 bg-parchment-50">
         <DashboardClient
           user={user}
           enrollments={enrollments}

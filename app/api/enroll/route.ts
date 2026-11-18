@@ -54,6 +54,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
+    // Paid courses are only unlocked by a verified payment (see /api/payments). This route is for free courses.
+    if (course.price > 0) {
+      return NextResponse.json({ error: 'This course requires payment', requiresPayment: true }, { status: 402 });
+    }
+
     // Check if already enrolled
     const existing = await prisma.enrollment.findUnique({
       where: {
@@ -74,7 +79,7 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         courseId: course.id,
         amountPaid: course.price,
-        paymentId: 'TXN-' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+        paymentId: 'FREE',
         status: 'ACTIVE',
       },
       include: {

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Compass, BookOpen, User, ShieldCheck } from 'lucide-react';
+import { Compass, LayoutDashboard, Award, User, ShieldCheck, ClipboardList } from 'lucide-react';
 
 interface Props {
   role?: string;
@@ -18,18 +18,28 @@ export function MobileBottomNav({ role, isLoggedIn }: Props) {
     return null;
   }
 
-  const items = [
-    { label: 'Home', href: '/', icon: Home, active: pathname === '/' },
-    { label: 'Courses', href: '/courses', icon: Compass, active: pathname.startsWith('/courses') },
-    { label: 'My Learning', href: '/dashboard', icon: BookOpen, active: pathname.startsWith('/dashboard') },
+  const items =
     role === 'ADMIN'
-      ? { label: 'Admin', href: '/admin', icon: ShieldCheck, active: pathname.startsWith('/admin') }
-      : { label: isLoggedIn ? 'Profile' : 'Login', href: '/login', icon: User, active: pathname === '/login' },
-  ];
+      ? [
+          { label: 'Courses', href: '/courses', icon: Compass, active: pathname.startsWith('/courses') },
+          { label: 'Admin', href: '/admin', icon: ShieldCheck, active: pathname.startsWith('/admin') },
+        ]
+      : isLoggedIn
+      ? [
+          { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, active: pathname.startsWith('/dashboard') },
+          { label: 'Courses', href: '/courses', icon: Compass, active: pathname.startsWith('/courses') },
+          { label: 'Assignments', href: '/assignments', icon: ClipboardList, active: pathname.startsWith('/assignments') },
+          { label: 'Purchases', href: '/purchases', icon: Award, active: pathname.startsWith('/purchases') || pathname.startsWith('/certificates') },
+          { label: 'Profile', href: '/profile', icon: User, active: pathname === '/profile' },
+        ]
+      : [
+          { label: 'Courses', href: '/courses', icon: Compass, active: pathname.startsWith('/courses') },
+          { label: 'Login', href: '/login', icon: User, active: pathname === '/login' },
+        ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t border-gray-200 pb-safe">
-      <div className="grid grid-cols-4 h-16">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t border-gray-200 pb-safe">
+      <div className="grid h-16" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
         {items.map((item) => {
           const Icon = item.icon;
           return (

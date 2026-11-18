@@ -3,13 +3,15 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ThemeToggle } from '@/components/ThemeProvider';
 import {
-  BookOpen,
+  Award,
   ShieldCheck,
   LogOut,
   Compass,
-  GraduationCap
+  GraduationCap,
+  LayoutDashboard,
+  ClipboardList,
+  UserRound,
 } from 'lucide-react';
 
 interface User {
@@ -17,9 +19,11 @@ interface User {
   name: string;
   email: string;
   role: string;
+  avatarUrl?: string | null;
 }
 
-export function Navbar() {
+// All pages use the full-width layout; `wide` is accepted for backwards compatibility.
+export function Navbar(_props: { wide?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -45,7 +49,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 w-full h-16 min-h-[4rem] bg-white border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+      <div className="w-full px-4 sm:px-6 lg:px-10 h-full flex items-center justify-between">
         {/* Brand */}
         <Link href={user?.role === 'ADMIN' ? '/admin' : user ? '/dashboard' : '/login'} className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-lg bg-amber-600 text-white flex items-center justify-center shrink-0">
@@ -62,7 +66,7 @@ export function Navbar() {
         </Link>
 
         {/* Center Nav (Context-aware based on role) */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+        <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-sm font-medium">
           {user?.role === 'ADMIN' ? (
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 border border-red-200 text-red-700 text-xs font-semibold">
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -70,40 +74,42 @@ export function Navbar() {
             </div>
           ) : user ? (
             <>
-              <Link
-                href="/dashboard"
-                className={`transition flex items-center gap-1.5 ${pathname === '/dashboard' ? 'text-amber-600 font-semibold' : 'text-gray-600 hover:text-amber-600'
-                  }`}
-              >
-                <Compass className="w-4 h-4" />
-                <span>Dashboard & Catalog</span>
-              </Link>
-              <Link
-                href="/dashboard?tab=my_courses"
-                className={`transition flex items-center gap-1.5 ${pathname.includes('tab=my_courses') ? 'text-amber-600 font-semibold' : 'text-gray-600 hover:text-amber-600'
-                  }`}
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>My Courses</span>
-              </Link>
+              {[
+                { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, active: pathname === '/dashboard' },
+                { href: '/courses', label: 'Courses', icon: Compass, active: pathname.startsWith('/courses') },
+                { href: '/assignments', label: 'Assignments', icon: ClipboardList, active: pathname.startsWith('/assignments') },
+                { href: '/purchases', label: 'Purchases & Certificates', icon: Award, active: pathname.startsWith('/purchases') || pathname.startsWith('/certificates') },
+                { href: '/profile', label: 'Profile', icon: UserRound, active: pathname === '/profile' },
+              ].map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  aria-current={l.active ? 'page' : undefined}
+                  className={`transition flex items-center gap-1.5 whitespace-nowrap ${l.active ? 'text-amber-600 font-semibold' : 'text-gray-600 hover:text-amber-600'}`}
+                >
+                  <l.icon className="w-4 h-4" />
+                  <span>{l.label}</span>
+                </Link>
+              ))}
             </>
           ) : null}
         </nav>
 
         {/* Right Actions: Theme Toggle & User Info / Logout */}
         <div className="flex items-center gap-3">
-          {/* Dark / Light Mode Toggle Button */}
-          <ThemeToggle />
-
           {!loading && user ? (
             <div className="flex items-center gap-2.5">
               <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-800 text-xs font-medium">
-                <div className="w-6 h-6 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-xs">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" referrerPolicy="no-referrer" className="w-7 h-7 rounded-full object-cover" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div className="hidden sm:block text-left">
                   <div className="font-semibold leading-tight">{user.name}</div>
-                  <div className="text-xs text-gray-400 capitalize">{user.role.toLowerCase()}</div>
+                  <div className="text-xs text-gray-500 capitalize">{user.role.toLowerCase()}</div>
                 </div>
               </div>
 

@@ -7,7 +7,7 @@ export default function AdminLoading() {
   return (
     <>
       <Navbar />
-      <main className="flex-1 pb-24 md:pb-12 bg-gray-50 min-h-screen">
+      <main className="flex-1 pb-24 lg:pb-12 bg-gray-50 min-h-screen">
         <AdminDashboardSkeleton />
       </main>
       <MobileBottomNav role="ADMIN" isLoggedIn={true} />

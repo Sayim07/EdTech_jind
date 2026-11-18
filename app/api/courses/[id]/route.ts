@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
+import { serializeFaqs } from '@/lib/course';
 
 export async function GET(
   req: NextRequest,
@@ -61,6 +62,8 @@ export async function PATCH(
     if (body.thumbnail !== undefined) data.thumbnail = body.thumbnail ? body.thumbnail.trim() : null;
     if (body.published !== undefined) data.published = Boolean(body.published);
     if (body.featured !== undefined) data.featured = Boolean(body.featured);
+    if (body.totalHours !== undefined) data.totalHours = body.totalHours ? parseFloat(body.totalHours) || null : null;
+    if (body.faqs !== undefined) data.faqs = serializeFaqs(body.faqs);
 
     const updatedCourse = await prisma.course.update({
       where: { id },

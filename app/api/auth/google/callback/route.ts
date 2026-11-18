@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { AUTH_COOKIE_OPTIONS, safeRedirectPath, signToken } from '@/lib/auth';
+import { AUTH_COOKIE_OPTIONS, appOrigin, safeRedirectPath, signToken } from '@/lib/auth';
 
 // Step 2 of Google sign-in: exchange the code, then sign the user in (creating the account if needed).
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  const origin = process.env.APP_URL || url.origin;
+  const origin = appOrigin(req.url);
   const fail = (code: string) => {
     const res = NextResponse.redirect(`${origin}/login?error=${code}`);
     res.cookies.delete('g_oauth_state');

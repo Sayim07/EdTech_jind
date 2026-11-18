@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash, randomBytes } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { mailConfigured, sendMail } from '@/lib/mailer';
+import { appOrigin } from '@/lib/auth';
+import { clientIp, rateLimit } from '@/lib/rate-limit';
 
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 const RESEND_COOLDOWN_MS = 60 * 1000;
@@ -14,6 +16,9 @@ export async function POST(req: NextRequest) {
     success: true,
     message: 'If an account exists for that email, a password reset link is on its way.',
   };
+
+  const limited = rateLimit(`forgot-ip:${clientIp(req)}`, 10, 60 * 60_000);
+  if (limited) return limited;
 
   try {
     const { email } = await req.json();
@@ -35,14 +40,14 @@ export async function POST(req: NextRequest) {
       data: { userId: user.id, tokenHash: sha256(token), expiresAt: new Date(Date.now() + TOKEN_TTL_MS) },
     });
 
-    const origin = process.env.APP_URL || new URL(req.url).origin;
+    const origin = appOrigin(req.url);
     const link = `${origin}/reset-password?token=${token}`;
 
     await sendMail({
       to: user.email,
       subject: 'Reset your CIM India password',
       text: `Hi ${user.name},\n\nUse this link to choose a new password. It expires in 1 hour:\n${link}\n\nIf you did not ask for this, you can ignore this email.`,
-      html: `<p>Hi ${user.name.replace(/[<>&]/g, '')},</p><p><a href="${link}">Choose a new password</a>. This link expires in 1 hour.</p><p>If you did not ask for this, you can ignore this email.</p>`,
+      html: `<p>Hi ${user.name.replace(/[<>&"']/g, '')},</p><p><a href="${link}">Choose a new password</a>. This link expires in 1 hour.</p><p>If you did not ask for this, you can ignore this email.</p>`,
     });
 
     // Local development without an email provider: hand the link back so the flow can be tested.

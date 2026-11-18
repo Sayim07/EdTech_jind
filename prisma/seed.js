@@ -4,6 +4,13 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
+  // This script DELETES every user, course and enrollment and creates accounts with known passwords.
+  // It exists for a throwaway local database only.
+  if (process.env.NODE_ENV === 'production' || process.env.ALLOW_DESTRUCTIVE_SEED !== 'yes') {
+    console.error('Refusing to run: the seed wipes all data and creates users with public passwords.
+Set ALLOW_DESTRUCTIVE_SEED=yes to run it on a disposable local database.');
+    process.exit(1);
+  }
   console.log('Seeding EdTech Jindal database with authentic CIM WEB curriculum...');
 
   // 1. Clean existing records

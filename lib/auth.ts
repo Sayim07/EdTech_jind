@@ -2,9 +2,17 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 
-const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'edtech-jindal-secret-jwt-key-2026-auth'
-);
+// Sessions are signed with JWT_SECRET. There is deliberately NO fallback in production: a built-in default would be
+// public (it lives in the repository) and anyone could forge an admin session with it.
+function sessionSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET?.trim();
+  if (secret && secret.length >= 32) return new TextEncoder().encode(secret);
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be set to a random string of at least 32 characters in production.');
+  }
+  // Local development only.
+  return new TextEncoder().encode('dev-only-insecure-session-secret-do-not-use-in-production');
+}
 
 export interface TokenPayload {
   userId: string;
@@ -18,12 +26,12 @@ export async function signToken(payload: TokenPayload): Promise<string> {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
-    .sign(SECRET_KEY);
+    .sign(sessionSecret());
 }
 
 export async function verifyToken(token: string): Promise<TokenPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, SECRET_KEY);
+    const { payload } = await jwtVerify(token, sessionSecret());
     return payload as unknown as TokenPayload;
   } catch (err) {
     return null;
@@ -70,3 +78,14 @@ export const AUTH_COOKIE_OPTIONS = {
   maxAge: 7 * 24 * 60 * 60,
   path: '/',
 };
+
+/**
+ * The public address of the site, used in emails and OAuth redirects. In production it MUST come from APP_URL:
+ * trusting the request's Host header would let an attacker poison password-reset links.
+ */
+export function appOrigin(requestUrl: string): string {
+  const configured = process.env.APP_URL?.trim().replace(/\/$/, '');
+  if (configured) return configured;
+  if (process.env.NODE_ENV === 'production') throw new Error('APP_URL must be set in production.');
+  return new URL(requestUrl).origin;
+}

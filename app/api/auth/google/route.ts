@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
-import { safeRedirectPath } from '@/lib/auth';
+import { appOrigin, safeRedirectPath } from '@/lib/auth';
 
 // Step 1 of Google sign-in: send the browser to Google's consent screen.
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  const origin = process.env.APP_URL || url.origin;
+  const origin = appOrigin(req.url);
   const clientId = process.env.GOOGLE_CLIENT_ID;
 
   if (!clientId || !process.env.GOOGLE_CLIENT_SECRET) {

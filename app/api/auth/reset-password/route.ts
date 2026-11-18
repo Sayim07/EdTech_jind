@@ -2,16 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { clientIp, rateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(`reset-ip:${clientIp(req)}`, 15, 15 * 60_000);
+  if (limited) return limited;
+
   try {
     const { token, password } = await req.json();
 
     if (!token || typeof token !== 'string') {
       return NextResponse.json({ error: 'This reset link is invalid.' }, { status: 400 });
     }
-    if (typeof password !== 'string' || password.length < 8) {
-      return NextResponse.json({ error: 'Your new password must be at least 8 characters.' }, { status: 400 });
+    if (typeof password !== 'string' || password.length < 8 || password.length > 128) {
+      return NextResponse.json({ error: 'Your new password must be between 8 and 128 characters.' }, { status: 400 });
     }
 
     const record = await prisma.passwordResetToken.findUnique({

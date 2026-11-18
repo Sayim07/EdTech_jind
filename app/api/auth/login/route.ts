@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { signToken } from '@/lib/auth';
+import { clientIp, rateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = rateLimit(`login-ip:${clientIp(req)}`, 30, 15 * 60_000);
+    if (limited) return limited;
+
     const { email, password } = await req.json();
 
     if (!email || !password) {
@@ -14,8 +18,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (typeof email !== 'string' || typeof password !== 'string' || password.length > 200) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 });
+    }
+    // Slow down guessing against one account, whatever the source address.
+    const cleanEmail = email.toLowerCase().trim();
+    const limitedAccount = rateLimit(`login-user:${cleanEmail}`, 10, 15 * 60_000);
+    if (limitedAccount) return limitedAccount;
+
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { email: cleanEmail },
     });
 
     if (!user) {

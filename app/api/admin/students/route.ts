@@ -48,8 +48,15 @@ export async function POST(req: NextRequest) {
     const { action, studentId, newPassword } = await req.json();
 
     if (action === 'reset_password') {
-      if (!studentId || !newPassword) {
+      if (typeof studentId !== 'string' || typeof newPassword !== 'string' || !studentId || !newPassword) {
         return NextResponse.json({ error: 'Student ID and new password are required' }, { status: 400 });
+      }
+      if (newPassword.length < 8 || newPassword.length > 128) {
+        return NextResponse.json({ error: 'Password must be between 8 and 128 characters' }, { status: 400 });
+      }
+      const target = await prisma.user.findUnique({ where: { id: studentId }, select: { role: true } });
+      if (!target || target.role !== 'STUDENT') {
+        return NextResponse.json({ error: 'Student not found' }, { status: 404 });
       }
 
       const passwordHash = await bcrypt.hash(newPassword, 10);

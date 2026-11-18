@@ -45,3 +45,6 @@ public/uploads/*
 
 # Runtime user data (profile pictures)
 /storage/
+
+# Local database backups (contain emails and password hashes)
+/backups/

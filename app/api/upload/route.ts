@@ -10,6 +10,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
     }
 
+    // Production stores media in cloud storage (see /api/upload/presign). Writing to this server's disk is for local development only.
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Cloud storage is not configured. Set the R2 or S3 variables to enable uploads.' }, { status: 503 });
+    }
+
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
 
@@ -21,14 +26,15 @@ export async function POST(req: NextRequest) {
     const ext = path.extname(file.name).toLowerCase();
     const allowedExtensions = [
       // Images
-      '.jpg', '.jpeg', '.png', '.webp', '.svg', '.gif',
+      '.jpg', '.jpeg', '.png', '.webp', '.gif',
       // Slides & Documents
       '.pptx', '.ppt', '.pdf', '.docx', '.doc',
       // Media
-      '.mp4', '.webm', '.m4a', '.mp3'
+      '.mp4', '.webm', '.mov', '.m4a', '.mp3', '.wav'
     ];
 
-    if (!allowedExtensions.includes(ext) && !file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/')) {
+    // The extension decides what is stored. The browser-supplied MIME type is never trusted.
+    if (!allowedExtensions.includes(ext)) {
       return NextResponse.json(
         { error: `File type "${ext}" is not supported. Please upload PPTX, PPT, PDF, MP4, M4A, or Image files.` },
         { status: 400 }

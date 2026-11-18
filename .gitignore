@@ -5,6 +5,7 @@
 
 # Next.js build output & cache (never commit this)
 /.next/
+/.next-*/
 /out/
 *.tsbuildinfo
 

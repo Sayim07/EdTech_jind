@@ -9,7 +9,7 @@ export default async function RootPage() {
   }
 
   if (user.role === 'ADMIN') {
-    redirect('/admin');
+    redirect('/admin?tab=home');
   } else {
     redirect('/dashboard');
   }

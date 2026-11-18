@@ -6,6 +6,7 @@ import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { AdminDashboardSkeleton } from '@/components/ui/Loaders';
 import { AdminClient } from './AdminClient';
+import type { AdminDashboardData } from '@/components/admin/AdminDashboard';
 
 export default async function AdminStudioPage() {
   const user = await getSessionUser();
@@ -14,7 +15,14 @@ export default async function AdminStudioPage() {
     redirect('/login?tab=admin&error=AdminAccessOnly');
   }
 
-  // Fetch initial data for admin studio
+  // Fetch initial data for admin studio. Every query starts at once: each round trip to the hosted DB is slow.
+  const extrasPromise = Promise.all([
+    prisma.lesson.groupBy({ by: ['type'], _count: { _all: true } }),
+    prisma.submission.groupBy({ by: ['status'], _count: { _all: true } }),
+    prisma.mcqAttempt.findMany({ where: { status: 'SUBMITTED' }, select: { passed: true } }),
+    prisma.payment.groupBy({ by: ['status'], _count: { _all: true } }),
+    prisma.lessonProgress.count(),
+  ]);
   const [courses, students, enrollments] = await Promise.all([
     prisma.course.findMany({
       include: {
@@ -55,7 +63,64 @@ export default async function AdminStudioPage() {
     }),
   ]);
 
+  const [lessonGroups, submissionGroups, attemptRows, paymentGroups, lessonsCompleted] = await extrasPromise;
+
   const totalRevenue = enrollments.reduce((sum, e) => sum + (e.amountPaid || 0), 0);
+
+
+  const now = new Date();
+  const day = 86400000;
+  const since = (days: number) => now.getTime() - days * day;
+  const months = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+    return { y: d.getFullYear(), m: d.getMonth(), label: d.toLocaleDateString('en-US', { month: 'short' }), enrollments: 0, revenue: 0 };
+  });
+  for (const e of enrollments) {
+    const d = new Date(e.createdAt);
+    const slot = months.find((m) => m.y === d.getFullYear() && m.m === d.getMonth());
+    if (slot) {
+      slot.enrollments += 1;
+      slot.revenue += e.amountPaid || 0;
+    }
+  }
+  const countOf = (rows: { status: string; _count: { _all: number } }[], s: string) => rows.find((r) => r.status === s)?._count._all || 0;
+  const perCourse = new Map<string, { enrollments: number; revenue: number }>();
+  for (const e of enrollments) {
+    const cur = perCourse.get(e.courseId) || { enrollments: 0, revenue: 0 };
+    cur.enrollments += 1;
+    cur.revenue += e.amountPaid || 0;
+    perCourse.set(e.courseId, cur);
+  }
+
+  const dashboard: AdminDashboardData = {
+    firstName: (user.name || 'Admin').split(' ')[0],
+    email: user.email,
+    kpis: {
+      revenue: totalRevenue,
+      revenue30: enrollments.filter((e) => e.createdAt.getTime() >= since(30)).reduce((s, e) => s + (e.amountPaid || 0), 0),
+      students: students.length,
+      newStudents30: students.filter((s) => s.createdAt.getTime() >= since(30)).length,
+      courses: courses.length,
+      publishedCourses: courses.filter((c) => c.published).length,
+      enrollments: enrollments.length,
+      enrollments7: enrollments.filter((e) => e.createdAt.getTime() >= since(7)).length,
+    },
+    months: months.map(({ label, enrollments: n, revenue }) => ({ label, enrollments: n, revenue })),
+    lessonTypes: lessonGroups.map((g) => ({ type: g.type, count: g._count._all })).sort((a, b) => b.count - a.count),
+    topCourses: courses
+      .map((c) => ({ id: c.id, title: c.title, ...(perCourse.get(c.id) || { enrollments: 0, revenue: 0 }) }))
+      .sort((a, b) => b.revenue - a.revenue || b.enrollments - a.enrollments)
+      .slice(0, 5),
+    activity: {
+      lessonsCompleted,
+      toGrade: countOf(submissionGroups, 'SUBMITTED') + countOf(submissionGroups, 'PENDING'),
+      graded: countOf(submissionGroups, 'GRADED'),
+      testAttempts: attemptRows.length,
+      testPassRate: attemptRows.length ? Math.round((attemptRows.filter((a) => a.passed).length / attemptRows.length) * 100) : null,
+    },
+    payments: { paid: countOf(paymentGroups, 'PAID'), failed: countOf(paymentGroups, 'FAILED'), pending: countOf(paymentGroups, 'CREATED') },
+    recent: enrollments.slice(0, 6).map((e) => ({ id: e.id, student: e.user.name, course: e.course.title, amount: e.amountPaid || 0, date: e.createdAt.toISOString() })),
+  };
 
   return (
     <>
@@ -69,6 +134,7 @@ export default async function AdminStudioPage() {
             initialStudents={students}
             initialEnrollments={enrollments}
             totalRevenue={totalRevenue}
+            dashboard={dashboard}
           />
         </Suspense>
       </main>

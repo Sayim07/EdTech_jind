@@ -63,7 +63,7 @@ function LoginContent() {
 
         // Route according to the role detected from the credentials.
         if (data.user?.role === 'ADMIN') {
-          router.push('/admin');
+          router.push('/admin?tab=home');
         } else {
           router.push(redirectTo || '/dashboard');
         }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { Spinner, ButtonSpinner } from '@/components/ui/Loaders';
+import { AdminDashboard, type AdminDashboardData } from '@/components/admin/AdminDashboard';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -39,6 +40,7 @@ interface Props {
   initialStudents: any[];
   initialEnrollments: any[];
   totalRevenue: number;
+  dashboard: AdminDashboardData;
 }
 
 export function AdminClient({
@@ -47,21 +49,17 @@ export function AdminClient({
   initialStudents,
   initialEnrollments,
   totalRevenue,
+  dashboard,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<'analytics' | 'courses' | 'students' | 'payments' | 'profile'>(
-    tabParam === 'profile' || tabParam === 'courses' || tabParam === 'students' || tabParam === 'payments'
-      ? (tabParam as any)
-      : 'analytics'
-  );
+  // The dashboard is ?tab=home. A bare /admin and the old ?tab=analytics both mean the same thing.
+  const toTab = (t: string | null) => (t === 'profile' || t === 'courses' || t === 'students' || t === 'payments' ? t : 'analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'courses' | 'students' | 'payments' | 'profile'>(toTab(tabParam));
 
   useEffect(() => {
-    const t = searchParams.get('tab');
-    if (t && ['analytics', 'courses', 'students', 'payments', 'profile'].includes(t)) {
-      setActiveTab(t as any);
-    }
+    setActiveTab(toTab(searchParams.get('tab')));
   }, [searchParams]);
 
   // Admin Profile State
@@ -473,93 +471,8 @@ export function AdminClient({
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10 py-6 sm:py-8 space-y-6 sm:space-y-8">
-      {/* Navigation Tabs - MOVED TO TOP */}
-      <div className="flex items-center gap-2 border-b border-gray-200 overflow-x-auto no-scrollbar">
-        {[
-          { id: 'analytics', label: 'Dashboard', icon: LayoutDashboard },
-          { id: 'courses', label: `All Courses (${courses.length})`, icon: BookOpen },
-          { id: 'students', label: `Registered Students (${students.length})`, icon: Users },
-          { id: 'payments', label: `Fee Payments (${initialEnrollments.length})`, icon: CreditCard },
-          { id: 'profile', label: 'Admin Profile', icon: UserRound },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const active = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`pb-3 px-3 text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition border-b-2 -mb-px ${active
-                ? 'border-amber-600 text-amber-600'
-                : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Admin Title Bar (Shown when not on profile tab) */}
-      {activeTab !== 'profile' && (
-        <section className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900">
-              Courses & Students
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Signed in as <span className="font-semibold">{adminUser.email}</span> (Admin)
-            </p>
-          </div>
-
-          <Link
-            href="/admin/courses/new"
-            className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-semibold text-sm shadow-sm transition active:scale-95 flex items-center justify-center gap-2 self-start md:self-auto"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Publish New Course</span>
-          </Link>
-        </section>
-      )}
-
       {/* TAB 1: ANALYTICS OVERVIEW */}
-      {activeTab === 'analytics' && (
-        <section className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-2">
-              <span className="text-xs font-semibold text-gray-500">Total Revenue Collected</span>
-              <div className="text-2xl sm:text-3xl font-sans font-bold text-gray-900">
-                {formatPrice(totalRevenue)}
-              </div>
-              <span className="text-xs text-emerald-600 font-medium">Verified payments</span>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-2">
-              <span className="text-xs font-semibold text-gray-500">Active Students</span>
-              <div className="text-2xl sm:text-3xl font-sans font-bold text-gray-900">
-                {students.length}
-              </div>
-              <span className="text-xs text-gray-400">Registered accounts</span>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-2">
-              <span className="text-xs font-semibold text-gray-500">Masterclasses Live</span>
-              <div className="text-2xl sm:text-3xl font-sans font-bold text-gray-900">
-                {courses.length}
-              </div>
-              <span className="text-xs text-gray-400">Published to catalog</span>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-2">
-              <span className="text-xs font-semibold text-gray-500">Course Enrollments</span>
-              <div className="text-2xl sm:text-3xl font-sans font-bold text-gray-900">
-                {initialEnrollments.length}
-              </div>
-              <span className="text-xs text-amber-600 font-medium">Classroom accesses</span>
-            </div>
-          </div>
-        </section>
-      )}
+      {activeTab === 'analytics' && <AdminDashboard data={dashboard} />}
 
       {/* TAB 2: COURSE MANAGER */}
       {activeTab === 'courses' && (

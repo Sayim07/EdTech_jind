@@ -252,7 +252,7 @@ export function EditCourseClient({
       });
       if (!res.ok) throw new Error('Failed to delete course');
       alert('Course deleted successfully.');
-      router.push('/admin');
+      router.push('/admin?tab=home');
       router.refresh();
     } catch (err: any) {
       alert(err.message || 'Error deleting course');
@@ -275,7 +275,7 @@ export function EditCourseClient({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm transition-colors">
         <div className="flex items-center gap-3">
           <Link
-            href="/admin"
+            href="/admin?tab=home"
             className="p-2 rounded-xl border border-gray-200 hover:bg-gray-100 text-gray-700 transition"
             title="Back to Admin Dashboard"
           >

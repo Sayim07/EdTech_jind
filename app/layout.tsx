@@ -3,6 +3,8 @@ import { Source_Sans_3 } from 'next/font/google';
 import './globals.css';
 import { AgentationDev } from '@/AgentationDev';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { AppSidebar } from '@/components/AppSidebar';
+import { SessionRoleProvider } from '@/components/SessionRole';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 
@@ -38,9 +40,12 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={sourceSans.variable} suppressHydrationWarning>
-      <body className={`antialiased min-h-screen bg-gray-100 text-gray-900${role === 'STUDENT' ? ' role-student' : ''}${collapsed ? ' sidebar-collapsed' : ''}`}>
+      <body className={`antialiased min-h-screen bg-gray-100 text-gray-900${role === 'STUDENT' || role === 'ADMIN' ? ' role-sidebar' : ''}${collapsed ? ' sidebar-collapsed' : ''}`}>
         <ThemeProvider>
-          {children}
+          <SessionRoleProvider role={role}>
+            <AppSidebar />
+            {children}
+          </SessionRoleProvider>
         </ThemeProvider>
         {/* Agentation Toolbar: strictly active on localhost/development only */}
         <AgentationDev />

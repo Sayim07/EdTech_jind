@@ -93,22 +93,22 @@ input, textarea, select {
 .sidebar-collapsed-only { display: none; }
 @media (prefers-reduced-motion: no-preference) {
   .app-sidebar { transition: width 200ms ease-out; }
-  body.role-student:has(.app-sidebar) { transition: padding-left 200ms ease-out; }
+  body.role-sidebar:has(.app-sidebar) { transition: padding-left 200ms ease-out; }
 }
 .nav-title { display: none; }
 @media (min-width: 1024px) {
-  body.role-student .app-sidebar { display: flex; }
-  body.role-student:has(.app-sidebar) { padding-left: 16rem; }
+  body.role-sidebar .app-sidebar { display: flex; }
+  body.role-sidebar:has(.app-sidebar) { padding-left: 16rem; }
   body.sidebar-collapsed .app-sidebar { width: 4.5rem; }
-  body.role-student.sidebar-collapsed:has(.app-sidebar) { padding-left: 4.5rem; }
+  body.role-sidebar.sidebar-collapsed:has(.app-sidebar) { padding-left: 4.5rem; }
   body.sidebar-collapsed .sidebar-label { display: none; }
   body.sidebar-collapsed .sidebar-head,
   body.sidebar-collapsed .sidebar-link { justify-content: center; padding-left: 0; padding-right: 0; gap: 0; }
   body.sidebar-collapsed .sidebar-user { flex-direction: column; justify-content: center; padding: 0.75rem 0; gap: 0.5rem; }
   body.sidebar-collapsed .sidebar-collapsed-only { display: flex; }
-  body.role-student .nav-brand,
-  body.role-student .nav-center,
-  body.role-student .nav-user-text,
-  body.role-student .nav-logout { display: none; }
-  body.role-student .nav-title { display: block; }
+  body.role-sidebar .nav-brand,
+  body.role-sidebar .nav-center,
+  body.role-sidebar .nav-user-text,
+  body.role-sidebar .nav-logout { display: none; }
+  body.role-sidebar .nav-title { display: block; }
 }

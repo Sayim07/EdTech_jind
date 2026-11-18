@@ -2,16 +2,28 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Compass, LayoutDashboard, Award, User, ShieldCheck, ClipboardList } from 'lucide-react';
+import { Suspense } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { ADMIN_LINKS } from '@/components/nav-links';
+import { Compass, LayoutDashboard, Award, User, ClipboardList } from 'lucide-react';
 
 interface Props {
   role?: string;
   isLoggedIn?: boolean;
 }
 
-export function MobileBottomNav({ role, isLoggedIn }: Props) {
+export function MobileBottomNav(props: Props) {
+  // useSearchParams (admin tab) must sit inside a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <BottomNav {...props} />
+    </Suspense>
+  );
+}
+
+function BottomNav({ role, isLoggedIn }: Props) {
   const pathname = usePathname();
+  const tab = useSearchParams().get('tab') || '';
 
   // Hide on deep classroom player view to give max screen space to the video
   if (pathname.startsWith('/learn/')) {
@@ -20,10 +32,7 @@ export function MobileBottomNav({ role, isLoggedIn }: Props) {
 
   const items =
     role === 'ADMIN'
-      ? [
-          { label: 'Courses', href: '/courses', icon: Compass, active: pathname.startsWith('/courses') },
-          { label: 'Admin', href: '/admin', icon: ShieldCheck, active: pathname.startsWith('/admin') },
-        ]
+      ? ADMIN_LINKS.filter((l) => l.label !== 'Storefront' && l.label !== 'Profile').map((l) => ({ label: l.label, href: l.href, icon: l.icon, active: l.match(pathname, tab) }))
       : isLoggedIn
       ? [
           { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, active: pathname.startsWith('/dashboard') },

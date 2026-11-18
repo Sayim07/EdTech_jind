@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
     }
 
     const token = await signToken({ userId: user.id, email: user.email, name: user.name, role: user.role });
-    const fallback = user.role === 'ADMIN' ? '/admin' : '/dashboard';
+    const fallback = user.role === 'ADMIN' ? '/admin?tab=home' : '/dashboard';
     const target = safeRedirectPath(req.cookies.get('g_oauth_redirect')?.value, fallback);
 
     const res = NextResponse.redirect(`${origin}${target}`);

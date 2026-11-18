@@ -72,10 +72,10 @@ function LoginContent() {
         <div className="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center mx-auto shadow-md">
           <GraduationCap className="w-7 h-7" />
         </div>
-        <h1 className="text-2xl font-serif font-bold text-gray-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-sans font-bold text-gray-900 tracking-tight">
           {mode === 'register' ? 'Create an Account' : 'Welcome Back'}
         </h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-gray-500">
           {mode === 'register'
             ? 'Sign up to start exploring masterclasses'
             : 'Enter your credentials to access your dashboard'}
@@ -83,9 +83,9 @@ function LoginContent() {
       </div>
 
       {/* Clean Card */}
-      <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-lg space-y-4 transition-colors">
+      <div className="bg-white p-6 sm:p-7 rounded-3xl border border-gray-200 shadow-lg space-y-4 transition-colors">
         {error && (
-          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
+          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -94,7 +94,7 @@ function LoginContent() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'register' && (
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
                 Full Name
               </label>
               <div className="relative">
@@ -105,14 +105,14 @@ function LoginContent() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Aarav Sharma"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-ink-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-semibold text-gray-700 mb-1">
               Email Address
             </label>
             <div className="relative">
@@ -123,13 +123,13 @@ function LoginContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-ink-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-semibold text-gray-700 mb-1">
               Password
             </label>
             <div className="relative">
@@ -140,7 +140,7 @@ function LoginContent() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-ink-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
           </div>
@@ -148,7 +148,7 @@ function LoginContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-sm transition shadow-sm active:scale-95 disabled:opacity-75 flex items-center justify-center gap-2 mt-1"
+            className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-semibold text-sm transition shadow-sm active:scale-95 disabled:opacity-75 flex items-center justify-center gap-2 mt-1"
           >
             {loading ? (
               <ButtonSpinner label="Verifying..." />
@@ -162,7 +162,7 @@ function LoginContent() {
         </form>
 
         {/* Minimal Toggle Link */}
-        <div className="pt-2 text-center text-xs text-gray-500 dark:text-gray-400">
+        <div className="pt-2 text-center text-xs text-gray-500">
           {mode === 'login' ? (
             <span>
               New student?{' '}
@@ -172,7 +172,7 @@ function LoginContent() {
                   setMode('register');
                   setError('');
                 }}
-                className="text-amber-600 dark:text-amber-400 font-semibold hover:underline"
+                className="text-amber-600 font-semibold hover:underline"
               >
                 Create an account
               </button>
@@ -186,7 +186,7 @@ function LoginContent() {
                   setMode('login');
                   setError('');
                 }}
-                className="text-amber-600 dark:text-amber-400 font-semibold hover:underline"
+                className="text-amber-600 font-semibold hover:underline"
               >
                 Sign in here
               </button>
@@ -200,14 +200,14 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-ink-950 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-gray-50 flex flex-col transition-colors duration-200">
       {/* Top minimal header with Theme Toggle */}
       <header className="h-16 px-4 sm:px-8 flex items-center justify-between max-w-7xl w-full mx-auto">
-        <div className="flex items-center gap-2.5 font-serif font-bold text-gray-900 dark:text-white text-base">
+        <div className="flex items-center gap-2.5 font-sans font-bold text-gray-900 text-base">
           <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-sm">
             <GraduationCap className="w-4 h-4" />
           </div>
-          <span className="font-serif text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+          <span className="font-sans text-lg font-bold tracking-tight text-gray-900">
             CIM India
           </span>
         </div>

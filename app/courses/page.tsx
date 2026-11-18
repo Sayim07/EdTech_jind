@@ -60,16 +60,16 @@ export default async function CoursesCatalogPage({
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-8 pb-20 md:pb-10 space-y-5 sm:space-y-6">
         {/* Header */}
         <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-sans font-bold text-gray-900">
             Courses
           </h1>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-xs sm:text-sm text-gray-600">
             Video lessons, presentation slides, and notes on food history.
           </p>
         </div>
 
         {/* Filter & Search Controls */}
-        <div className="space-y-3 bg-white dark:bg-ink-900 p-3.5 sm:p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        <div className="space-y-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-gray-200 shadow-sm">
           <form method="GET" action="/courses" className="flex flex-col sm:flex-row gap-2.5">
             <div className="relative flex-1">
               <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
@@ -78,12 +78,12 @@ export default async function CoursesCatalogPage({
                 name="q"
                 defaultValue={q}
                 placeholder="Search courses..."
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-ink-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-300 bg-gray-50 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs sm:text-sm transition active:scale-95 shrink-0"
+              className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-medium text-xs sm:text-sm transition active:scale-95 shrink-0"
             >
               Search
             </button>
@@ -91,17 +91,17 @@ export default async function CoursesCatalogPage({
 
           {/* Category Chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
-            <span className="text-[11px] font-semibold text-gray-500 shrink-0 pr-1">Category:</span>
+            <span className="text-xs font-semibold text-gray-500 shrink-0 pr-1">Category:</span>
             {categories.map((cat) => {
               const active = category === cat || (cat === 'All' && !category);
               return (
                 <Link
                   key={cat}
                   href={`/courses?category=${encodeURIComponent(cat)}&q=${encodeURIComponent(q)}`}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition ${
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition ${
                     active
                       ? 'bg-amber-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {cat}
@@ -113,9 +113,9 @@ export default async function CoursesCatalogPage({
 
         {/* Course Grid */}
         {courses.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-ink-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 space-y-3">
+          <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
             <Compass className="w-10 h-10 text-gray-400 mx-auto" />
-            <h3 className="text-base font-serif font-bold text-gray-800 dark:text-gray-200">
+            <h3 className="text-base font-sans font-bold text-gray-800">
               No matching courses found
             </h3>
             <p className="text-xs text-gray-500 max-w-xs mx-auto">
@@ -136,26 +136,26 @@ export default async function CoursesCatalogPage({
               return (
                 <article
                   key={course.id}
-                  className="flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition group"
+                  className="flex flex-col rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-md transition group"
                 >
                   {/* Thumbnail (if set by admin) */}
                   {course.thumbnail ? (
-                    <Link href={`/courses/${course.slug}`} className="relative aspect-[16/10] bg-gray-100 dark:bg-gray-800 overflow-hidden block">
+                    <Link href={`/courses/${course.slug}`} className="relative aspect-[16/10] bg-gray-100 overflow-hidden block">
                       <img
                         src={course.thumbnail}
                         alt={course.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                       />
-                      <div className="absolute top-2.5 left-2.5 bg-ink-950/80 backdrop-blur-sm text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                      <div className="absolute top-2.5 left-2.5 bg-ink-950/80 text-amber-300 text-xs font-bold px-2 py-0.5 rounded-md">
                         {course.level}
                       </div>
                     </Link>
                   ) : (
                     <div className="p-4 pb-0 flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                      <span className="text-xs font-bold text-amber-700">
                         {course.category}
                       </span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600">
                         {course.level}
                       </span>
                     </div>
@@ -165,32 +165,32 @@ export default async function CoursesCatalogPage({
                   <div className={`p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3 ${course.thumbnail ? 'pt-4' : 'pt-2'}`}>
                     <div className="space-y-1.5">
                       {course.thumbnail && (
-                        <div className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                        <div className="text-xs font-semibold text-amber-700">
                           {course.category}
                         </div>
                       )}
-                      <h3 className="font-serif text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-amber-600 transition leading-snug">
+                      <h3 className="font-sans text-base sm:text-lg font-bold text-gray-900 group-hover:text-amber-600 transition leading-snug">
                         <Link href={`/courses/${course.slug}`}>{course.title}</Link>
                       </h3>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
                         {course.shortDescription || course.description}
                       </p>
                     </div>
 
-                    <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5 text-xs text-gray-500 dark:text-gray-400">
-                        <span className="flex items-center gap-1 text-[11px]">
+                    <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5 text-xs text-gray-500">
+                        <span className="flex items-center gap-1 text-xs">
                           <BookOpen className="w-3.5 h-3.5" />
                           {lessonCount} lessons
                         </span>
-                        <span className="flex items-center gap-1 text-[11px]">
+                        <span className="flex items-center gap-1 text-xs">
                           <Clock className="w-3.5 h-3.5" />
                           {course.modules.length} modules
                         </span>
                       </div>
 
                       <div className="text-right">
-                        <div className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
+                        <div className="text-sm sm:text-base font-bold text-gray-900">
                           {course.price > 0 ? formatPrice(course.price) : 'Free'}
                         </div>
                         {course.originalPrice && (
@@ -205,7 +205,7 @@ export default async function CoursesCatalogPage({
                   <div className="px-5 pb-5 pt-0">
                     <Link
                       href={`/courses/${course.slug}`}
-                      className="w-full block text-center py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs tracking-wide transition shadow-sm active:scale-95"
+                      className="w-full block text-center py-2.5 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-medium text-xs transition shadow-sm active:scale-95"
                     >
                       View Syllabus & Enroll
                     </Link>

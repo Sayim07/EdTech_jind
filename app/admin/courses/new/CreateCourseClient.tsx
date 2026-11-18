@@ -186,22 +186,22 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Top Navigation & Mode Switcher Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-ink-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm transition-colors">
         <div className="flex items-center gap-3">
           <Link
             href="/admin"
-            className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-ink-800 text-gray-700 dark:text-gray-300 transition"
+            className="p-2 rounded-xl border border-gray-200 hover:bg-gray-100 text-gray-700 transition"
             title="Back to Admin Studio"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-amber-700 dark:text-amber-500 uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-xs font-semibold text-amber-700">
               <span>Admin Studio</span>
               <span>/</span>
               <span>Publish Course</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 dark:text-white mt-0.5">
+            <h1 className="text-xl sm:text-2xl font-sans font-bold text-gray-900 mt-0.5">
               {title ? title : 'New Masterclass Publication'}
             </h1>
           </div>
@@ -210,20 +210,20 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
         {/* Action Controls: Dual-Theme Toggle + Primary Mode Switcher + Publish */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Theme Toggle (Test in Light & Dark Mode) */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-gray-100 dark:bg-ink-800 border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300">
-            <span className="text-[11px] hidden sm:inline">Theme:</span>
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-gray-100 border border-gray-200 text-xs font-medium text-gray-600">
+            <span className="text-xs hidden sm:inline">Theme:</span>
             <ThemeToggle />
           </div>
 
           {/* Clean 2-Mode Primary Switcher: Edit vs Preview */}
-          <div className="flex items-center p-1 rounded-xl bg-gray-100 dark:bg-ink-800 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center p-1 rounded-xl bg-gray-100 border border-gray-200">
             <button
               type="button"
               onClick={() => setMainMode('editor')}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition ${
                 mainMode === 'editor'
-                  ? 'bg-white dark:bg-ink-900 text-amber-700 dark:text-amber-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-white text-amber-700 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -234,8 +234,8 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
               onClick={() => setMainMode('preview')}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition ${
                 mainMode === 'preview'
-                  ? 'bg-white dark:bg-ink-900 text-amber-700 dark:text-amber-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-white text-amber-700 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
@@ -248,7 +248,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
             type="button"
             onClick={() => handlePublishCourse()}
             disabled={savingCourse}
-            className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow-sm transition active:scale-95 disabled:opacity-75 flex items-center gap-2"
+            className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-semibold text-sm shadow-sm transition active:scale-95 disabled:opacity-75 flex items-center gap-2"
           >
             {savingCourse ? (
               <ButtonSpinner label="Publishing..." />
@@ -271,11 +271,11 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
             {/* Left 2 Columns: Core Information & Curriculum Attachments */}
             <div className="lg:col-span-2 space-y-6">
               {/* Section 1: Course Identity */}
-              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-5 transition-colors">
-                <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+              <div className="bg-white p-6 sm:p-7 rounded-2xl border border-gray-200 shadow-sm space-y-5 transition-colors">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4 text-amber-600" />
-                    <h2 className="text-base font-serif font-bold text-gray-900 dark:text-white">
+                    <h2 className="text-base font-sans font-bold text-gray-900">
                       1. Course Title & Syllabus Overview
                     </h2>
                   </div>
@@ -284,7 +284,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Course Title *
                     </label>
                     <input
@@ -293,12 +293,12 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="e.g. Ancient Civilizations & Their Food Traditions"
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Short Synopsis / Subtitle (Shown on catalog card)
                     </label>
                     <input
@@ -306,12 +306,12 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={shortDescription}
                       onChange={(e) => setShortDescription(e.target.value)}
                       placeholder="e.g. From Roman power banquets and Egyptian beer pyramids to Mesopotamian royal tablets."
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Comprehensive Description *
                     </label>
                     <textarea
@@ -320,18 +320,18 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Detailed academic synopsis, historical context, key learning outcomes, and archival bibliography..."
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 2: Curriculum & Initial Media Attachments */}
-              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-5 transition-colors">
-                <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+              <div className="bg-white p-6 sm:p-7 rounded-2xl border border-gray-200 shadow-sm space-y-5 transition-colors">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                   <div className="flex items-center gap-2">
                     <Layers className="w-4 h-4 text-amber-600" />
-                    <h2 className="text-base font-serif font-bold text-gray-900 dark:text-white">
+                    <h2 className="text-base font-sans font-bold text-gray-900">
                       2. Curriculum & Lecture Media (Folder Upload & Direct Link)
                     </h2>
                   </div>
@@ -341,7 +341,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                         Module Name
                       </label>
                       <input
@@ -349,11 +349,11 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         value={moduleTitle}
                         onChange={(e) => setModuleTitle(e.target.value)}
                         placeholder="e.g. Module 1: Mesopotamian Cuisine"
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                         Lecture Title
                       </label>
                       <input
@@ -361,20 +361,20 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         value={lectureTitle}
                         onChange={(e) => setLessonTitle(e.target.value)}
                         placeholder="e.g. 1.1 Tasting Ancient Mesopotamia: Table of Gods"
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                         Lesson Type
                       </label>
                       <select
                         value={lectureType}
                         onChange={(e) => setLessonType(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       >
                         <option value="VIDEO">Video Class (MP4 or YouTube)</option>
                         <option value="PPT">Presentation Slides (PowerPoint / PDF)</option>
@@ -383,7 +383,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                         Duration / Slide Count
                       </label>
                       <input
@@ -391,14 +391,14 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         value={duration}
                         onChange={(e) => setDuration(e.target.value)}
                         placeholder="e.g. 45 mins or 24 slides"
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
                   </div>
 
                   {/* Video Attachment */}
                   <div className="space-y-1.5 pt-2">
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    <label className="block text-xs font-semibold text-gray-700">
                       Class Video (Upload from Computer or Web Link)
                     </label>
                     <div className="flex flex-col sm:flex-row gap-2">
@@ -416,7 +416,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         type="button"
                         onClick={() => videoInputRef.current?.click()}
                         disabled={uploadingVideo}
-                        className="px-4 py-2.5 rounded-xl border border-dashed border-amber-400 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50 text-amber-800 dark:text-amber-300 text-xs font-medium flex items-center justify-center gap-2 shrink-0 transition"
+                        className="px-4 py-2.5 rounded-xl border border-dashed border-amber-400 bg-amber-50/50 hover:bg-amber-100/50 text-amber-800 text-xs font-medium flex items-center justify-center gap-2 shrink-0 transition"
                       >
                         {uploadingVideo ? (
                           <Spinner size="xs" variant="primary" />
@@ -430,14 +430,14 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         value={videoUrl}
                         onChange={(e) => setVideoUrl(e.target.value)}
                         placeholder="Or paste YouTube link / Video web link..."
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
                   </div>
 
                   {/* Presentation Deck Attachment */}
                   <div className="space-y-1.5 pt-2">
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    <label className="block text-xs font-semibold text-gray-700">
                       Presentation Slides (PPT / PDF from Computer or Link)
                     </label>
                     <div className="flex flex-col sm:flex-row gap-2">
@@ -455,7 +455,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         type="button"
                         onClick={() => pptInputRef.current?.click()}
                         disabled={uploadingPpt}
-                        className="px-4 py-2.5 rounded-xl border border-dashed border-amber-400 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50 text-amber-800 dark:text-amber-300 text-xs font-medium flex items-center justify-center gap-2 shrink-0 transition"
+                        className="px-4 py-2.5 rounded-xl border border-dashed border-amber-400 bg-amber-50/50 hover:bg-amber-100/50 text-amber-800 text-xs font-medium flex items-center justify-center gap-2 shrink-0 transition"
                       >
                         {uploadingPpt ? (
                           <Spinner size="xs" variant="primary" />
@@ -469,7 +469,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         value={fileUrl}
                         onChange={(e) => setFileUrl(e.target.value)}
                         placeholder="Or enter Presentation / PDF link..."
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
                   </div>
@@ -480,23 +480,23 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
             {/* Right Column: Taxonomy, Pricing & Visual Thumbnail */}
             <div className="space-y-6">
               {/* Section 3: Taxonomy & Instructor */}
-              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4 transition-colors">
-                <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+              <div className="bg-white p-6 sm:p-7 rounded-2xl border border-gray-200 shadow-sm space-y-4 transition-colors">
+                <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
                   <Compass className="w-4 h-4 text-amber-600" />
-                  <h2 className="text-base font-serif font-bold text-gray-900 dark:text-white">
+                  <h2 className="text-base font-sans font-bold text-gray-900">
                     3. Course Category & Teacher
                   </h2>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Course Category
                     </label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     >
                       {CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>
@@ -507,13 +507,13 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Course Level
                     </label>
                     <select
                       value={level}
                       onChange={(e) => setLevel(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     >
                       {LEVELS.map((lvl) => (
                         <option key={lvl} value={lvl}>
@@ -524,7 +524,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Teacher / Instructor Name
                     </label>
                     <input
@@ -532,24 +532,24 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={instructorName}
                       onChange={(e) => setInstructorName(e.target.value)}
                       placeholder="e.g. CIM India Faculty"
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 4: Pricing & Fees */}
-              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4 transition-colors">
-                <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+              <div className="bg-white p-6 sm:p-7 rounded-2xl border border-gray-200 shadow-sm space-y-4 transition-colors">
+                <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
                   <DollarSign className="w-4 h-4 text-amber-600" />
-                  <h2 className="text-base font-serif font-bold text-gray-900 dark:text-white">
+                  <h2 className="text-base font-sans font-bold text-gray-900">
                     4. Course Fees & Pricing
                   </h2>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Selling Price (₹)
                     </label>
                     <input
@@ -558,11 +558,11 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
                       placeholder="1499"
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Original / MRP (₹)
                     </label>
                     <input
@@ -571,13 +571,13 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={originalPrice}
                       onChange={(e) => setOriginalPrice(e.target.value)}
                       placeholder="2999"
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50/50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 </div>
 
                 {discountPercent !== null && discountPercent > 0 && (
-                  <div className="p-2.5 rounded-xl bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/40 text-[11px] font-semibold text-green-800 dark:text-green-300 flex items-center gap-2">
+                  <div className="p-2.5 rounded-xl bg-green-50 border border-green-200 text-xs font-semibold text-green-800 flex items-center gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Students will see a {discountPercent}% discount badge!</span>
                   </div>
@@ -585,11 +585,11 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
               </div>
 
               {/* Section 5: Thumbnail Image Upload & URL */}
-              <div className="bg-white dark:bg-ink-900 p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4 transition-colors">
-                <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+              <div className="bg-white p-6 sm:p-7 rounded-2xl border border-gray-200 shadow-sm space-y-4 transition-colors">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                   <div className="flex items-center gap-2">
                     <ImageIcon className="w-4 h-4 text-amber-600" />
-                    <h2 className="text-base font-serif font-bold text-gray-900 dark:text-white">
+                    <h2 className="text-base font-sans font-bold text-gray-900">
                       5. Course Cover Photo
                     </h2>
                   </div>
@@ -609,7 +609,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
 
                   {/* Thumbnail Preview or Upload Button */}
                   {thumbnail ? (
-                    <div className="relative aspect-[16/10] rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 group">
+                    <div className="relative aspect-[16/10] rounded-xl overflow-hidden border border-gray-200 group">
                       <img src={thumbnail} alt="Cover preview" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-ink-950/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
                         <button
@@ -633,20 +633,20 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       type="button"
                       onClick={() => imageInputRef.current?.click()}
                       disabled={uploadingImage}
-                      className="w-full aspect-[16/9] rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-amber-500 dark:hover:border-amber-500 bg-gray-50/50 dark:bg-ink-800/40 transition flex flex-col items-center justify-center p-4 text-center cursor-pointer group"
+                      className="w-full aspect-[16/9] rounded-xl border-2 border-dashed border-gray-300 hover:border-amber-500 bg-gray-50/50 transition flex flex-col items-center justify-center p-4 text-center cursor-pointer group"
                     >
                       {uploadingImage ? (
                         <div className="flex flex-col items-center gap-2">
                           <Spinner size="md" variant="primary" />
-                          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Uploading image...</span>
+                          <span className="text-xs font-medium text-amber-600">Uploading image...</span>
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400 group-hover:text-amber-600 dark:group-hover:text-amber-400">
+                        <div className="flex flex-col items-center gap-2 text-gray-500 group-hover:text-amber-600">
                           <UploadCloud className="w-8 h-8 stroke-1" />
                           <div className="text-xs font-semibold">
                             Click to choose Course Photo from your Computer
                           </div>
-                          <div className="text-[11px] text-gray-400">
+                          <div className="text-xs text-gray-400">
                             PNG, JPG, WEBP up to 10MB
                           </div>
                         </div>
@@ -656,7 +656,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
 
                   {/* Direct Image URL input */}
                   <div>
-                    <label className="block text-[11px] font-medium text-gray-500 mb-1">
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
                       Or paste Image web link
                     </label>
                     <input
@@ -664,11 +664,11 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       value={thumbnail}
                       onChange={(e) => setThumbnail(e.target.value)}
                       placeholder="https://... or /media/cover.jpg"
-                      className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-ink-800 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-300 bg-gray-50/50 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
 
-                  <p className="text-[11px] text-gray-400 italic">
+                  <p className="text-xs text-gray-400 italic">
                     If you don&apos;t upload a photo, a clean title card will be used automatically.
                   </p>
                 </div>
@@ -679,7 +679,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                 <button
                   type="button"
                   onClick={() => setMainMode('preview')}
-                  className="w-full py-3 rounded-xl border border-amber-600/50 dark:border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-xs font-semibold transition flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl border border-amber-600/50 text-amber-700 hover:bg-amber-50 text-xs font-semibold transition flex items-center justify-center gap-2"
                 >
                   <Eye className="w-4 h-4" />
                   <span>Preview How Students See This Course</span>
@@ -687,7 +687,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                 <button
                   type="submit"
                   disabled={savingCourse}
-                  className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-md transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white text-xs font-semibold shadow-md transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {savingCourse ? (
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -708,27 +708,27 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
       {mainMode === 'preview' && (
         <section className="space-y-6">
           {/* Preview Navigation Banner */}
-          <div className="bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+          <div className="bg-amber-50/80 border border-amber-200/80 p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
+              <div className="flex items-center gap-2 text-amber-900">
                 <Eye className="w-5 h-5 text-amber-600 shrink-0" />
                 <h3 className="text-sm font-semibold">Student Live Preview</h3>
               </div>
-              <p className="text-xs text-amber-700 dark:text-amber-400">
+              <p className="text-xs text-amber-700">
                 Check how your course looks to students on computer and mobile.
               </p>
             </div>
 
             {/* Sub-view selector tabs */}
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center p-1 rounded-xl bg-white dark:bg-ink-900 border border-amber-200 dark:border-gray-800 shadow-sm text-xs font-semibold">
+              <div className="flex items-center p-1 rounded-xl bg-white border border-amber-200 shadow-sm text-xs font-semibold">
                 <button
                   type="button"
                   onClick={() => setPreviewSubTab('card')}
                   className={`px-3 py-1.5 rounded-lg transition ${
                     previewSubTab === 'card'
                       ? 'bg-amber-600 text-white shadow-sm'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                      : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   Course Card (Catalog View)
@@ -739,7 +739,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   className={`px-3 py-1.5 rounded-lg transition ${
                     previewSubTab === 'page'
                       ? 'bg-amber-600 text-white shadow-sm'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                      : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   Course Details Page
@@ -750,7 +750,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   className={`px-3 py-1.5 rounded-lg transition ${
                     previewSubTab === 'classroom'
                       ? 'bg-amber-600 text-white shadow-sm'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                      : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   Student Learning Screen
@@ -760,7 +760,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
               <button
                 type="button"
                 onClick={() => setMainMode('editor')}
-                className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-ink-800 transition flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition flex items-center gap-1.5"
               >
                 <Edit3 className="w-3.5 h-3.5" />
                 <span>Back to Edit</span>
@@ -770,31 +770,31 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
 
           {/* SUB-VIEW 1: CHHOTA PREVIEW (STUDENT CATALOG CARD) */}
           {previewSubTab === 'card' && (
-            <div className="p-8 bg-gray-100/60 dark:bg-ink-900/40 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center space-y-6">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="p-8 bg-gray-100/60 rounded-2xl border border-gray-200 flex flex-col items-center justify-center space-y-6">
+              <span className="text-xs font-semibold text-gray-500">
                 How this course looks in the course catalog
               </span>
 
               <div className="w-full max-w-sm">
-                <article className="flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-ink-900 border border-gray-200 dark:border-gray-800 shadow-md transition group">
+                <article className="flex flex-col rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-md transition group">
                   {/* Thumbnail (if set) */}
                   {thumbnail ? (
-                    <div className="relative aspect-[16/10] bg-gray-100 dark:bg-gray-800 overflow-hidden block">
+                    <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden block">
                       <img
                         src={thumbnail}
                         alt={title || 'Course Preview'}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                       />
-                      <div className="absolute top-3 left-3 bg-ink-950/80 backdrop-blur-sm text-amber-300 text-[11px] font-bold px-2.5 py-1 rounded-md">
+                      <div className="absolute top-3 left-3 bg-ink-950/80 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-md">
                         {level}
                       </div>
                     </div>
                   ) : (
                     <div className="p-6 pb-0 flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                      <span className="text-xs font-bold text-amber-700">
                         {category}
                       </span>
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600">
                         {level}
                       </span>
                     </div>
@@ -804,20 +804,20 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   <div className={`p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4 ${thumbnail ? 'pt-5' : 'pt-3'}`}>
                     <div className="space-y-2">
                       {thumbnail && (
-                        <div className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                        <div className="text-xs font-semibold text-amber-700">
                           {category}
                         </div>
                       )}
-                      <h3 className="font-serif text-lg font-bold text-gray-900 dark:text-white leading-snug">
+                      <h3 className="font-sans text-lg font-bold text-gray-900 leading-snug">
                         {title || 'Untitled Masterclass Course'}
                       </h3>
-                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 leading-relaxed">
                         {shortDescription || description || 'Detailed historical synopsis and primary archaeological curriculum.'}
                       </p>
                     </div>
 
-                    <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
                         <span className="flex items-center gap-1">
                           <BookOpen className="w-3.5 h-3.5" />
                           1 module
@@ -829,11 +829,11 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       </div>
 
                       <div className="text-right">
-                        <div className="font-serif font-bold text-base text-gray-900 dark:text-white">
+                        <div className="font-sans font-bold text-base text-gray-900">
                           {formatPrice(numericPrice)}
                         </div>
                         {numericOriginal > numericPrice && (
-                          <span className="text-[11px] text-gray-400 line-through">
+                          <span className="text-xs text-gray-400 line-through">
                             {formatPrice(numericOriginal)}
                           </span>
                         )}
@@ -847,13 +847,13 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
 
           {/* SUB-VIEW 2: FULL PAGE PREVIEW (COURSE LANDING VIEW) */}
           {previewSubTab === 'page' && (
-            <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-ink-900 shadow-sm transition-colors">
+            <div className="rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm transition-colors">
               {/* Dark Academic Hero Banner */}
               <div className="bg-ink-950 text-white p-6 sm:p-10 border-b border-gray-800 space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                   <div className="lg:col-span-8 space-y-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold uppercase tracking-wider">
+                      <span className="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">
                         {category}
                       </span>
                       <span className="px-2.5 py-0.5 rounded bg-gray-800 text-gray-300 text-xs font-medium">
@@ -864,7 +864,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       </span>
                     </div>
 
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-sans font-bold text-white tracking-tight leading-tight">
                       {title || 'Untitled Masterclass Course'}
                     </h1>
 
@@ -889,7 +889,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   </div>
 
                   {/* Right Hero Card: Enrollment CTA */}
-                  <div className="lg:col-span-4 bg-ink-900/90 rounded-2xl border border-gray-800 p-6 space-y-5 shadow-2xl backdrop-blur-sm">
+                  <div className="lg:col-span-4 bg-ink-900/90 rounded-2xl border border-gray-800 p-6 space-y-5 shadow-2xl">
                     {thumbnail && (
                       <div className="aspect-[16/10] rounded-xl overflow-hidden bg-gray-800">
                         <img src={thumbnail} alt="" className="w-full h-full object-cover" />
@@ -898,7 +898,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
 
                     <div className="space-y-1">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-2xl sm:text-3xl font-serif font-bold text-white">
+                        <span className="text-2xl sm:text-3xl font-sans font-bold text-white">
                           {formatPrice(numericPrice)}
                         </span>
                         {numericOriginal > numericPrice && (
@@ -908,16 +908,16 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                         )}
                       </div>
                       {discountPercent !== null && discountPercent > 0 && (
-                        <span className="inline-block text-[11px] font-bold text-green-400 bg-green-950/60 px-2 py-0.5 rounded border border-green-800/40">
+                        <span className="inline-block text-xs font-bold text-green-400 bg-green-950/60 px-2 py-0.5 rounded border border-green-800/40">
                           Save {discountPercent}% today
                         </span>
                       )}
                     </div>
 
-                    <div className="w-full py-3 rounded-xl bg-amber-600 text-white font-semibold text-xs text-center shadow cursor-not-allowed opacity-90">
+                    <div className="w-full py-3 rounded-xl bg-amber-600 text-white font-semibold text-sm text-center shadow cursor-not-allowed opacity-90">
                       Enroll in Course
                     </div>
-                    <p className="text-[11px] text-gray-400 text-center">
+                    <p className="text-xs text-gray-400 text-center">
                       Instant lifetime access &bull; Includes all class notes and slides
                     </p>
                   </div>
@@ -927,29 +927,29 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
               {/* Bottom Section: Syllabus & Attached Resources Preview */}
               <div className="p-6 sm:p-10 space-y-8 max-w-4xl">
                 <div className="space-y-3">
-                  <h3 className="font-serif font-bold text-xl text-gray-900 dark:text-white">
+                  <h3 className="font-sans font-bold text-xl text-gray-900">
                     About This Course
                   </h3>
-                  <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line">
+                  <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                     {description || 'Comprehensive course syllabus will be rendered here.'}
                   </div>
                 </div>
 
                 {/* Syllabus Module Accordion */}
                 <div className="space-y-4">
-                  <h3 className="font-serif font-bold text-xl text-gray-900 dark:text-white">
+                  <h3 className="font-sans font-bold text-xl text-gray-900">
                     Course Lessons & Study Material
                   </h3>
 
-                  <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
-                    <div className="p-4 bg-gray-50 dark:bg-ink-800/60 flex items-center justify-between">
-                      <span className="font-serif font-bold text-sm text-gray-900 dark:text-white">
+                  <div className="rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-200">
+                    <div className="p-4 bg-gray-50 flex items-center justify-between">
+                      <span className="font-sans font-bold text-sm text-gray-900">
                         {moduleTitle || 'Module 1'}
                       </span>
                       <span className="text-xs text-gray-500">1 Class</span>
                     </div>
 
-                    <div className="p-4 bg-white dark:bg-ink-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="p-4 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         {lectureType === 'PPT' || lectureType === 'PDF' ? (
                           <FileText className="w-5 h-5 text-amber-600 shrink-0" />
@@ -957,7 +957,7 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                           <PlayCircle className="w-5 h-5 text-amber-600 shrink-0" />
                         )}
                         <div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          <div className="text-sm font-medium text-gray-900">
                             {lectureTitle || '1.1 Tasting Ancient Mesopotamia: Table of Gods'}
                           </div>
                           <div className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
@@ -967,20 +967,20 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                             {fileUrl && (
                               <>
                                 <span>&bull;</span>
-                                <span className="text-amber-600 dark:text-amber-400 font-medium">Class Slides Attached</span>
+                                <span className="text-amber-600 font-medium">Class Slides Attached</span>
                               </>
                             )}
                             {videoUrl && (
                               <>
                                 <span>&bull;</span>
-                                <span className="text-blue-600 dark:text-blue-400 font-medium">Class Video Attached</span>
+                                <span className="text-blue-600 font-medium">Class Video Attached</span>
                               </>
                             )}
                           </div>
                         </div>
                       </div>
 
-                      <span className="text-xs px-2.5 py-1 rounded bg-gray-100 dark:bg-ink-800 text-gray-600 dark:text-gray-300 self-start sm:self-auto">
+                      <span className="text-xs px-2.5 py-1 rounded bg-gray-100 text-gray-600 self-start sm:self-auto">
                         Sample Lesson
                       </span>
                     </div>
@@ -992,25 +992,25 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
 
           {/* SUB-VIEW 3: CLASSROOM PLAYER VIEW (EXACTLY MATCHING /learn/[slug]) */}
           {previewSubTab === 'classroom' && (
-            <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-ink-950 shadow-sm transition-colors">
+            <div className="rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 shadow-sm transition-colors">
               {/* Top Classroom Bar */}
-              <div className="h-14 bg-white dark:bg-ink-900 border-b border-gray-200 dark:border-gray-800 px-4 sm:px-6 flex items-center justify-between shrink-0">
+              <div className="h-14 bg-white border-b border-gray-200 px-4 sm:px-6 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <span className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-white">
+                  <span className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700">
                     <ArrowLeft className="w-4 h-4" />
                   </span>
                   <div className="truncate">
-                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block leading-none">
+                    <span className="text-xs font-bold text-amber-700 block leading-none">
                       {category} &bull; {title || 'Course Player'}
                     </span>
-                    <span className="text-xs font-serif font-bold text-gray-900 dark:text-gray-100 truncate block mt-0.5">
+                    <span className="text-xs font-sans font-bold text-gray-900 truncate block mt-0.5">
                       {lectureTitle || '1.1 Tasting Ancient Mesopotamia: Table of Gods'}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-gray-100 dark:bg-ink-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                  <span className="px-3 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
                     Mark Complete
                   </span>
                 </div>
@@ -1026,12 +1026,12 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                       <div className="text-center p-6 space-y-2 text-white">
                         <PlayCircle className="w-12 h-12 text-amber-400 mx-auto" />
                         <div className="text-xs font-semibold">{lectureTitle}</div>
-                        <div className="text-[11px] text-gray-400">Attached: {videoUrl}</div>
+                        <div className="text-xs text-gray-400">Attached: {videoUrl}</div>
                       </div>
                     ) : (
                       <div className="text-center p-6 space-y-2 text-white">
                         <FileText className="w-12 h-12 text-amber-400 mx-auto" />
-                        <div className="text-sm font-serif font-bold">Slide Seminar Lecture</div>
+                        <div className="text-sm font-sans font-bold">Slide Seminar Lecture</div>
                         <p className="text-xs text-gray-400">
                           {fileUrl ? `PPT Attached: ${fileUrl}` : 'PPT presentation or video attached'}
                         </p>
@@ -1040,44 +1040,44 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                   </div>
 
                   {/* Lecture Details and Tabs */}
-                  <div className="p-6 space-y-5 bg-white dark:bg-ink-900 border-t border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                  <div className="p-6 space-y-5 bg-white border-t border-gray-200">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                       <div>
-                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                        <span className="text-xs font-semibold text-amber-700">
                           {moduleTitle}
                         </span>
-                        <h4 className="text-lg font-serif font-bold text-gray-900 dark:text-white mt-0.5">
+                        <h4 className="text-lg font-sans font-bold text-gray-900 mt-0.5">
                           {lectureTitle}
                         </h4>
                       </div>
 
                       {/* Interactive Tabs */}
-                      <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-ink-800 text-xs font-semibold">
+                      <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 text-xs font-semibold">
                         <span className="px-3 py-1 rounded-lg bg-amber-600 text-white shadow-sm">
                           Lecture Notes
                         </span>
-                        <span className="px-3 py-1 rounded-lg text-gray-600 dark:text-gray-400">
+                        <span className="px-3 py-1 rounded-lg text-gray-600">
                           PPT Slides
                         </span>
-                        <span className="px-3 py-1 rounded-lg text-gray-600 dark:text-gray-400">
+                        <span className="px-3 py-1 rounded-lg text-gray-600">
                           Assignment
                         </span>
                       </div>
                     </div>
 
-                    <div className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                    <div className="text-xs text-gray-600 leading-relaxed">
                       {shortDescription || description || 'Lecture description and archival citations will be displayed here.'}
                     </div>
 
                     {fileUrl && (
-                      <div className="p-3.5 rounded-xl bg-gray-50 dark:bg-ink-950 border border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                      <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <FileText className="w-5 h-5 text-amber-600" />
-                          <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                          <span className="text-xs font-semibold text-gray-800">
                             {fileUrl.split('/').pop()}
                           </span>
                         </div>
-                        <span className="text-xs text-amber-700 dark:text-amber-400 font-semibold">
+                        <span className="text-xs text-amber-700 font-semibold">
                           Download PPT
                         </span>
                       </div>
@@ -1086,24 +1086,24 @@ export function CreateCourseClient({ adminUser }: { adminUser: AdminUser }) {
                 </div>
 
                 {/* Right Side: Curriculum Sidebar Simulator */}
-                <aside className="w-full lg:w-72 border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-ink-900 p-4 space-y-3">
-                  <div className="border-b border-gray-100 dark:border-gray-800 pb-2">
-                    <h5 className="font-serif font-bold text-xs text-gray-900 dark:text-white">
+                <aside className="w-full lg:w-72 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white p-4 space-y-3">
+                  <div className="border-b border-gray-100 pb-2">
+                    <h5 className="font-sans font-bold text-xs text-gray-900">
                       Course Curriculum
                     </h5>
-                    <span className="text-[11px] text-gray-400">1 Lecture attached</span>
+                    <span className="text-xs text-gray-400">1 Lecture attached</span>
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                    <span className="text-xs font-bold text-gray-400 block">
                       {moduleTitle}
                     </span>
-                    <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-l-2 border-amber-600 text-xs font-semibold flex items-center justify-between gap-2">
+                    <div className="p-2.5 rounded-lg bg-amber-50 text-amber-800 text-xs font-semibold flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 truncate">
                         <PlayCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                         <span className="truncate">{lectureTitle}</span>
                       </div>
-                      <span className="text-[10px] text-gray-400">{duration || '45m'}</span>
+                      <span className="text-xs text-gray-400">{duration || '45m'}</span>
                     </div>
                   </div>
                 </aside>

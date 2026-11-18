@@ -28,7 +28,7 @@ export function MobileBottomNav({ role, isLoggedIn }: Props) {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-ink-950/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 pb-safe">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t border-gray-200 pb-safe">
       <div className="grid grid-cols-4 h-16">
         {items.map((item) => {
           const Icon = item.icon;
@@ -38,12 +38,12 @@ export function MobileBottomNav({ role, isLoggedIn }: Props) {
               href={item.href}
               className={`flex flex-col items-center justify-center gap-1 transition ${
                 item.active
-                  ? 'text-amber-600 dark:text-amber-500 font-semibold'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  ? 'text-amber-600 font-semibold'
+                  : 'text-gray-500 hover:text-gray-900'
               }`}
             >
               <Icon className={`w-5 h-5 ${item.active ? 'stroke-[2.5]' : 'stroke-2'}`} />
-              <span className="text-[11px] leading-tight">{item.label}</span>
+              <span className="text-xs leading-tight">{item.label}</span>
             </Link>
           );
         })}

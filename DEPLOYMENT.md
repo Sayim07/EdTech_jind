@@ -23,7 +23,7 @@ Set these on the host. Never commit them. `.env.example` lists every name.
 2. `npm run db:migrate` applies the migrations, including row level security on every table.
 3. `npm run db:verify-rls` must print `RLS on` for every table and `table grants left for anon/authenticated: 0`.
 4. `npm run storage:setup` creates the public `avatars` bucket.
-5. Create the first admin account directly in the database. Do **not** run `npm run db:seed`: it deletes everything and refuses to run unless `ALLOW_DESTRUCTIVE_SEED=yes`.
+5. Create the first admin account directly in the database. There is no seed script (it was removed: it wiped all data and created accounts with public passwords).
 
 ## 3. External settings to update for the new address
 

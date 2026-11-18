@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { AdminDashboardSkeleton } from '@/components/ui/Loaders';
 import { AdminClient } from './AdminClient';
 
 export default async function AdminStudioPage() {
@@ -61,13 +62,15 @@ export default async function AdminStudioPage() {
       <Navbar />
 
       <main className="flex-1 pb-24 lg:pb-12 bg-gray-50">
-        <AdminClient
-          adminUser={user}
-          initialCourses={courses}
-          initialStudents={students}
-          initialEnrollments={enrollments}
-          totalRevenue={totalRevenue}
-        />
+        <Suspense fallback={<AdminDashboardSkeleton />}>
+          <AdminClient
+            adminUser={user}
+            initialCourses={courses}
+            initialStudents={students}
+            initialEnrollments={enrollments}
+            totalRevenue={totalRevenue}
+          />
+        </Suspense>
       </main>
 
       <MobileBottomNav role="ADMIN" isLoggedIn={true} />

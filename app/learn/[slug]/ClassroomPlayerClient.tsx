@@ -74,7 +74,11 @@ function PptxViewer({ url, name }: { url: string; name: string }) {
 
     (async () => {
       try {
-        const [{ init }, res] = await Promise.all([import('pptx-preview'), fetch(url)]);
+        const [{ init }, res] = await Promise.all([
+          // @ts-expect-error pptx-preview has no bundled type declarations
+          import('pptx-preview'),
+          fetch(url),
+        ]);
         if (!res.ok) throw new Error('Could not load the file');
         const buffer = await res.arrayBuffer();
         if (cancelled) return;

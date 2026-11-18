@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Award,
-  ShieldCheck,
   LogOut,
   Compass,
   GraduationCap,
   LayoutDashboard,
   ClipboardList,
   UserRound,
+  PlusCircle,
 } from 'lucide-react';
 
 interface User {
@@ -65,14 +65,9 @@ export function Navbar(_props: { wide?: boolean }) {
           </div>
         </Link>
 
-        {/* Center Nav (Context-aware based on role) */}
+        {/* Center Nav (Context-aware based on role: students have learning links, admin navigation is on the page tabs) */}
         <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-sm font-medium">
-          {user?.role === 'ADMIN' ? (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 border border-red-200 text-red-700 text-xs font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Admin Mode</span>
-            </div>
-          ) : user ? (
+          {user && user.role !== 'ADMIN' ? (
             <>
               {[
                 { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, active: pathname === '/dashboard' },
@@ -95,11 +90,15 @@ export function Navbar(_props: { wide?: boolean }) {
           ) : null}
         </nav>
 
-        {/* Right Actions: Theme Toggle & User Info / Logout */}
+        {/* Right Actions: User Info / Logout */}
         <div className="flex items-center gap-3">
           {!loading && user ? (
             <div className="flex items-center gap-2.5">
-              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-800 text-xs font-medium">
+              <Link
+                href={user.role === 'ADMIN' ? '/admin?tab=profile' : '/profile'}
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-medium transition cursor-pointer"
+                title="View Profile"
+              >
                 {user.avatarUrl ? (
                   <img src={user.avatarUrl} alt="" referrerPolicy="no-referrer" className="w-7 h-7 rounded-full object-cover" />
                 ) : (
@@ -111,7 +110,7 @@ export function Navbar(_props: { wide?: boolean }) {
                   <div className="font-semibold leading-tight">{user.name}</div>
                   <div className="text-xs text-gray-500 capitalize">{user.role.toLowerCase()}</div>
                 </div>
-              </div>
+              </Link>
 
               <button
                 onClick={handleLogout}

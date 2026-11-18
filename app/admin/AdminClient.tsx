@@ -2,11 +2,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { Spinner, ButtonSpinner } from '@/components/ui/Loaders';
 import {
   ShieldCheck,
+  LayoutDashboard,
   BookOpen,
   Users,
   CreditCard,
@@ -17,6 +18,7 @@ import {
   FileText,
   Link as LinkIcon,
   CheckCircle,
+  CheckCircle2,
   X,
   TrendingUp,
   AlertCircle,
@@ -26,7 +28,9 @@ import {
   Sparkles,
   FolderOpen,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Camera,
+  UserRound,
 } from 'lucide-react';
 
 interface Props {
@@ -45,7 +49,127 @@ export function AdminClient({
   totalRevenue,
 }: Props) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'analytics' | 'courses' | 'students' | 'payments'>('analytics');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'courses' | 'students' | 'payments' | 'profile'>(
+    tabParam === 'profile' || tabParam === 'courses' || tabParam === 'students' || tabParam === 'payments'
+      ? (tabParam as any)
+      : 'analytics'
+  );
+
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t && ['analytics', 'courses', 'students', 'payments', 'profile'].includes(t)) {
+      setActiveTab(t as any);
+    }
+  }, [searchParams]);
+
+  // Admin Profile State
+  const [adminName, setAdminName] = useState(adminUser.name || '');
+  const [savedAdminName, setSavedAdminName] = useState(adminUser.name || '');
+  const [adminAvatarUrl, setAdminAvatarUrl] = useState(adminUser.avatarUrl || '');
+  const [adminAvatarBusy, setAdminAvatarBusy] = useState(false);
+  const [adminAvatarNotice, setAdminAvatarNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const adminFileRef = useRef<HTMLInputElement>(null);
+  const [savingAdminName, setSavingAdminName] = useState(false);
+  const [adminNameNotice, setAdminNameNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const [adminCurrentPassword, setAdminCurrentPassword] = useState('');
+  const [adminNewPassword, setAdminNewPassword] = useState('');
+  const [adminConfirmPassword, setAdminConfirmPassword] = useState('');
+  const [savingAdminPassword, setSavingAdminPassword] = useState(false);
+  const [adminPasswordNotice, setAdminPasswordNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const uploadAdminAvatar = async (file: File) => {
+    setAdminAvatarNotice(null);
+    if (file.size > 2 * 1024 * 1024) {
+      setAdminAvatarNotice({ type: 'error', text: 'Image must be 2 MB or smaller.' });
+      return;
+    }
+    setAdminAvatarBusy(true);
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const res = await fetch('/api/profile/avatar', { method: 'POST', body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      setAdminAvatarUrl(data.avatarUrl);
+      setAdminAvatarNotice({ type: 'success', text: 'Profile picture updated.' });
+      router.refresh();
+    } catch (err: any) {
+      setAdminAvatarNotice({ type: 'error', text: err.message });
+    } finally {
+      setAdminAvatarBusy(false);
+      if (adminFileRef.current) adminFileRef.current.value = '';
+    }
+  };
+
+  const removeAdminAvatar = async () => {
+    setAdminAvatarNotice(null);
+    setAdminAvatarBusy(true);
+    try {
+      const res = await fetch('/api/profile/avatar', { method: 'DELETE' });
+      if (!res.ok) throw new Error('Could not remove picture');
+      setAdminAvatarUrl('');
+      setAdminAvatarNotice({ type: 'success', text: 'Profile picture removed.' });
+      router.refresh();
+    } catch (err: any) {
+      setAdminAvatarNotice({ type: 'error', text: err.message });
+    } finally {
+      setAdminAvatarBusy(false);
+    }
+  };
+
+  const saveAdminName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminNameNotice(null);
+    setSavingAdminName(true);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: adminName }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update name');
+      setSavedAdminName(data.user.name);
+      setAdminName(data.user.name);
+      setAdminNameNotice({ type: 'success', text: 'Your name has been updated.' });
+      router.refresh();
+    } catch (err: any) {
+      setAdminNameNotice({ type: 'error', text: err.message });
+    } finally {
+      setSavingAdminName(false);
+    }
+  };
+
+  const saveAdminPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminPasswordNotice(null);
+    if (adminNewPassword !== adminConfirmPassword) {
+      setAdminPasswordNotice({ type: 'error', text: 'The new passwords do not match.' });
+      return;
+    }
+    setSavingAdminPassword(true);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: adminCurrentPassword, newPassword: adminNewPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update password');
+      setAdminPasswordNotice({ type: 'success', text: 'Your password has been changed.' });
+      setAdminCurrentPassword('');
+      setAdminNewPassword('');
+      setAdminConfirmPassword('');
+    } catch (err: any) {
+      setAdminPasswordNotice({ type: 'error', text: err.message });
+    } finally {
+      setSavingAdminPassword(false);
+    }
+  };
+
   const [courses, setCourses] = useState(initialCourses);
   const [students, setStudents] = useState(initialStudents);
 
@@ -348,34 +472,15 @@ export function AdminClient({
   };
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-10 py-8 space-y-8">
-      {/* Admin Title Bar */}
-      <section className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900">
-            Courses & Students
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Signed in as <span className="font-semibold">{adminUser.email}</span> (Admin)
-          </p>
-        </div>
-
-        <Link
-          href="/admin/courses/new"
-          className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-semibold text-sm shadow-sm transition active:scale-95 flex items-center justify-center gap-2 self-start md:self-auto"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>Publish New Course</span>
-        </Link>
-      </section>
-
-      {/* Navigation Tabs */}
+    <div className="w-full px-4 sm:px-6 lg:px-10 py-6 sm:py-8 space-y-6 sm:space-y-8">
+      {/* Navigation Tabs - MOVED TO TOP */}
       <div className="flex items-center gap-2 border-b border-gray-200 overflow-x-auto no-scrollbar">
         {[
-          { id: 'analytics', label: 'Summary', icon: TrendingUp },
+          { id: 'analytics', label: 'Dashboard', icon: LayoutDashboard },
           { id: 'courses', label: `All Courses (${courses.length})`, icon: BookOpen },
           { id: 'students', label: `Registered Students (${students.length})`, icon: Users },
           { id: 'payments', label: `Fee Payments (${initialEnrollments.length})`, icon: CreditCard },
+          { id: 'profile', label: 'Admin Profile', icon: UserRound },
         ].map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -394,6 +499,28 @@ export function AdminClient({
           );
         })}
       </div>
+
+      {/* Admin Title Bar (Shown when not on profile tab) */}
+      {activeTab !== 'profile' && (
+        <section className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900">
+              Courses & Students
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              Signed in as <span className="font-semibold">{adminUser.email}</span> (Admin)
+            </p>
+          </div>
+
+          <Link
+            href="/admin/courses/new"
+            className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-semibold text-sm shadow-sm transition active:scale-95 flex items-center justify-center gap-2 self-start md:self-auto"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Publish New Course</span>
+          </Link>
+        </section>
+      )}
 
       {/* TAB 1: ANALYTICS OVERVIEW */}
       {activeTab === 'analytics' && (
@@ -429,33 +556,6 @@ export function AdminClient({
                 {initialEnrollments.length}
               </div>
               <span className="text-xs text-amber-600 font-medium">Classroom accesses</span>
-            </div>
-          </div>
-
-          {/* Quick Shortcuts */}
-          <div className="p-6 rounded-2xl bg-white border border-gray-200 space-y-3">
-            <h3 className="font-sans font-bold text-base text-gray-900">
-              Quick Actions
-            </h3>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/admin/courses/new"
-                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white text-xs font-medium inline-flex items-center gap-1.5"
-              >
-                + Create New Course
-              </Link>
-              <button
-                onClick={() => setActiveTab('students')}
-                className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-medium"
-              >
-                Reset Student Password
-              </button>
-              <button
-                onClick={() => setActiveTab('payments')}
-                className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-medium"
-              >
-                View Fee Payments
-              </button>
             </div>
           </div>
         </section>
@@ -668,6 +768,285 @@ export function AdminClient({
             </table>
           </div>
         </section>
+      )}
+
+      {/* TAB 5: ADMIN PROFILE */}
+      {activeTab === 'profile' && (
+        <div className="space-y-6">
+          {/* Profile Banner */}
+          <section className="bg-amber-100 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-5">
+            <div className="flex flex-col items-center gap-2 shrink-0">
+              <div className="relative w-24 h-24">
+                {adminAvatarUrl ? (
+                  <img
+                    src={adminAvatarUrl}
+                    alt={`${savedAdminName}'s profile picture`}
+                    referrerPolicy="no-referrer"
+                    className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-sm"
+                  />
+                ) : (
+                  <div
+                    className="w-24 h-24 rounded-full bg-amber-600 text-white flex items-center justify-center text-4xl font-semibold border-4 border-white shadow-sm"
+                    aria-hidden="true"
+                  >
+                    {savedAdminName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => adminFileRef.current?.click()}
+                  disabled={adminAvatarBusy}
+                  aria-label="Upload profile picture"
+                  className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center border-2 border-white transition active:scale-95 disabled:opacity-60 shadow"
+                >
+                  {adminAvatarBusy ? <Spinner size="xs" variant="white" /> : <Camera className="w-4 h-4" />}
+                </button>
+              </div>
+              <input
+                ref={adminFileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                aria-label="Choose a profile picture"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadAdminAvatar(f);
+                }}
+              />
+              {adminAvatarUrl && (
+                <button
+                  type="button"
+                  onClick={removeAdminAvatar}
+                  disabled={adminAvatarBusy}
+                  className="text-xs font-semibold text-red-600 hover:underline flex items-center gap-1 disabled:opacity-60"
+                >
+                  <Trash2 className="w-3 h-3" /> Remove
+                </button>
+              )}
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-semibold text-amber-900 leading-tight truncate">
+                  {savedAdminName}
+                </h1>
+                <span className="px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-800 text-[11px] font-bold uppercase tracking-wider">
+                  Admin
+                </span>
+              </div>
+              <p className="text-sm text-gray-700 truncate mt-0.5">{adminUser.email}</p>
+              <p className="text-xs text-gray-600 mt-1">
+                Administrator &bull; Member since{' '}
+                {new Date(adminUser.createdAt || Date.now()).toLocaleDateString('en-IN', {
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </p>
+            </div>
+
+            <dl className="sm:ml-auto grid grid-cols-3 gap-6 text-center shrink-0 border-t sm:border-t-0 sm:border-l border-amber-200/80 pt-4 sm:pt-0 sm:pl-6">
+              <div>
+                <dd className="text-2xl font-bold text-amber-700">{courses.length}</dd>
+                <dt className="text-xs text-gray-600">Courses</dt>
+              </div>
+              <div>
+                <dd className="text-2xl font-bold text-amber-700">{students.length}</dd>
+                <dt className="text-xs text-gray-600">Students</dt>
+              </div>
+              <div>
+                <dd className="text-2xl font-bold text-amber-700">{formatPrice(totalRevenue)}</dd>
+                <dt className="text-xs text-gray-600">Revenue</dt>
+              </div>
+            </dl>
+          </section>
+
+          {/* Avatar Notice */}
+          {adminAvatarNotice && (
+            <div
+              className={`p-3.5 rounded-xl border text-xs font-medium flex items-center gap-2 ${
+                adminAvatarNotice.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : 'bg-red-50 border-red-200 text-red-700'
+              }`}
+            >
+              {adminAvatarNotice.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 shrink-0" />
+              )}
+              <span>{adminAvatarNotice.text}</span>
+            </div>
+          )}
+
+          {/* Two-Column Cards: Personal Details & Password */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            {/* Card 1: Personal Details */}
+            <form
+              onSubmit={saveAdminName}
+              className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-7 space-y-4 shadow-sm"
+            >
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Personal Details</h2>
+                <p className="text-xs text-gray-500">
+                  Update your display name. Profile picture: JPG, PNG or WebP, up to 2 MB.
+                </p>
+              </div>
+
+              {adminNameNotice && (
+                <div
+                  className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-2 ${
+                    adminNameNotice.type === 'success'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                      : 'bg-red-50 border-red-200 text-red-700'
+                  }`}
+                >
+                  {adminNameNotice.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                  )}
+                  <span>{adminNameNotice.text}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={adminName}
+                  onChange={(e) => setAdminName(e.target.value)}
+                  className="w-full h-11 px-3.5 rounded-xl border border-gray-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  disabled
+                  value={adminUser.email}
+                  className="w-full h-11 px-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 text-sm cursor-not-allowed"
+                />
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Email is locked for administrative accounts.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Role
+                </label>
+                <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-700 font-medium">
+                  <ShieldCheck className="w-4 h-4 text-amber-600" />
+                  <span>Administrator (Full Portal & Curriculum Privileges)</span>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={savingAdminName || adminName === savedAdminName}
+                className="w-full h-11 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs tracking-wide shadow-sm transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {savingAdminName ? (
+                  <ButtonSpinner label="Saving Changes..." />
+                ) : (
+                  <span>Save Changes</span>
+                )}
+              </button>
+            </form>
+
+            {/* Card 2: Security & Password */}
+            <form
+              onSubmit={saveAdminPassword}
+              className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-7 space-y-4 shadow-sm"
+            >
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Security & Password</h2>
+                <p className="text-xs text-gray-500">
+                  Choose a strong password with at least 8 characters.
+                </p>
+              </div>
+
+              {adminPasswordNotice && (
+                <div
+                  className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-2 ${
+                    adminPasswordNotice.type === 'success'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                      : 'bg-red-50 border-red-200 text-red-700'
+                  }`}
+                >
+                  {adminPasswordNotice.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                  )}
+                  <span>{adminPasswordNotice.text}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={adminCurrentPassword}
+                  onChange={(e) => setAdminCurrentPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full h-11 px-3.5 rounded-xl border border-gray-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={adminNewPassword}
+                  onChange={(e) => setAdminNewPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  className="w-full h-11 px-3.5 rounded-xl border border-gray-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={adminConfirmPassword}
+                  onChange={(e) => setAdminConfirmPassword(e.target.value)}
+                  placeholder="Repeat new password"
+                  className="w-full h-11 px-3.5 rounded-xl border border-gray-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={savingAdminPassword || !adminCurrentPassword || !adminNewPassword}
+                className="w-full h-11 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs tracking-wide shadow-sm transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {savingAdminPassword ? (
+                  <ButtonSpinner label="Updating Password..." />
+                ) : (
+                  <span>Update Password</span>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* MODAL: ADD COURSE */}

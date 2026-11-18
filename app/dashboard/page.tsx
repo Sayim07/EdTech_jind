@@ -18,6 +18,11 @@ export default async function DashboardPage({
     redirect('/login?redirect=/dashboard');
   }
 
+  // Administrators manage courses and students on /admin and should never see the student "My Courses" view.
+  if (user.role === 'ADMIN') {
+    redirect('/admin');
+  }
+
   // Fetch enrolled courses for this student
   const enrollments = await prisma.enrollment.findMany({
     where: { userId: user.id },

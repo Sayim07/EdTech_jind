@@ -49,7 +49,7 @@ export function EnrollButton({ courseId, courseSlug, coursePrice, isLoggedIn }: 
     <button
       onClick={handleEnroll}
       disabled={loading}
-      className="w-full py-3 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-medium text-sm transition shadow-sm active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+      className="w-full py-3 px-4 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white font-medium text-sm transition shadow-sm active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
     >
       <ShoppingBag className="w-4 h-4" />
       <span>

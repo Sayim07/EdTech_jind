@@ -60,7 +60,7 @@ export default async function AdminStudioPage() {
     <>
       <Navbar />
 
-      <main className="flex-1 pb-24 md:pb-12 bg-gray-50 dark:bg-ink-950">
+      <main className="flex-1 pb-24 md:pb-12 bg-gray-50">
         <AdminClient
           adminUser={user}
           initialCourses={courses}

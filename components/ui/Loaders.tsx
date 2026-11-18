@@ -21,9 +21,9 @@ const SIZE_MAP = {
 };
 
 const VARIANT_MAP = {
-  primary: 'text-amber-600 dark:text-amber-400',
+  primary: 'text-amber-600',
   white: 'text-white',
-  gray: 'text-gray-500 dark:text-gray-400',
+  gray: 'text-gray-500',
   current: 'text-current',
 };
 
@@ -110,12 +110,12 @@ export function PageSpinner({ message = 'Loading content...' }: { message?: stri
     <div className="min-h-[50vh] flex flex-col items-center justify-center p-8 space-y-4">
       <div className="relative flex items-center justify-center">
         {/* Subtle pulsing background glow */}
-        <div className="w-16 h-16 rounded-full bg-amber-500/10 dark:bg-amber-400/10 animate-ping absolute" />
-        <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-900/60 flex items-center justify-center shadow-sm">
+        <div className="w-16 h-16 rounded-full bg-amber-500/10 animate-ping absolute" />
+        <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center shadow-sm">
           <Spinner size="md" variant="primary" />
         </div>
       </div>
-      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 tracking-wide">
+      <p className="text-xs font-medium text-gray-500">
         {message}
       </p>
     </div>
@@ -132,7 +132,7 @@ export function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`animate-pulse rounded-xl bg-gray-200/80 dark:bg-ink-800/80 ${className}`}
+      className={`animate-pulse rounded-xl bg-gray-200/80 ${className}`}
       {...props}
     />
   );
@@ -143,7 +143,7 @@ export function Skeleton({
  */
 export function CourseCardSkeleton() {
   return (
-    <div className="flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-ink-900 border border-gray-200/70 dark:border-gray-800 shadow-sm">
+    <div className="flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden bg-white border border-gray-200/70 shadow-sm">
       {/* Thumbnail placeholder */}
       <Skeleton className="w-full aspect-[16/10] rounded-none rounded-t-2xl sm:rounded-t-3xl" />
 
@@ -168,7 +168,7 @@ export function CourseCardSkeleton() {
         </div>
 
         {/* Footer info (Lectures & Price) */}
-        <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+        <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Skeleton className="h-3.5 w-16 rounded" />
             <Skeleton className="h-3.5 w-12 rounded" />
@@ -203,19 +203,19 @@ export function DashboardSkeleton() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 sm:space-y-8">
       {/* Welcome Banner Skeleton */}
-      <div className="bg-white dark:bg-ink-900 rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-gray-800 p-5 sm:p-7 shadow-sm">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-200 p-5 sm:p-7 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2">
             <Skeleton className="h-5 w-32 rounded-full" />
             <Skeleton className="h-7 w-48 rounded-lg" />
             <Skeleton className="h-3.5 w-64 rounded" />
           </div>
-          <div className="flex items-center gap-5 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-800 pt-3 md:pt-0 md:pl-6">
+          <div className="flex items-center gap-5 border-t md:border-t-0 md:border-l border-gray-200 pt-3 md:pt-0 md:pl-6">
             <div className="space-y-1 text-center">
               <Skeleton className="h-7 w-12 mx-auto rounded" />
               <Skeleton className="h-3 w-16 mx-auto rounded" />
             </div>
-            <div className="h-7 w-px bg-gray-200 dark:bg-gray-800" />
+            <div className="h-7 w-px bg-gray-200" />
             <div className="space-y-1 text-center">
               <Skeleton className="h-7 w-12 mx-auto rounded" />
               <Skeleton className="h-3 w-16 mx-auto rounded" />
@@ -258,7 +258,7 @@ export function CoursesCatalogSkeleton() {
       </div>
 
       {/* Search & Category Filter Box */}
-      <div className="bg-white dark:bg-ink-900 p-3.5 sm:p-4 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-3">
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-gray-200 space-y-3">
         <div className="flex flex-col sm:flex-row gap-2.5">
           <Skeleton className="h-9 flex-1 rounded-xl" />
           <Skeleton className="h-9 w-24 rounded-xl shrink-0" />
@@ -282,7 +282,7 @@ export function CoursesCatalogSkeleton() {
  */
 export function CourseDetailsSkeleton() {
   return (
-    <div className="min-h-screen bg-parchment-50 dark:bg-ink-950 pb-20">
+    <div className="min-h-screen bg-parchment-50 pb-20">
       {/* Hero Header */}
       <div className="bg-ink-950 border-b border-gray-800 py-10 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -307,14 +307,14 @@ export function CourseDetailsSkeleton() {
             </div>
 
             {/* Right Action Box */}
-            <div className="lg:col-span-4 bg-white dark:bg-ink-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-4">
+            <div className="lg:col-span-4 bg-white p-6 rounded-2xl border border-gray-200 space-y-4">
               <Skeleton className="aspect-video w-full rounded-xl" />
               <div className="space-y-1">
                 <Skeleton className="h-7 w-28 rounded" />
                 <Skeleton className="h-3 w-48 rounded" />
               </div>
               <Skeleton className="h-10 w-full rounded-xl" />
-              <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+              <div className="space-y-2 pt-2 border-t border-gray-100">
                 <Skeleton className="h-3 w-full rounded" />
                 <Skeleton className="h-3 w-4/5 rounded" />
                 <Skeleton className="h-3 w-3/4 rounded" />
@@ -332,7 +332,7 @@ export function CourseDetailsSkeleton() {
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="bg-white dark:bg-ink-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-3"
+              className="bg-white rounded-xl border border-gray-200 p-4 space-y-3"
             >
               <Skeleton className="h-5 w-48 rounded" />
               <Skeleton className="h-4 w-full rounded" />
@@ -349,9 +349,9 @@ export function CourseDetailsSkeleton() {
  */
 export function ClassroomPlayerSkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-ink-950 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Top Navbar Skeleton */}
-      <div className="h-14 bg-white dark:bg-ink-900 border-b border-gray-200 dark:border-gray-800 px-4 sm:px-6 flex items-center justify-between shrink-0">
+      <div className="h-14 bg-white border-b border-gray-200 px-4 sm:px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <Skeleton className="w-8 h-8 rounded-lg" />
           <div className="space-y-1">
@@ -374,7 +374,7 @@ export function ClassroomPlayerSkeleton() {
           </div>
 
           {/* Notes & Tabs */}
-          <div className="bg-white dark:bg-ink-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
             <div className="flex items-center justify-between">
               <Skeleton className="h-6 w-56 rounded-md" />
               <div className="flex items-center gap-1.5">
@@ -391,7 +391,7 @@ export function ClassroomPlayerSkeleton() {
         </div>
 
         {/* Right Side: Syllabus Sidebar */}
-        <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-ink-900 p-4 space-y-3 shrink-0">
+        <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white p-4 space-y-3 shrink-0">
           <Skeleton className="h-5 w-32 rounded" />
           <div className="space-y-2 pt-2">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -411,7 +411,7 @@ export function AdminDashboardSkeleton() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
       {/* Admin Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-ink-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-200">
         <div className="space-y-2">
           <Skeleton className="h-4 w-28 rounded" />
           <Skeleton className="h-7 w-48 rounded" />
@@ -425,7 +425,7 @@ export function AdminDashboardSkeleton() {
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="bg-white dark:bg-ink-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-2"
+            className="bg-white p-5 rounded-2xl border border-gray-200 space-y-2"
           >
             <div className="flex items-center justify-between">
               <Skeleton className="h-3.5 w-24 rounded" />
@@ -448,7 +448,7 @@ export function AdminDashboardSkeleton() {
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="bg-white dark:bg-ink-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 flex items-center justify-between gap-4"
+            className="bg-white p-4 rounded-2xl border border-gray-200 flex items-center justify-between gap-4"
           >
             <div className="flex items-center gap-3">
               <Skeleton className="w-12 h-12 rounded-xl shrink-0" />

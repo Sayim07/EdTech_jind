@@ -7,7 +7,7 @@ export default function CourseDetailLoading() {
   return (
     <>
       <Navbar />
-      <main className="flex-1 min-h-screen bg-parchment-50 dark:bg-ink-950">
+      <main className="flex-1 min-h-screen bg-parchment-50">
         <CourseDetailsSkeleton />
       </main>
       <MobileBottomNav role="STUDENT" isLoggedIn={true} />

@@ -42,3 +42,8 @@ Set these on the host. Never commit them. `.env.example` lists every name.
 - Login and registration rate limits are counted per server instance. For strict global limits, back `lib/rate-limit.ts` with Redis.
 - Course videos are served from a public bucket URL, so anyone holding a link can watch. Protected playback needs signed URLs or a player service.
 - No Content-Security-Policy header yet (Razorpay, YouTube and the media host need to be allow-listed first).
+
+## Cloudflare auto-deploy
+
+Every push to `main` runs `.github/workflows/deploy.yml`, which builds with OpenNext and deploys the `cimindia` Worker.
+Needs the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Runtime secrets live in Cloudflare (`wrangler secret put NAME`).

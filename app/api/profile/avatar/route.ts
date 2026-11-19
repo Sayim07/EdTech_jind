@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser } from '@/lib/auth';
+import { getSessionUser, invalidateSessionUser } from '@/lib/auth';
 import { AVATAR_BUCKET, deleteObject, isSupabaseStorageConfigured, objectPathFromUrl, uploadObject } from '@/lib/supabase-storage';
 import { deleteStoredObject, isS3Configured, keyFromPublicUrl, putObject } from '@/lib/s3';
 
@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
 
     await removeOldAvatar(user.avatarUrl);
     await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
+    invalidateSessionUser(user.id);
 
     return NextResponse.json({ success: true, avatarUrl });
   } catch (err) {
@@ -77,6 +78,7 @@ export async function DELETE() {
     if (!user) return NextResponse.json({ error: 'Please log in' }, { status: 401 });
     await removeOldAvatar(user.avatarUrl);
     await prisma.user.update({ where: { id: user.id }, data: { avatarUrl: null } });
+    invalidateSessionUser(user.id);
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('Avatar delete error:', err);

@@ -103,6 +103,28 @@ export async function listCourseTestsLight(course: { id: string; title: string }
   return list;
 }
 
+/**
+ * Test titles for every course a student is enrolled in, in ONE query, so a page can ask for it at the same moment as
+ * the enrollments instead of waiting for them. Group the result by courseId; apply the sample-test rule per course
+ * with withPracticeFallback().
+ */
+export async function listUserTestsLight(userId: string) {
+  const rows = await prisma.mcqTest.findMany({
+    where: {
+      questions: { some: {} },
+      OR: [{ course: { enrollments: { some: { userId } } } }, { module: { course: { enrollments: { some: { userId } } } } }],
+    },
+    select: { id: true, title: true, kind: true, order: true, createdAt: true, courseId: true, module: { select: { order: true, courseId: true } } },
+  });
+  rows.sort((a, b) => (a.module?.order ?? 9999) - (b.module?.order ?? 9999) || a.order - b.order || a.createdAt.getTime() - b.createdAt.getTime());
+  return rows.map((t) => ({ key: t.id, courseId: (t.courseId ?? t.module?.courseId) as string, title: t.title, kind: (t.kind === 'ASSIGNMENT' ? 'ASSIGNMENT' : 'TEST') as 'TEST' | 'ASSIGNMENT' }));
+}
+
+/** Adds the built-in practice test when a course has no real test (same rule as resolveCourseTests). */
+export function withPracticeFallback(course: { id: string; title: string }, tests: { key: string; title: string; kind: 'TEST' | 'ASSIGNMENT' }[]) {
+  return tests.some((t) => t.kind === 'TEST') ? tests : [...tests, { key: `sample-${course.id}`, title: `${course.title}: Practice Test`, kind: 'TEST' as const }];
+}
+
 export async function findTestByKey(userId: string, key: string): Promise<ResolvedTest | null> {
   let courseId: string | null | undefined;
   if (key.startsWith('sample-')) courseId = key.slice('sample-'.length);

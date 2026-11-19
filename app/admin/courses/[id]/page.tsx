@@ -18,10 +18,16 @@ export default async function AdminEditCoursePage({ params }: { params: Promise<
   if (!user || user.role !== 'ADMIN') redirect('/login?tab=admin&error=AdminAccessOnly');
 
   const { id } = await params;
-  const course = await prisma.course.findFirst({ where: { OR: [{ id }, { slug: id }] } });
+  // Nothing here depends on anything else, so ask for it all at once. The address normally carries the course id, so the
+  // content can be requested in the same breath; if someone used the slug instead, reload it with the real id.
+  const [course, categories, instructors, guessedContent] = await Promise.all([
+    prisma.course.findFirst({ where: { OR: [{ id }, { slug: id }] } }),
+    courseCategories(),
+    activeInstructors(),
+    loadCourseContent(id),
+  ]);
   if (!course) notFound();
-
-  const [content, categories, instructors] = await Promise.all([loadCourseContent(course.id), courseCategories(), activeInstructors()]);
+  const content = course.id === id ? guessedContent : await loadCourseContent(course.id);
 
   return (
     <>

@@ -38,6 +38,17 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
   }
 }
 
+// Reading the user from the database on every page view cost one network round trip per click. Keep the answer for a
+// few seconds per server instance. A role change or removal therefore takes effect within SESSION_CACHE_MS.
+const SESSION_CACHE_MS = 20_000;
+type SessionUserRow = { id: string; email: string; name: string; role: string; avatarUrl: string | null; createdAt: Date };
+const sessionCache = new Map<string, { user: SessionUserRow | null; expires: number }>();
+
+/** Call after changing a user's own profile (name, avatar, password) so the next request sees it immediately. */
+export function invalidateSessionUser(userId: string) {
+  sessionCache.delete(userId);
+}
+
 export async function getSessionUser() {
   try {
     const cookieStore = await cookies();
@@ -46,6 +57,9 @@ export async function getSessionUser() {
 
     const payload = await verifyToken(token);
     if (!payload?.userId) return null;
+
+    const hit = sessionCache.get(payload.userId);
+    if (hit && hit.expires > Date.now()) return hit.user;
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
@@ -59,6 +73,8 @@ export async function getSessionUser() {
       },
     });
 
+    if (sessionCache.size > 2000) sessionCache.clear();
+    sessionCache.set(payload.userId, { user, expires: Date.now() + SESSION_CACHE_MS });
     return user;
   } catch (err) {
     return null;

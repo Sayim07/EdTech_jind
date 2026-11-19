@@ -39,7 +39,8 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
   const { slug } = await params;
   const user = await getSessionUser();
 
-  const course = await prisma.course.findUnique({
+  const [course, enrollment] = await Promise.all([
+  prisma.course.findUnique({
     where: { slug },
     include: {
       modules: {
@@ -53,18 +54,14 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
       mcqTests: { select: { id: true } },
       _count: { select: { enrollments: true } },
     },
-  });
+  }),
+  user ? prisma.enrollment.findFirst({ where: { userId: user.id, course: { slug } }, select: { id: true } }) : Promise.resolve(null),
+  ]);
 
   // Details are public, but unpublished courses stay hidden from everyone except admins.
   if (!course || (!course.published && user?.role !== 'ADMIN')) notFound();
 
-  let isEnrolled = false;
-  if (user) {
-    const enrollment = await prisma.enrollment.findUnique({
-      where: { userId_courseId: { userId: user.id, courseId: course.id } },
-    });
-    isEnrolled = !!enrollment;
-  }
+  const isEnrolled = !!enrollment;
 
   const allLessons = course.modules.flatMap((m) => m.lessons);
   const totalLessons = allLessons.length;

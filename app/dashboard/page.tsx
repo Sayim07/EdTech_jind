@@ -6,7 +6,7 @@ import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { DashboardClient } from './DashboardClient';
 import { durationToMinutes } from '@/lib/course';
-import { listCourseTestsLight } from '@/lib/mcq-server';
+import { listUserTestsLight, withPracticeFallback } from '@/lib/mcq-server';
 
 export default async function DashboardPage({
   searchParams,
@@ -26,7 +26,7 @@ export default async function DashboardPage({
   }
 
   // Everything below only needs the user id, so run it all at once: each round trip to the database costs real time.
-  const [enrollments, popularCourses, doneRows, attempts] = await Promise.all([
+  const [enrollments, popularCourses, doneRows, attempts, userTests] = await Promise.all([
   prisma.enrollment.findMany({
     where: { userId: user.id },
     include: {
@@ -73,6 +73,8 @@ export default async function DashboardPage({
     where: { userId: user.id },
     select: { testKey: true, status: true, startedAt: true, submittedAt: true },
   }),
+
+  listUserTestsLight(user.id),
   ]);
   const doneIds = new Set(doneRows.map((r) => r.lessonId));
 
@@ -97,9 +99,8 @@ export default async function DashboardPage({
   }
 
   const submittedKeys = new Set(attempts.filter((a) => a.status === 'SUBMITTED').map((a) => a.testKey));
-  const courseTests = await Promise.all(enrollments.map((e) => listCourseTestsLight(e.course)));
-  enrollments.forEach((e, i) => {
-    for (const t of courseTests[i]) {
+  enrollments.forEach((e) => {
+    for (const t of withPracticeFallback(e.course, userTests.filter((x) => x.courseId === e.courseId))) {
       if (!submittedKeys.has(t.key)) todo.push({ kind: t.kind === 'ASSIGNMENT' ? 'assignment' : 'test', title: t.title, course: e.course.title, href: `/assignments/tests/${t.key}` });
     }
   });

@@ -19,7 +19,9 @@ export default async function CourseClassroomPage({
     redirect(`/login?redirect=/learn/${slug}`);
   }
 
-  const course = await prisma.course.findUnique({
+  // Course, enrollment and progress do not depend on each other (all keyed by the slug), so ask for them at once.
+  const [course, enrollment, progress] = await Promise.all([
+  prisma.course.findUnique({
     where: { slug },
     include: {
       modules: {
@@ -35,30 +37,21 @@ export default async function CourseClassroomPage({
       },
       mcqTests: { where: { questions: { some: {} } }, orderBy: { order: 'asc' }, select: { id: true, title: true, kind: true } },
     },
-  });
+  }),
+  prisma.enrollment.findFirst({ where: { userId: user.id, course: { slug } } }),
+  prisma.lessonProgress.findMany({
+    where: { userId: user.id, lesson: { module: { course: { slug } } } },
+    select: { lessonId: true },
+  }),
+  ]);
 
   if (!course) notFound();
 
-  // Verify enrollment (Admins always have access)
-  const enrollment = await prisma.enrollment.findUnique({
-    where: {
-      userId_courseId: {
-        userId: user.id,
-        courseId: course.id,
-      },
-    },
-  });
+  // Admins always have access
 
   if (!enrollment && user.role !== 'ADMIN') {
     redirect(`/courses/${course.slug}?unauthorized=true`);
   }
-
-  const progress = enrollment
-    ? await prisma.lessonProgress.findMany({
-        where: { userId: user.id, lesson: { module: { courseId: course.id } } },
-        select: { lessonId: true },
-      })
-    : [];
 
   return (
     <ClassroomPlayerClient

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, signToken } from '@/lib/auth';
+import { getSessionUser, invalidateSessionUser, signToken } from '@/lib/auth';
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -34,6 +34,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const updated = await prisma.user.update({ where: { id: user.id }, data });
+    invalidateSessionUser(user.id);
 
     const res = NextResponse.json({
       success: true,

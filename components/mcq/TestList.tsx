@@ -17,16 +17,19 @@ function Status({ kind }: { kind: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' })
 
 /** MCQ tests for every course the student is enrolled in (real tests, or the built-in sample when a course has none). */
 export async function TestList({ userId }: { userId: string }) {
-  const enrollments = await prisma.enrollment.findMany({
-    where: { userId },
-    include: { course: true },
-    orderBy: { createdAt: 'desc' },
-  });
-  const attempts = await prisma.mcqAttempt.findMany({
-    where: { userId },
-    orderBy: { startedAt: 'desc' },
-    select: { id: true, testKey: true, status: true, percentage: true, passed: true, submittedAt: true, startedAt: true },
-  });
+  // Independent reads: run them together (each round trip to the database costs real time).
+  const [enrollments, attempts] = await Promise.all([
+    prisma.enrollment.findMany({
+      where: { userId },
+      include: { course: true },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.mcqAttempt.findMany({
+      where: { userId },
+      orderBy: { startedAt: 'desc' },
+      select: { id: true, testKey: true, status: true, percentage: true, passed: true, submittedAt: true, startedAt: true },
+    }),
+  ]);
 
   const groups = await Promise.all(
     enrollments.map(async (e) => ({ course: e.course, tests: await resolveCourseTests(e.course) }))

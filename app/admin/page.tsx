@@ -17,12 +17,24 @@ export default async function AdminStudioPage() {
   }
 
   // Fetch initial data for admin studio. Every query starts at once: each round trip to the hosted DB is slow.
+  // All the dashboard counters in ONE query (they used to be five separate round trips).
   const extrasPromise = Promise.all([
-    prisma.lesson.groupBy({ by: ['type'], _count: { _all: true } }),
-    prisma.submission.groupBy({ by: ['status'], _count: { _all: true } }),
-    prisma.mcqAttempt.findMany({ where: { status: 'SUBMITTED' }, select: { passed: true } }),
-    prisma.payment.groupBy({ by: ['status'], _count: { _all: true } }),
-    prisma.lessonProgress.count(),
+    prisma.$queryRaw<
+      {
+        lessons: { type: string; count: number }[] | null;
+        submissions: { status: string; count: number }[] | null;
+        payments: { status: string; count: number }[] | null;
+        attempts: number;
+        passed: number;
+        progress: number;
+      }[]
+    >`SELECT
+        (SELECT json_agg(x) FROM (SELECT "type", COUNT(*)::int AS count FROM "Lesson" GROUP BY "type") x) AS lessons,
+        (SELECT json_agg(x) FROM (SELECT "status", COUNT(*)::int AS count FROM "Submission" GROUP BY "status") x) AS submissions,
+        (SELECT json_agg(x) FROM (SELECT "status", COUNT(*)::int AS count FROM "Payment" GROUP BY "status") x) AS payments,
+        (SELECT COUNT(*)::int FROM "McqAttempt" WHERE "status" = 'SUBMITTED') AS attempts,
+        (SELECT COUNT(*)::int FROM "McqAttempt" WHERE "status" = 'SUBMITTED' AND "passed" = true) AS passed,
+        (SELECT COUNT(*)::int FROM "LessonProgress") AS progress`,
     prisma.payment.findMany({
       include: { user: { select: { id: true, name: true, email: true } }, course: { select: { id: true, title: true } } },
       orderBy: { createdAt: 'desc' },
@@ -66,7 +78,13 @@ export default async function AdminStudioPage() {
     }),
   ]);
 
-  const [lessonGroups, submissionGroups, attemptRows, paymentGroups, lessonsCompleted, paymentRecords] = await extrasPromise;
+  const [[counters], paymentRecords] = await extrasPromise;
+  const lessonGroups = counters.lessons ?? [];
+  const submissionGroups = counters.submissions ?? [];
+  const paymentGroups = counters.payments ?? [];
+  const lessonsCompleted = Number(counters.progress);
+  const attemptTotal = Number(counters.attempts);
+  const attemptPassed = Number(counters.passed);
 
   const totalRevenue = enrollments.reduce((sum, e) => sum + (e.amountPaid || 0), 0);
 
@@ -86,7 +104,7 @@ export default async function AdminStudioPage() {
       slot.revenue += e.amountPaid || 0;
     }
   }
-  const countOf = (rows: { status: string; _count: { _all: number } }[], s: string) => rows.find((r) => r.status === s)?._count._all || 0;
+  const countOf = (rows: { status: string; count: number }[], s: string) => rows.find((r) => r.status === s)?.count || 0;
   const perCourse = new Map<string, { enrollments: number; revenue: number }>();
   for (const e of enrollments) {
     const cur = perCourse.get(e.courseId) || { enrollments: 0, revenue: 0 };
@@ -153,7 +171,7 @@ export default async function AdminStudioPage() {
       enrollments7: enrollments.filter((e) => e.createdAt.getTime() >= since(7)).length,
     },
     months: months.map(({ label, enrollments: n, revenue }) => ({ label, enrollments: n, revenue })),
-    lessonTypes: lessonGroups.map((g) => ({ type: g.type, count: g._count._all })).sort((a, b) => b.count - a.count),
+    lessonTypes: lessonGroups.map((g) => ({ type: g.type, count: g.count })).sort((a, b) => b.count - a.count),
     topCourses: courses
       .map((c) => ({ id: c.id, title: c.title, ...(perCourse.get(c.id) || { enrollments: 0, revenue: 0 }) }))
       .sort((a, b) => b.revenue - a.revenue || b.enrollments - a.enrollments)
@@ -162,8 +180,8 @@ export default async function AdminStudioPage() {
       lessonsCompleted,
       toGrade: countOf(submissionGroups, 'SUBMITTED') + countOf(submissionGroups, 'PENDING'),
       graded: countOf(submissionGroups, 'GRADED'),
-      testAttempts: attemptRows.length,
-      testPassRate: attemptRows.length ? Math.round((attemptRows.filter((a) => a.passed).length / attemptRows.length) * 100) : null,
+      testAttempts: attemptTotal,
+      testPassRate: attemptTotal ? Math.round((attemptPassed / attemptTotal) * 100) : null,
     },
     payments: { paid: countOf(paymentGroups, 'PAID'), failed: countOf(paymentGroups, 'FAILED'), pending: countOf(paymentGroups, 'CREATED') },
     recent: enrollments.slice(0, 6).map((e) => ({ id: e.id, student: e.user.name, course: e.course.title, amount: e.amountPaid || 0, date: e.createdAt.toISOString() })),

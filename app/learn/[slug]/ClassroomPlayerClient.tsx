@@ -40,7 +40,7 @@ function SlidesViewer({ url }: { url: string }) {
   if (isPdf) {
     return (
       <iframe
-        src={`${url}#view=FitH`}
+        src={`${url}#toolbar=0&navpanes=0&view=FitH`}
         title={`Slides: ${name}`}
         className="w-full h-[70vh] min-h-[420px] rounded-xl border border-gray-200 bg-gray-100"
       />
@@ -56,7 +56,7 @@ function SlidesViewer({ url }: { url: string }) {
       <FileText className="w-12 h-12 text-amber-600" />
       <div className="text-base font-semibold text-gray-900">{name}</div>
       <p className="text-sm text-gray-600 max-w-md">
-        An in-page preview is not available for this file type. Use Download Slides to open it.
+        A preview is not available for this file type. Please ask your instructor to upload it as a PDF or PowerPoint file.
       </p>
     </div>
   );
@@ -118,7 +118,7 @@ function PptxViewer({ url, name }: { url: string; name: string }) {
             <FileText className="w-10 h-10 text-amber-600" />
             <div className="text-base font-semibold text-gray-900">{name}</div>
             <p className="text-sm text-gray-600 max-w-md">
-              The preview could not be displayed. Use Download Slides to open the file.
+              The slides could not be displayed. Please refresh the page or try again in a moment.
             </p>
           </div>
         )}
@@ -258,8 +258,8 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
   const [submitting, setSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  // Lesson types decide what opens first: slides and PDFs show the document, audio lessons show the player.
-  const tabFor = (l: any): 'notes' | 'slides' | 'audio' => (l?.type === 'PPT' || l?.type === 'PDF' ? 'slides' : l?.type === 'AUDIO' ? 'audio' : 'notes');
+  // Slides, PDFs and audio lessons are shown in the main area itself, so the tabs below always start on the notes.
+  const tabFor = (_l: any): 'notes' | 'slides' | 'audio' => 'notes';
   const [activeTab, setActiveTab] = useState<'notes' | 'slides' | 'audio' | 'infographic'>(tabFor(allLessons.find((l) => l.id === initialLessonId) || allLessons[0]));
 
   // Written assignments live inside modules and open in the main area, like a lesson does.
@@ -329,20 +329,11 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
     }
   };
 
-  // Helper to extract YouTube embed URL
+  // Privacy-enhanced YouTube player (no tracking cookies until played), related videos limited to this channel's.
   const getYouTubeEmbedUrl = (url: string) => {
-    try {
-      if (url.includes('youtube.com/watch')) {
-        const videoId = new URL(url).searchParams.get('v');
-        return `https://www.youtube.com/embed/${videoId}`;
-      } else if (url.includes('youtu.be/')) {
-        const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-      return url;
-    } catch {
-      return url;
-    }
+    const id = url.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/)?.[1];
+    if (!id) return url;
+    return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&playsinline=1`;
   };
 
 
@@ -426,39 +417,46 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
             />
           ) : (
           <>
-          {/* VIDEO PLAYER SCREEN */}
-          <div className="px-5 sm:px-8 lg:px-12 pt-6 sm:pt-8">
-          <div className="w-full bg-black aspect-video max-h-[60vh] rounded-2xl overflow-hidden flex items-center justify-center relative">
-            {activeLesson?.type === 'YOUTUBE' && activeLesson.videoUrl ? (
-              <iframe
-                src={getYouTubeEmbedUrl(activeLesson.videoUrl)}
-                title={activeLesson.title}
-                className="w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : activeLesson?.videoUrl ? (
-              <video
-                key={activeLesson.videoUrl}
-                src={activeLesson.videoUrl}
-                controls
-                autoPlay
-                playsInline
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <div className="text-center p-8 space-y-3">
-                {activeLesson?.type === 'AUDIO' ? <Headphones className="w-12 h-12 text-amber-500 mx-auto" /> : <FileText className="w-12 h-12 text-amber-500 mx-auto" />}
-                <div className="text-base font-sans font-bold text-gray-100">
-                  {activeLesson?.type === 'AUDIO' ? 'Audio Lesson' : activeLesson?.type === 'PDF' ? 'PDF Lesson' : 'Presentation Lesson'}
-                </div>
-                <p className="text-xs text-gray-300 max-w-sm">
-                  {activeLesson?.type === 'AUDIO' ? 'Press play on the audio player below.' : 'This class is based on the document below.'}
-                </p>
+          {/* MAIN AREA: sized to the lesson, so a slide deck or PDF is not squeezed under an empty video box */}
+          {(() => {
+            const l = activeLesson;
+            const isDoc = (l?.type === 'PPT' || l?.type === 'PDF') && l?.fileUrl;
+            const isAudio = l?.type === 'AUDIO' && l?.audioUrl;
+            const isVideo = l?.type === 'YOUTUBE' ? Boolean(l?.videoUrl) : Boolean(l?.videoUrl) && l?.type !== 'AUDIO' && l?.type !== 'PPT' && l?.type !== 'PDF';
+            if (!isDoc && !isAudio && !isVideo) return null;
+            return (
+              <div className="px-5 sm:px-8 lg:px-12 pt-6 sm:pt-8">
+                {isVideo ? (
+                  <div className="w-full bg-black aspect-video max-h-[60vh] rounded-2xl overflow-hidden flex items-center justify-center relative">
+                    {l.type === 'YOUTUBE' ? (
+                      <iframe
+                        src={getYouTubeEmbedUrl(l.videoUrl)}
+                        title={l.title}
+                        className="w-full h-full border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video key={l.videoUrl} src={l.videoUrl} controls autoPlay playsInline controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full h-full object-contain" />
+                    )}
+                  </div>
+                ) : isDoc ? (
+                  // Slides are shown here, in the page. There is no download button.
+                  <div onContextMenu={(e) => e.preventDefault()}>
+                    <SlidesViewer url={l.fileUrl} />
+                  </div>
+                ) : (
+                  <div className="rounded-2xl bg-white border border-gray-200 p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                      <Headphones className="w-6 h-6" aria-hidden />
+                    </div>
+                    <audio key={l.audioUrl} controls controlsList="nodownload" src={l.audioUrl} className="w-full min-w-0" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          </div>
+            );
+          })()}
 
           {/* LESSON DETAILS & INTERACTION TABS */}
           <div className="w-full px-5 sm:px-8 lg:px-12 py-8 sm:py-10 space-y-8">
@@ -484,6 +482,7 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
                 >
                   Lecture Notes
                 </button>
+                {activeLesson?.fileUrl && activeLesson.type !== 'PPT' && activeLesson.type !== 'PDF' && (
                 <button
                   onClick={() => setActiveTab('slides')}
                   className={`px-4 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${
@@ -493,9 +492,10 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
                   }`}
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>PPT Slides</span>
+                  <span>Slides</span>
                 </button>
-                {activeLesson?.audioUrl && (
+                )}
+                {activeLesson?.audioUrl && activeLesson.type !== 'AUDIO' && (
                   <button
                     onClick={() => setActiveTab('audio')}
                     className={`px-4 py-2 rounded-lg transition shrink-0 flex items-center gap-1.5 ${
@@ -527,34 +527,8 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
             {/* TAB 1: LECTURE OVERVIEW & NOTES */}
             {activeTab === 'notes' && (
               <div className="space-y-6 text-base text-gray-700 leading-relaxed">
-                <p className="max-w-3xl">
-                  {activeLesson?.content ||
-                    'Welcome to this lecture module. Watch the archival recording and take notes on the biological transformations and social structures.'}
-                </p>
+                {activeLesson?.content ? <p className="max-w-3xl whitespace-pre-line">{activeLesson.content}</p> : <p className="max-w-3xl text-gray-600">There are no notes for this lesson.</p>}
 
-                {activeLesson?.fileUrl && (
-                  <div className="p-5 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-6 h-6 text-amber-600 shrink-0" />
-                      <div>
-                        <div className="text-xs font-bold text-gray-900">
-                          Class Presentation Slides
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {activeLesson.fileUrl.split('/').pop()}
-                        </div>
-                      </div>
-                    </div>
-                    <a
-                      href={activeLesson.fileUrl}
-                      download
-                      className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-[#0060eb] text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>Download</span>
-                    </a>
-                  </div>
-                )}
               </div>
             )}
 
@@ -563,24 +537,7 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
               <div className="space-y-4">
                 {activeLesson?.fileUrl ? (
                   <div className="p-5 sm:p-8 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <h4 className="text-lg font-semibold text-gray-900">
-                          Class Slides & Presentation
-                        </h4>
-                        <p className="text-xs text-gray-500">
-                          File: {activeLesson.fileUrl.split('/').pop()}
-                        </p>
-                      </div>
-                      <a
-                        href={activeLesson.fileUrl}
-                        download
-                        className="h-10 px-5 rounded-lg bg-amber-600 hover:bg-[#0060eb] text-white text-sm font-semibold flex items-center gap-2 transition active:scale-[0.98] self-start sm:self-auto shrink-0"
-                      >
-                        <Download className="w-4 h-4" />
-                        <span>Download Slides</span>
-                      </a>
-                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900">Class slides</h4>
 
                     <SlidesViewer url={activeLesson.fileUrl} />
                   </div>
@@ -612,17 +569,9 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
                     </div>
 
                     <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3">
-                      <audio controls src={activeLesson.audioUrl} className="w-full" />
+                      <audio controls controlsList="nodownload" src={activeLesson.audioUrl} className="w-full" />
                       <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
                         <span>Audio Recording</span>
-                        <a
-                          href={activeLesson.audioUrl}
-                          download
-                          className="text-amber-700 hover:underline flex items-center gap-1 font-semibold"
-                        >
-                          <Download className="w-3 h-3" />
-                          <span>Download Audio File</span>
-                        </a>
                       </div>
                     </div>
                   </div>

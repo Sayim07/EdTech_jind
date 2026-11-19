@@ -545,13 +545,22 @@ export function AdminClient({
                 Create courses, set prices, upload course photos, and attach video lessons & slides.
               </p>
             </div>
-            <Link
-              href="/admin/courses/new"
-              className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white text-xs font-semibold shadow flex items-center gap-1.5 transition active:scale-95"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Add New Course</span>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/admin/categories"
+                className="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95"
+              >
+                <FolderOpen className="w-4 h-4" />
+                <span>Create Category</span>
+              </Link>
+              <Link
+                href="/admin/courses/new"
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-[#0060eb] text-white text-xs font-semibold shadow flex items-center gap-1.5 transition active:scale-95"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Add New Course</span>
+              </Link>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">

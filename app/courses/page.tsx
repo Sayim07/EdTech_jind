@@ -5,6 +5,7 @@ import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { formatPrice } from '@/lib/utils';
 import { getSessionUser } from '@/lib/auth';
+import { courseCategories } from '@/lib/course-options';
 import { BookOpen, Clock, Compass, Search, Filter } from 'lucide-react';
 
 export default async function CoursesCatalogPage({
@@ -46,12 +47,7 @@ export default async function CoursesCatalogPage({
     orderBy: { createdAt: 'desc' },
   });
 
-  const categories = [
-    'All',
-    'Anthropology & Gastronomy',
-    'World History',
-    'Global Economics & Culture',
-  ];
+  const categories = ['All', ...(await courseCategories())];
 
   return (
     <>

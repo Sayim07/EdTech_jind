@@ -234,6 +234,14 @@ model Payment {
   @@index([createdAt])
 }
 
+// Course categories, created and managed by admins. Courses keep the category name as a plain label.
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+}
+
 // People who teach or run the academy. This is a directory managed by admins, not a login account.
 model StaffMember {
   id          String   @id @default(uuid())

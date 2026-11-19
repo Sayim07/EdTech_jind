@@ -2,6 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
+import { completion } from '@/lib/profile';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { DashboardClient } from './DashboardClient';
@@ -120,7 +121,8 @@ export default async function DashboardPage({
 
       <main className="flex-1 pb-24 lg:pb-12 bg-parchment-50">
         <DashboardClient
-          user={user}
+          user={{ id: user.id, name: user.name, email: user.email, role: user.role, avatarUrl: user.avatarUrl }}
+          profile={user.role === 'STUDENT' ? (({ percent, complete, missingRequired }) => ({ percent, complete, missing: missingRequired.map((m) => m.label) }))(completion(user)) : null}
           enrollments={enrollments}
           popularCourses={popularCourses}
           progress={progress}

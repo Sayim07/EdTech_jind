@@ -9,6 +9,9 @@ export interface SessionUser {
   email: string;
   role: string;
   avatarUrl?: string | null;
+  /** Students only: how complete the profile is, and whether to show the welcome popup. */
+  profile?: { percent: number; complete: boolean };
+  showOnboarding?: boolean;
 }
 
 /**
@@ -43,7 +46,7 @@ function refresh() {
       .then((data) => {
         const u: SessionUser | null = data?.user ?? null;
         // Keep the same object when nothing changed so subscribers do not re-render for nothing.
-        const same = u && state.user && u.id === state.user.id && u.name === state.user.name && u.role === state.user.role && u.avatarUrl === state.user.avatarUrl;
+        const same = u && state.user && u.id === state.user.id && u.name === state.user.name && u.role === state.user.role && u.avatarUrl === state.user.avatarUrl && u.showOnboarding === state.user.showOnboarding && u.profile?.percent === state.user.profile?.percent;
         set({ user: same ? state.user : u, loaded: true });
       })
       .catch(() => set({ user: state.user, loaded: true }))
@@ -57,6 +60,11 @@ function refresh() {
 /** Call right after a successful sign in or sign up so the sidebar and header pick up the new account. */
 export function refreshSessionUser() {
   return refresh();
+}
+
+/** The welcome popup was answered: hide it everywhere right away (the server is told separately). */
+export function markOnboardingSeen() {
+  if (state.user) set({ user: { ...state.user, showOnboarding: false }, loaded: true });
 }
 
 export function clearSessionUser() {

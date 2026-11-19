@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
 import { listGateways } from '@/lib/payments';
+import { completion, profileGateUrl } from '@/lib/profile';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { CheckoutClient } from './CheckoutClient';
@@ -16,6 +17,8 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const user = await getSessionUser();
   if (!user) redirect(`/login?redirect=/checkout/${slug}`);
+  // Finish the profile first; the student returns here afterwards.
+  if (user.role !== 'ADMIN' && !completion(user).complete) redirect(profileGateUrl(`/checkout/${slug}`));
 
   const [course, recent] = await Promise.all([
     prisma.course.findUnique({ where: { slug } }),
@@ -34,12 +37,12 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
   const billing = {
     name: saved.name || user.name || '',
     email: saved.email || user.email || '',
-    phone: saved.phone || '',
-    address: saved.address || '',
-    city: saved.city || '',
-    state: saved.state || '',
-    pin: saved.pin || '',
-    country: saved.country || 'India',
+    phone: saved.phone || user.phone || '',
+    address: saved.address || user.address || '',
+    city: saved.city || user.city || '',
+    state: saved.state || user.state || '',
+    pin: saved.pin || user.pin || '',
+    country: saved.country || user.country || 'India',
   };
 
   return (

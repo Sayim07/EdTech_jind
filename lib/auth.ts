@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
+import type { StoredProfile } from '@/lib/profile';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 
@@ -41,7 +42,7 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
 // Reading the user from the database on every page view cost one network round trip per click. Keep the answer for a
 // few seconds per server instance. A role change or removal therefore takes effect within SESSION_CACHE_MS.
 const SESSION_CACHE_MS = 20_000;
-type SessionUserRow = { id: string; email: string; name: string; role: string; avatarUrl: string | null; createdAt: Date };
+type SessionUserRow = { id: string; email: string; name: string; role: string; avatarUrl: string | null; createdAt: Date } & StoredProfile & { onboardingSeenAt: Date | null };
 const sessionCache = new Map<string, { user: SessionUserRow | null; expires: number }>();
 
 /** Call after changing a user's own profile (name, avatar, password) so the next request sees it immediately. */
@@ -70,6 +71,21 @@ export async function getSessionUser() {
         role: true,
         avatarUrl: true,
         createdAt: true,
+        onboardingSeenAt: true,
+        dob: true,
+        gender: true,
+        phone: true,
+        education: true,
+        institution: true,
+        qualification: true,
+        skills: true,
+        interests: true,
+        occupation: true,
+        address: true,
+        city: true,
+        state: true,
+        pin: true,
+        country: true,
       },
     });
 

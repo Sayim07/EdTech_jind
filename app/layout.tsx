@@ -4,6 +4,7 @@ import './globals.css';
 import { AgentationDev } from '@/AgentationDev';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { AppSidebar } from '@/components/AppSidebar';
+import { OnboardingModal } from '@/components/OnboardingModal';
 import { SessionRoleProvider } from '@/components/SessionRole';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
@@ -44,6 +45,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <SessionRoleProvider role={role}>
             <AppSidebar />
+            <OnboardingModal />
             {children}
           </SessionRoleProvider>
         </ThemeProvider>

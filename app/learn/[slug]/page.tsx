@@ -56,7 +56,7 @@ export default async function CourseClassroomPage({
   return (
     <ClassroomPlayerClient
       course={{ ...course, tests: course.mcqTests }}
-      user={user}
+      user={{ id: user.id, name: user.name, email: user.email, role: user.role }}
       initialLessonId={lesson}
       initialAssignmentId={assignment}
       canTrackProgress={!!enrollment}

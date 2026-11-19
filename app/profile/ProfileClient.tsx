@@ -4,10 +4,14 @@ import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Camera, Trash2 } from 'lucide-react';
 import { ButtonSpinner } from '@/components/ui/Loaders';
+import { ProfileDetailsForm } from './ProfileDetailsForm';
+import type { ProfileData } from '@/lib/profile';
 
 interface Props {
   user: { name: string; email: string; role: string; avatarUrl?: string | null; createdAt: string };
   stats: { enrolled: number; completed: number; certificates: number };
+  /** Students only: the profile details form and where to go after completing it. */
+  details?: { initial: ProfileData; returnTo: string | null; required: boolean };
 }
 
 const inputCls =
@@ -31,7 +35,7 @@ function NoticeBar({ notice }: { notice: Notice }) {
   );
 }
 
-export function ProfileClient({ user, stats }: Props) {
+export function ProfileClient({ user, stats, details }: Props) {
   const router = useRouter();
   const [name, setName] = useState(user.name);
   const [savedName, setSavedName] = useState(user.name);
@@ -203,6 +207,8 @@ export function ProfileClient({ user, stats }: Props) {
       </section>
 
       {avatarNotice && <NoticeBar notice={avatarNotice} />}
+
+      {details && <ProfileDetailsForm initial={details.initial} returnTo={details.returnTo} required={details.required} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <form onSubmit={saveName} className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-7 space-y-4">

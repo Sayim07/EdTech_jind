@@ -4,10 +4,23 @@ import { getSessionUser } from '@/lib/auth';
 import { defaultGateway, getGateway } from '@/lib/payments';
 import { fulfillPayment, reconcilePayment } from '@/lib/payments/fulfill';
 import { parseBilling, priceFor } from '@/lib/coupons';
+import { completion } from '@/lib/profile';
 
 export async function POST(req: NextRequest) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Please log in to purchase this course' }, { status: 401 });
+
+  // A profile with the required details must exist before anything can be bought. The checkout page checks this too,
+  // but only this check cannot be skipped.
+  if (user.role !== 'ADMIN') {
+    const c = completion(user);
+    if (!c.complete) {
+      return NextResponse.json(
+        { error: 'Please complete your profile before purchasing a course.', code: 'PROFILE_INCOMPLETE', missing: c.missingRequired.map((m) => m.label) },
+        { status: 403 },
+      );
+    }
+  }
 
   const body = await req.json().catch(() => ({}));
   const courseId = typeof body.courseId === 'string' ? body.courseId : '';

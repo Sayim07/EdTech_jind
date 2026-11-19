@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Loader2, Lock, ShieldCheck, Tag, X } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
+import { profileGateUrl } from '@/lib/profile';
 
 interface Gateway {
   id: string;
@@ -116,6 +117,7 @@ export function CheckoutClient({ course, gateways, initialBilling }: { course: C
     if (!order.ok) {
       if (order.status === 401) return router.push(`/login?redirect=/checkout/${course.slug}`);
       if (order.data.alreadyEnrolled) return router.push(`/learn/${course.slug}`);
+      if (order.data.code === 'PROFILE_INCOMPLETE') return router.push(profileGateUrl(`/checkout/${course.slug}`));
       if (order.data.field === 'coupon') {
         removeCoupon();
         setCouponError(order.data.error);

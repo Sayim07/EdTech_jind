@@ -17,6 +17,22 @@ model User {
   avatarUrl    String?
   googleId     String?      @unique
   role         String       @default("STUDENT") // "STUDENT" | "ADMIN"
+  // Student profile (see lib/profile.ts for which of these are required before a purchase)
+  dob          DateTime?
+  gender       String?
+  phone        String?
+  education    String?      // highest level: "High school", "Bachelor's degree", ...
+  institution  String?
+  qualification String?     // degree or field of study
+  skills       String[]
+  interests    String[]
+  occupation   String?
+  address      String?
+  city         String?
+  state        String?
+  pin          String?
+  country      String?
+  onboardingSeenAt DateTime? // set once the welcome popup has been shown, so it never repeats
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   enrollments  Enrollment[]

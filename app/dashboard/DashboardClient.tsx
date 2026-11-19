@@ -7,6 +7,7 @@ import { formatPrice } from '@/lib/utils';
 import { ButtonSpinner } from '@/components/ui/Loaders';
 import { ActivityCalendar, ActivityItem, StatsWidget, TodoItem, TodoWidget, useNow } from '@/components/dashboard/Widgets';
 import { Award, BookOpen, Compass, FileText, PlayCircle, ShoppingBag } from 'lucide-react';
+import { CompletionRing } from '@/components/profile/CompletionRing';
 
 interface NextLesson {
   id: string;
@@ -24,6 +25,8 @@ interface Props {
   todo: TodoItem[];
   activity: ActivityItem[];
   overall: { totalLessons: number; doneLessons: number; certificates: number };
+  /** Students only. null for admins. */
+  profile: { percent: number; complete: boolean; missing: string[] } | null;
 }
 
 function Thumb({ course, className }: { course: any; className: string }) {
@@ -48,14 +51,17 @@ const solidBtn =
 
 type Filter = 'all' | 'progress' | 'completed';
 
-export function DashboardClient({ user, enrollments, popularCourses, progress, nextLesson, todo, activity, overall }: Props) {
+export function DashboardClient({ user, enrollments, popularCourses, progress, nextLesson, todo, activity, overall, profile }: Props) {
   const router = useRouter();
   const now = useNow();
   const [filter, setFilter] = useState<Filter>('all');
   const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
+  const [enrollError, setEnrollError] = useState<{ id: string; text: string } | null>(null);
 
-  const handleQuickEnroll = async (courseId: string, slug: string) => {
+  // Free courses are joined right here. Paid courses never come through this function: their button opens checkout.
+  const handleFreeEnroll = async (courseId: string, slug: string) => {
     setEnrollingCourseId(courseId);
+    setEnrollError(null);
     try {
       const res = await fetch('/api/enroll', {
         method: 'POST',
@@ -63,13 +69,14 @@ export function DashboardClient({ user, enrollments, popularCourses, progress, n
         body: JSON.stringify({ courseId }),
       });
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to enroll');
+        const data = await res.json().catch(() => ({}));
+        if (data.requiresPayment) return router.push(`/checkout/${slug}`);
+        throw new Error(data.error || 'Could not enroll in this course.');
       }
       router.push(`/learn/${slug}`);
       router.refresh();
     } catch (err: any) {
-      alert(err.message || 'Error enrolling in course');
+      setEnrollError({ id: courseId, text: err.message || 'Could not enroll in this course.' });
     } finally {
       setEnrollingCourseId(null);
     }
@@ -110,6 +117,23 @@ export function DashboardClient({ user, enrollments, popularCourses, progress, n
             <p className="text-sm text-gray-600 min-h-5">{now ? `Today: ${now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}` : ''}</p>
           </div>
         </header>
+
+        {/* Profile reminder: quiet, and gone once the required details are saved */}
+        {profile && !profile.complete && (
+          <section aria-label="Profile reminder" className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+            <CompletionRing percent={profile.percent} size={56} />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-semibold text-gray-900">Your profile is {profile.percent}% complete</h2>
+              <p className="text-sm text-gray-600">
+                You need to add {profile.missing.slice(0, 3).join(', ').toLowerCase()}
+                {profile.missing.length > 3 ? ` and ${profile.missing.length - 3} more` : ''} before you can buy a course.
+              </p>
+            </div>
+            <Link href="/profile?required=1#profile-details" className={`${outlineBtn} shrink-0 self-start sm:self-auto`}>
+              Complete profile
+            </Link>
+          </section>
+        )}
 
         {/* My courses */}
         <section className="space-y-4" aria-labelledby="my-courses">
@@ -238,14 +262,20 @@ export function DashboardClient({ user, enrollments, popularCourses, progress, n
                         </span>
                         <span className="text-sm font-semibold text-gray-900">{course.price > 0 ? formatPrice(course.price) : 'Free'}</span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleQuickEnroll(course.id, course.slug)}
-                        disabled={enrollingCourseId === course.id}
-                        className={`relative z-10 w-full ${solidBtn} disabled:opacity-70`}
-                      >
-                        {enrollingCourseId === course.id ? <ButtonSpinner label="Enrolling..." /> : (<><ShoppingBag className="w-4 h-4" aria-hidden /> Enroll</>)}
-                      </button>
+                      {course.price > 0 ? (
+                        <Link href={`/checkout/${course.slug}`} className={`relative z-10 w-full ${solidBtn}`}>
+                          <ShoppingBag className="w-4 h-4" aria-hidden /> Buy now
+                        </Link>
+                      ) : (
+                        <button type="button" onClick={() => handleFreeEnroll(course.id, course.slug)} disabled={enrollingCourseId === course.id} className={`relative z-10 w-full ${solidBtn} disabled:opacity-70`}>
+                          {enrollingCourseId === course.id ? <ButtonSpinner label="Enrolling..." /> : (<><ShoppingBag className="w-4 h-4" aria-hidden /> Enroll for free</>)}
+                        </button>
+                      )}
+                      {enrollError && enrollError.id === course.id && (
+                        <p role="alert" className="relative z-10 text-xs text-red-700">
+                          {enrollError.text}
+                        </p>
+                      )}
                     </div>
                   </li>
                 );

@@ -333,7 +333,7 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
   const getYouTubeEmbedUrl = (url: string) => {
     const id = url.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/)?.[1];
     if (!id) return url;
-    return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&playsinline=1`;
+    return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&disablekb=1&fs=1`;
   };
 
 
@@ -437,6 +437,11 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
                         referrerPolicy="strict-origin-when-cross-origin"
                         allowFullScreen
                       />
+                    ) : null}
+                    {l.type === 'YOUTUBE' ? (
+                      // The player's title bar holds "Watch on YouTube", "Copy link" and Share. Nothing can switch them
+                      // off, so this invisible strip sits on top of that bar and swallows the clicks.
+                      <div className="absolute inset-x-0 top-0 h-16 z-10" aria-hidden onContextMenu={(e) => e.preventDefault()} />
                     ) : (
                       <video key={l.videoUrl} src={l.videoUrl} controls autoPlay playsInline controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full h-full object-contain" />
                     )}

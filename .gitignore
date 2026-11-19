@@ -48,3 +48,6 @@ public/uploads/*
 
 # Local database backups (contain emails and password hashes)
 /backups/
+.open-next/
+.wrangler/
+.dev.vars

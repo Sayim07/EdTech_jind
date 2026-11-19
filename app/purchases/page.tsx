@@ -7,6 +7,7 @@ import { getSessionUser } from '@/lib/auth';
 import { formatPrice } from '@/lib/utils';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { PurchasesSubNav } from '@/components/PurchasesSubNav';
 
 export const metadata = { title: 'Purchases & Certificates | CIM India' };
 
@@ -41,6 +42,7 @@ export default async function PurchasesPage() {
       <Navbar wide />
       <main className="flex-1 pb-24 lg:pb-12">
         <div className="w-full px-4 sm:px-6 lg:px-10 py-5 sm:py-8 space-y-8">
+          <PurchasesSubNav active="purchases" />
           <section className="bg-amber-100 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl sm:text-4xl font-semibold text-amber-800 leading-tight">

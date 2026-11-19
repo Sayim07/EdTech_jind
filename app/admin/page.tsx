@@ -114,14 +114,20 @@ export default async function AdminStudioPage() {
   }
 
   // Every online checkout attempt, plus enrollments that predate online payments so no purchase goes missing.
-  const paidKeys = new Set(paymentRecords.filter((p) => p.status === 'PAID').map((p) => `${p.userId}:${p.courseId}`));
+  const paidKeys = new Set(paymentRecords.filter((p) => p.status === 'PAID' || p.status === 'REFUNDED').map((p) => `${p.userId}:${p.courseId}`));
   const onlineRows: PaymentRow[] = paymentRecords.map((p) => ({
     id: p.id,
     source: 'online',
-    status: p.status === 'PAID' ? 'PAID' : p.status === 'FAILED' ? 'FAILED' : 'PENDING',
+    status: p.status === 'PAID' ? 'PAID' : p.status === 'REFUNDED' ? 'REFUNDED' : p.status === 'FAILED' ? 'FAILED' : 'PENDING',
     student: p.user,
     course: p.course,
     amount: p.amount / 100,
+    listPrice: p.originalAmount !== null ? p.originalAmount / 100 : null,
+    discount: p.discountAmount / 100,
+    coupon: p.couponCode,
+    refunded: p.refundedAmount / 100,
+    note: p.note,
+    billing: (p.billing as Record<string, string> | null) ?? null,
     currency: p.currency,
     gateway: p.gateway,
     method: p.method,
@@ -143,6 +149,12 @@ export default async function AdminStudioPage() {
       student: { id: e.user.id, name: e.user.name, email: e.user.email },
       course: { id: e.course.id, title: e.course.title },
       amount: e.amountPaid || 0,
+      listPrice: null,
+      discount: 0,
+      coupon: null,
+      refunded: 0,
+      note: null,
+      billing: null,
       currency: 'INR',
       gateway: 'manual',
       method: 'recorded',

@@ -22,9 +22,9 @@ const onAdminTab = (p: string, tab: string, id: string) => p === '/admin' && tab
 
 export const ADMIN_LINKS: NavLink[] = [
   { href: '/admin?tab=home', label: 'Dashboard', title: 'Admin Dashboard', icon: LayoutDashboard, match: (p, t) => p === '/admin' && (t === '' || t === 'home' || t === 'analytics') },
-  { href: '/admin?tab=courses', label: 'Courses', title: 'Manage Courses', icon: BookOpen, match: (p, t) => onAdminTab(p, t, 'courses') || p.startsWith('/admin/courses') },
+  { href: '/admin?tab=courses', label: 'Courses', title: 'Manage Courses', icon: BookOpen, match: (p, t) => onAdminTab(p, t, 'courses') || p.startsWith('/admin/courses') || p.startsWith('/admin/categories') },
   { href: '/admin?tab=students', label: 'Students', title: 'Registered Students', icon: Users, match: (p, t) => onAdminTab(p, t, 'students') },
-  { href: '/admin?tab=payments', label: 'Payments', title: 'Fee Payments', icon: CreditCard, match: (p, t) => onAdminTab(p, t, 'payments') },
+  { href: '/admin?tab=payments', label: 'Payments', title: 'Fee Payments', icon: CreditCard, match: (p, t) => onAdminTab(p, t, 'payments') || p.startsWith('/admin/payments') },
   { href: '/admin/staff', label: 'Staff', title: 'Staff', icon: Briefcase, match: (p) => p.startsWith('/admin/staff') },
   { href: '/admin?tab=profile', label: 'Profile', title: 'Admin Profile', icon: UserRound, match: (p, t) => onAdminTab(p, t, 'profile') },
   { href: '/courses', label: 'Storefront', title: 'Storefront', icon: Store, match: (p) => p.startsWith('/courses') },

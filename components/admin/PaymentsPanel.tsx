@@ -1,20 +1,29 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { CheckCircle2, ChevronRight, Clock, CreditCard, Landmark, Smartphone, Wallet, XCircle, HelpCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { CheckCircle2, ChevronRight, Clock, CreditCard, Landmark, RefreshCw, Smartphone, Undo2, Wallet, XCircle, HelpCircle } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { formatDate, formatDateTime, formatTime, istDay } from '@/lib/format';
 import { Dialog, secondaryBtn } from '@/components/mcq/Dialog';
 import { Chips, DateRange, FilterBar, Select } from '@/components/admin/FilterBar';
+import { RefundDialog } from '@/components/admin/RefundDialog';
+import { PaymentsSubNav } from '@/components/admin/PaymentsSubNav';
 
 export interface PaymentRow {
   id: string;
   /** "online" rows come from a checkout; "legacy" rows are enrollments recorded before online payments existed. */
   source: 'online' | 'legacy';
-  status: 'PAID' | 'FAILED' | 'PENDING';
+  status: 'PAID' | 'FAILED' | 'PENDING' | 'REFUNDED';
   student: { id: string; name: string; email: string };
   course: { id: string; title: string };
-  amount: number; // rupees
+  amount: number; // rupees actually charged, after any coupon
+  listPrice: number | null; // rupees before the coupon
+  discount: number; // rupees
+  coupon: string | null;
+  refunded: number; // rupees refunded so far
+  note: string | null;
+  billing: Record<string, string> | null;
   currency: string;
   gateway: string;
   method: string | null;
@@ -35,6 +44,7 @@ const STATUS = {
   PAID: { label: 'Paid', cls: 'bg-emerald-100 text-emerald-800', icon: CheckCircle2 },
   FAILED: { label: 'Failed', cls: 'bg-red-100 text-red-700', icon: XCircle },
   PENDING: { label: 'Pending', cls: 'bg-amber-100 text-amber-800', icon: Clock },
+  REFUNDED: { label: 'Refunded', cls: 'bg-gray-200 text-gray-800', icon: Undo2 },
 } as const;
 
 const METHODS: Record<string, { label: string; icon: typeof CreditCard }> = {
@@ -44,6 +54,7 @@ const METHODS: Record<string, { label: string; icon: typeof CreditCard }> = {
   wallet: { label: 'Wallet', icon: Wallet },
   emi: { label: 'EMI', icon: CreditCard },
   recorded: { label: 'Recorded manually', icon: HelpCircle },
+  coupon: { label: '100% coupon', icon: HelpCircle },
 };
 const methodInfo = (m: string | null) => (m ? METHODS[m] || { label: m.charAt(0).toUpperCase() + m.slice(1), icon: CreditCard } : { label: 'Not reported', icon: HelpCircle });
 
@@ -69,11 +80,31 @@ export function PaymentsPanel({ payments }: { payments: PaymentRow[] }) {
   const [sort, setSort] = useState<Sort>('new');
   const [limit, setLimit] = useState(PAGE);
   const [open, setOpen] = useState<PaymentRow | null>(null);
+  const [refunding, setRefunding] = useState<PaymentRow | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState('');
+  const router = useRouter();
+
+  const syncWithGateway = async (p: PaymentRow) => {
+    setSyncing(true);
+    setSyncMsg('');
+    try {
+      const res = await fetch(`/api/admin/payments/${p.id}/sync`, { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      setSyncMsg(!res.ok ? 'Could not reach the gateway.' : data.result === 'paid' ? 'The gateway reports this payment as paid. The student is now enrolled.' : data.result === 'failed' ? 'The gateway reports this payment as failed.' : data.result === 'open' ? 'The gateway has no completed payment for this order yet.' : 'The gateway could not tell us more.');
+      if (res.ok && data.result === 'paid') {
+        setOpen(null);
+        router.refresh();
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const courses = useMemo(() => Array.from(new Map(payments.map((p) => [p.course.id, p.course.title])).entries()).sort((a, b) => a[1].localeCompare(b[1])), [payments]);
   const methods = useMemo(() => Array.from(new Set(payments.map((p) => p.method || 'none'))), [payments]);
 
-  const counts = useMemo(() => ({ ALL: payments.length, PAID: payments.filter((p) => p.status === 'PAID').length, FAILED: payments.filter((p) => p.status === 'FAILED').length, PENDING: payments.filter((p) => p.status === 'PENDING').length }), [payments]);
+  const counts = useMemo(() => ({ ALL: payments.length, PAID: payments.filter((p) => p.status === 'PAID').length, FAILED: payments.filter((p) => p.status === 'FAILED').length, PENDING: payments.filter((p) => p.status === 'PENDING').length, REFUNDED: payments.filter((p) => p.status === 'REFUNDED').length }), [payments]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -96,8 +127,8 @@ export function PaymentsPanel({ payments }: { payments: PaymentRow[] }) {
     return [...list].sort(cmp[sort]);
   }, [payments, query, status, method, course, from, to, sort]);
 
-  const collected = filtered.filter((p) => p.status === 'PAID').reduce((s, p) => s + p.amount, 0);
-  const latest = useMemo(() => [...payments].filter((p) => p.status === 'PAID').sort((a, b) => eventTime(b) - eventTime(a))[0], [payments]);
+  const collected = filtered.filter((p) => p.status === 'PAID' || p.status === 'REFUNDED').reduce((s, p) => s + p.amount - p.refunded, 0);
+  const latest = useMemo(() => [...payments].filter((p) => p.status === 'PAID' || p.status === 'REFUNDED').sort((a, b) => eventTime(b) - eventTime(a))[0], [payments]);
   const active = Boolean(query || status !== 'ALL' || method !== 'ALL' || course !== 'ALL' || from || to || sort !== 'new');
   const clear = () => {
     setQuery('');
@@ -116,6 +147,7 @@ export function PaymentsPanel({ payments }: { payments: PaymentRow[] }) {
 
   return (
     <section className="space-y-4" aria-label="Payments">
+      <PaymentsSubNav active="transactions" />
       {latest && (
         <button
           type="button"
@@ -171,13 +203,14 @@ export function PaymentsPanel({ payments }: { payments: PaymentRow[] }) {
               { value: 'PAID', label: 'Paid', count: counts.PAID },
               { value: 'FAILED', label: 'Failed', count: counts.FAILED },
               { value: 'PENDING', label: 'Pending', count: counts.PENDING },
+              { value: 'REFUNDED', label: 'Refunded', count: counts.REFUNDED },
             ]}
           />
           <DateRange from={from} to={to} onFrom={reset(setFrom)} onTo={reset(setTo)} />
         </div>
 
         <p className="px-4 sm:px-5 py-3 text-sm text-gray-700 border-b border-gray-200">
-          Collected in this view: <strong className="text-gray-900 tabular-nums">{formatPrice(collected)}</strong>
+          Net collected in this view: <strong className="text-gray-900 tabular-nums">{formatPrice(collected)}</strong>
         </p>
 
         {filtered.length === 0 ? (
@@ -224,7 +257,10 @@ export function PaymentsPanel({ payments }: { payments: PaymentRow[] }) {
                           </span>
                           {p.methodDetail && <span className="block text-xs text-gray-600">{p.methodDetail}</span>}
                         </td>
-                        <td className="px-5 py-3 text-right font-semibold text-gray-900 tabular-nums whitespace-nowrap">{p.amount > 0 ? formatPrice(p.amount) : 'Free'}</td>
+                        <td className="px-5 py-3 text-right font-semibold text-gray-900 tabular-nums whitespace-nowrap">
+                          {p.amount > 0 ? formatPrice(p.amount) : 'Free'}
+                          {p.refunded > 0 && p.status === 'PAID' && <span className="block text-xs font-normal text-gray-600">{formatPrice(p.refunded)} refunded</span>}
+                        </td>
                         <td className="px-5 py-3">
                           <span className={`inline-flex items-center gap-1 px-2.5 h-6 rounded-md text-xs font-semibold ${st.cls}`}>
                             <st.icon className="w-3.5 h-3.5" aria-hidden /> {st.label}
@@ -257,9 +293,21 @@ export function PaymentsPanel({ payments }: { payments: PaymentRow[] }) {
           title="Payment details"
           onClose={() => setOpen(null)}
           actions={
-            <button type="button" className={secondaryBtn} onClick={() => setOpen(null)}>
-              Close
-            </button>
+            <>
+              {open.source === 'online' && open.status !== 'PAID' && open.status !== 'REFUNDED' && open.gateway !== 'coupon' && (
+                <button type="button" className={secondaryBtn} onClick={() => syncWithGateway(open)} disabled={syncing}>
+                  <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} aria-hidden /> Check with gateway
+                </button>
+              )}
+              {open.source === 'online' && open.status === 'PAID' && open.amount - open.refunded > 0 && (
+                <button type="button" className={secondaryBtn} onClick={() => { setRefunding(open); setOpen(null); }}>
+                  <Undo2 className="w-4 h-4" aria-hidden /> Refund
+                </button>
+              )}
+              <button type="button" className={secondaryBtn} onClick={() => setOpen(null)}>
+                Close
+              </button>
+            </>
           }
         >
           <div className="flex items-center justify-between gap-3 pb-2">
@@ -269,6 +317,7 @@ export function PaymentsPanel({ payments }: { payments: PaymentRow[] }) {
           <dl className="text-sm">
             <Row k="Student" v={`${open.student.name} (${open.student.email})`} />
             <Row k="Course" v={open.course.title} />
+            {open.coupon && <Row k="Coupon" v={`${open.coupon} (took off ${formatPrice(open.discount)} from ${formatPrice(open.listPrice ?? open.amount + open.discount)})`} />}
             <Row k="Method" v={methodInfo(open.method).label} />
             <Row k="Method details" v={open.methodDetail} />
             <Row k="Initiated" v={formatDateTime(open.initiatedAt)} />
@@ -281,9 +330,17 @@ export function PaymentsPanel({ payments }: { payments: PaymentRow[] }) {
             <Row k="Order ID" v={open.orderId} mono />
             <Row k="Reference" v={open.id} mono />
             {open.failureReason && <Row k="Reason" v={open.failureReason} />}
+            {open.refunded > 0 && <Row k="Refunded" v={formatPrice(open.refunded)} />}
+            {open.note && <Row k="Note" v={open.note} />}
+            {open.billing && (
+              <Row k="Billing address" v={`${open.billing.name}, ${open.billing.address}, ${open.billing.city}, ${open.billing.state} ${open.billing.pin}, ${open.billing.country}. ${open.billing.phone}, ${open.billing.email}`} />
+            )}
           </dl>
+          {syncMsg && <p role="status" className="text-sm text-gray-800 bg-gray-100 rounded-lg px-3 py-2">{syncMsg}</p>}
         </Dialog>
       )}
+
+      {refunding && <RefundDialog target={{ id: refunding.id, student: refunding.student.name, course: refunding.course.title, amount: refunding.amount, refunded: refunding.refunded }} onClose={() => setRefunding(null)} />}
     </section>
   );
 }

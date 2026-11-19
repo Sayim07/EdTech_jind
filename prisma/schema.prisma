@@ -225,12 +225,77 @@ model Payment {
   methodDetail     String?   // e.g. "Visa credit card ending 4242", "UPI: name@bank", "HDFC Bank"
   gatewayFee       Int?      // paise charged by the gateway (incl. tax), when reported
   paidAt           DateTime?
+  originalAmount   Int?      // paise, before any coupon
+  discountAmount   Int       @default(0) // paise taken off by the coupon
+  couponId         String?
+  couponCode       String?   // kept even if the coupon is later deleted
+  billing          Json?     // name, email, phone, address, city, state, pin, country
+  refundedAmount   Int       @default(0) // paise refunded so far
+  note             String?   // e.g. a duplicate payment that needs a refund
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   course           Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  refunds          Refund[]
+  coupon           Coupon?   @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  redemption       CouponRedemption?
 
   @@index([userId, courseId])
+  @@index([createdAt])
+  @@index([couponId])
+}
+
+// A discount code. Empty courseIds / allowedEmails mean "everyone".
+model Coupon {
+  id            String   @id @default(uuid())
+  code          String   @unique // always stored upper case
+  description   String?
+  type          String   // "PERCENT" | "FIXED"
+  value         Float    // percent (1-100) or rupees
+  maxDiscount   Float?   // rupee cap for percent coupons
+  minOrder      Float?   // rupee minimum course price
+  startsAt      DateTime?
+  expiresAt     DateTime?
+  maxUses       Int?     // across all students
+  perUserLimit  Int      @default(1)
+  active        Boolean  @default(true)
+  courseIds     String[] // one course, or several (a bundle). Empty = every course
+  allowedEmails String[] // a student group. Empty = every student
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  payments      Payment[]
+  redemptions   CouponRedemption[]
+}
+
+// One use of a coupon. RESERVED while the payment is open, REDEEMED once paid, RELEASED if it failed or was refunded in full.
+model CouponRedemption {
+  id        String   @id @default(uuid())
+  couponId  String
+  userId    String
+  paymentId String   @unique
+  amount    Int      // paise discounted
+  status    String   @default("RESERVED")
+  createdAt DateTime @default(now())
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  payment   Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([couponId, userId])
+}
+
+model Refund {
+  id              String    @id @default(uuid())
+  paymentId       String
+  amount          Int       // paise
+  status          String    @default("PENDING") // "PENDING" | "PROCESSED" | "FAILED"
+  reason          String?
+  gatewayRefundId String?   @unique
+  failureReason   String?
+  createdBy       String?   // admin user id
+  createdAt       DateTime  @default(now())
+  processedAt     DateTime?
+  payment         Payment   @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
   @@index([createdAt])
 }
 

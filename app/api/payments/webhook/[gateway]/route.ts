@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getGateway } from '@/lib/payments';
-import { failPayment, fulfillPayment, recordMethod } from '@/lib/payments/fulfill';
+import { applyGatewayRefund, failPayment, fulfillPayment, recordMethod } from '@/lib/payments/fulfill';
 
 /**
  * Server-to-server confirmation from the gateway. This is what enrolls a student whose browser closed
@@ -16,7 +16,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ gat
   const event = gateway.parseWebhook(raw, req.headers.get('x-razorpay-signature') || req.headers.get('x-signature'));
   if (!event) return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
 
-  if (event.type !== 'ignored' && event.orderId) {
+  if (event.type === 'refund' && event.paymentId && event.refund) {
+    await applyGatewayRefund(event.paymentId, event.refund);
+  } else if (event.type !== 'ignored' && event.orderId) {
     const payment = await prisma.payment.findUnique({ where: { gatewayOrderId: event.orderId } });
     if (payment && payment.gateway === gateway.id) {
       if (event.type === 'paid' && event.paymentId) await fulfillPayment(payment.id, event.paymentId);

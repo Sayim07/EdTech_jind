@@ -1,12 +1,13 @@
 'use client';
 
+import { UnreadBadge } from '@/components/chat/UnreadBadge';
 import React from 'react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { ADMIN_LINKS } from '@/components/nav-links';
+import { ADMIN_LINKS, INSTRUCTOR_LINKS } from '@/components/nav-links';
 import { softTabNav } from '@/components/tab-nav';
-import { Compass, LayoutDashboard, Award, User, ClipboardList } from 'lucide-react';
+import { Compass, LayoutDashboard, Award, User, ClipboardList, MessageSquare } from 'lucide-react';
 
 interface Props {
   role?: string;
@@ -34,12 +35,15 @@ function BottomNav({ role, isLoggedIn }: Props) {
   const items =
     role === 'ADMIN'
       ? ADMIN_LINKS.filter((l) => l.label !== 'Storefront' && l.label !== 'Profile').map((l) => ({ label: l.label, href: l.href, icon: l.icon, active: l.match(pathname, tab) }))
+      : role === 'INSTRUCTOR'
+      ? INSTRUCTOR_LINKS.map((l) => ({ label: l.label, href: l.href, icon: l.icon, active: l.match(pathname, tab) }))
       : isLoggedIn
       ? [
           { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, active: pathname.startsWith('/dashboard') },
           { label: 'Courses', href: '/courses', icon: Compass, active: pathname.startsWith('/courses') },
           { label: 'Assignments', href: '/assignments', icon: ClipboardList, active: pathname.startsWith('/assignments') },
           { label: 'Purchases', href: '/purchases', icon: Award, active: pathname.startsWith('/purchases') || pathname.startsWith('/certificates') },
+          { label: 'Messages', href: '/messages', icon: MessageSquare, active: pathname.startsWith('/messages') },
           { label: 'Profile', href: '/profile', icon: User, active: pathname === '/profile' },
         ]
       : [
@@ -63,7 +67,10 @@ function BottomNav({ role, isLoggedIn }: Props) {
                   : 'text-gray-500 hover:text-gray-900'
               }`}
             >
-              <Icon className={`w-5 h-5 ${item.active ? 'stroke-[2.5]' : 'stroke-2'}`} />
+              <span className="relative">
+                <Icon className={`w-5 h-5 ${item.active ? 'stroke-[2.5]' : 'stroke-2'}`} />
+                {item.href === '/messages' && <UnreadBadge className="absolute -top-2 left-3 !min-w-[16px] !px-1 !text-[10px] !leading-4" />}
+              </span>
               <span className="text-xs leading-tight">{item.label}</span>
             </Link>
           );

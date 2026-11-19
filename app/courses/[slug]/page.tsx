@@ -52,6 +52,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
         },
       },
       mcqTests: { select: { id: true } },
+      instructor: { select: { name: true, designation: true, bio: true, active: true, user: { select: { avatarUrl: true } } } },
       _count: { select: { enrollments: true } },
     },
   }),
@@ -132,6 +133,28 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
                     </div>
                   ))}
                 </dl>
+
+                {course.instructor?.active && (
+                  <section aria-labelledby="instructor-heading" className="space-y-3 pt-4 border-t border-amber-200">
+                    <h2 id="instructor-heading" className="text-2xl font-semibold text-gray-900">
+                      Your instructor
+                    </h2>
+                    <div className="flex items-start gap-4 max-w-3xl">
+                      {course.instructor.user?.avatarUrl ? (
+                        <img src={course.instructor.user.avatarUrl} alt="" referrerPolicy="no-referrer" className="w-14 h-14 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <span className="w-14 h-14 rounded-full bg-amber-600 text-white flex items-center justify-center text-xl font-semibold shrink-0" aria-hidden="true">
+                          {course.instructor.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-base font-semibold text-gray-900">{course.instructor.name}</p>
+                        {course.instructor.designation && <p className="text-sm text-gray-600">{course.instructor.designation}</p>}
+                        {course.instructor.bio && <p className="text-base text-gray-800 leading-relaxed mt-2 whitespace-pre-line">{course.instructor.bio}</p>}
+                      </div>
+                    </div>
+                  </section>
+                )}
 
                 <section aria-labelledby="about-heading" className="space-y-3 pt-4 border-t border-amber-200">
                   <h2 id="about-heading" className="text-2xl font-semibold text-gray-900">

@@ -17,6 +17,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const user = await getSessionUser();
   if (!user) redirect(`/login?redirect=/checkout/${slug}`);
+  if (user.role === 'INSTRUCTOR') redirect('/messages');
   // Finish the profile first; the student returns here afterwards.
   if (user.role !== 'ADMIN' && !completion(user).complete) redirect(profileGateUrl(`/checkout/${slug}`));
 

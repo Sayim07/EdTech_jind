@@ -30,6 +30,7 @@
     "pptx-preview": "^1.0.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "stream-chat": "^9.56.1",
     "tailwind-merge": "^3.0.1"
   },
   "devDependencies": {

@@ -9,8 +9,26 @@ export async function courseCategories(): Promise<string[]> {
   return Array.from(new Set([...created.map((c) => c.name), ...used.map((r) => r.category).filter(Boolean)])).sort((a, b) => a.localeCompare(b));
 }
 
-/** Names of active instructors from the Staff page, offered as suggestions in the course form. */
-export async function activeInstructors(): Promise<string[]> {
-  const rows = await prisma.staffMember.findMany({ where: { role: 'INSTRUCTOR', active: true }, select: { name: true }, orderBy: { name: 'asc' } });
-  return rows.map((r) => r.name);
+export interface InstructorOption {
+  id: string;
+  name: string;
+  /** True when this instructor can sign in and answer student messages. */
+  hasLogin: boolean;
+}
+
+export const DEFAULT_INSTRUCTOR_NAME = 'CIM India Faculty';
+
+/** Active instructors from the Staff page, for the course form's instructor picker. */
+export async function activeInstructors(): Promise<InstructorOption[]> {
+  const rows = await prisma.staffMember.findMany({ where: { role: 'INSTRUCTOR', active: true }, select: { id: true, name: true, userId: true }, orderBy: { name: 'asc' } });
+  return rows.map((r) => ({ id: r.id, name: r.name, hasLogin: !!r.userId }));
+}
+
+/** Checks an instructorId from a request. null/empty clears the instructor. */
+export async function resolveInstructor(raw: unknown): Promise<{ id: string | null; name: string } | { error: string }> {
+  if (raw === null || raw === '' || raw === undefined) return { id: null, name: DEFAULT_INSTRUCTOR_NAME };
+  if (typeof raw !== 'string') return { error: 'Choose an instructor from the list.' };
+  const staff = await prisma.staffMember.findUnique({ where: { id: raw }, select: { id: true, name: true, role: true, active: true } });
+  if (!staff || staff.role !== 'INSTRUCTOR' || !staff.active) return { error: 'That instructor is not available. Choose an active instructor from the Staff list.' };
+  return { id: staff.id, name: staff.name };
 }

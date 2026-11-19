@@ -10,6 +10,8 @@ export default async function RootPage() {
 
   if (user.role === 'ADMIN') {
     redirect('/admin?tab=home');
+  } else if (user.role === 'INSTRUCTOR') {
+    redirect('/messages');
   } else {
     redirect('/dashboard');
   }

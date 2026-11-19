@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
 import { serializeFaqs } from '@/lib/course';
+import { resolveInstructor } from '@/lib/course-options';
+import { courseDeleted, syncCourseChat } from '@/lib/chat/sync';
 import { loadCourseContent, syncCourseContent } from '@/lib/course-content';
 import { CourseContentDraft, validateContent } from '@/lib/course-content-shared';
 
@@ -75,7 +77,15 @@ export async function PATCH(
     if (body.originalPrice !== undefined) data.originalPrice = body.originalPrice ? parseFloat(body.originalPrice) : null;
     if (body.category !== undefined) data.category = body.category.trim();
     if (body.level !== undefined) data.level = body.level.trim();
-    if (body.instructorName !== undefined) data.instructorName = body.instructorName.trim();
+    let instructorChanged = false;
+    if (body.instructorId !== undefined) {
+      const instructor = await resolveInstructor(body.instructorId);
+      if ('error' in instructor) return NextResponse.json({ error: instructor.error }, { status: 400 });
+      const before = await prisma.course.findUnique({ where: { id }, select: { instructorId: true } });
+      instructorChanged = before?.instructorId !== instructor.id;
+      data.instructorId = instructor.id;
+      data.instructorName = instructor.name;
+    } else if (body.instructorName !== undefined) data.instructorName = body.instructorName.trim();
     if (body.thumbnail !== undefined) data.thumbnail = body.thumbnail ? body.thumbnail.trim() : null;
     if (body.published !== undefined) data.published = Boolean(body.published);
     if (body.featured !== undefined) data.featured = Boolean(body.featured);
@@ -99,6 +109,8 @@ export async function PATCH(
       const problem = await syncCourseContent(id, content);
       if (problem) return NextResponse.json({ error: problem }, { status: 400 });
     }
+
+    if (instructorChanged) await syncCourseChat(id);
 
     // Hand back the saved tree so the editor picks up the real ids of anything created in this save.
     const savedContent = content ? await loadCourseContent(id) : undefined;
@@ -125,6 +137,7 @@ export async function DELETE(
     await prisma.course.delete({
       where: { id },
     });
+    await courseDeleted(id);
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

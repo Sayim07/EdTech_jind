@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { getGateway } from '@/lib/payments';
+import { studentJoined, studentLeft } from '@/lib/chat/sync';
 
 /**
  * Marks a payment as paid and enrolls the student. Safe to call more than once for the same payment
@@ -36,6 +37,8 @@ export async function fulfillPayment(paymentRowId: string, gatewayPaymentId: str
     return { payment, enrollment };
   });
   await recordMethod(paymentRowId, gatewayPaymentId);
+  // Put the student in the course's class chat. Never fails the payment.
+  if (result.enrollment) await studentJoined(result.payment.courseId, result.payment.userId);
   return result;
 }
 
@@ -90,6 +93,15 @@ export async function reconcilePayment(paymentRowId: string): Promise<'paid' | '
  * a full refund removes access, and a refund that later fails gives it back.
  */
 export async function syncRefundState(paymentRowId: string) {
+  const out = await syncRefundStateInner(paymentRowId);
+  if (out?.status === 'REFUNDED') {
+    const p = await prisma.payment.findUnique({ where: { id: paymentRowId }, select: { courseId: true, userId: true } });
+    if (p) await studentLeft(p.courseId, p.userId);
+  }
+  return out;
+}
+
+async function syncRefundStateInner(paymentRowId: string) {
   return prisma.$transaction(async (tx) => {
     const payment = await tx.payment.findUnique({ where: { id: paymentRowId }, include: { refunds: true } });
     if (!payment || (payment.status !== 'PAID' && payment.status !== 'REFUNDED')) return null;

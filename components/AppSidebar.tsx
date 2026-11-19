@@ -9,9 +9,11 @@ import { linksFor } from '@/components/nav-links';
 import { clearSessionUser, useSessionUser } from '@/components/useSessionUser';
 import { useInitialRole } from '@/components/SessionRole';
 import { softTabNav } from '@/components/tab-nav';
+import { UnreadBadge } from '@/components/chat/UnreadBadge';
+import { resetChat } from '@/components/chat/client';
 
 /** Pages that use the app shell. Everything else (login, classroom, certificates, home) has no sidebar. */
-const SHELL_PREFIXES = ['/admin', '/assignments', '/checkout', '/courses', '/dashboard', '/profile', '/purchases'];
+const SHELL_PREFIXES = ['/admin', '/assignments', '/checkout', '/courses', '/dashboard', '/messages', '/profile', '/purchases'];
 export const usesShell = (pathname: string) => SHELL_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
 function Links({ role, pathname, tab }: { role?: string; pathname: string; tab: string }) {
@@ -32,6 +34,7 @@ function Links({ role, pathname, tab }: { role?: string; pathname: string; tab: 
           >
             <l.icon className="w-[18px] h-[18px] shrink-0" aria-hidden />
             <span className="sidebar-label truncate">{l.label}</span>
+            {l.href === '/messages' && <UnreadBadge className="sidebar-label ml-auto" />}
           </Link>
         );
       })}
@@ -65,7 +68,7 @@ export function AppSidebar() {
   // Keep the layout class right after a client-side sign in or out. Never remove it while still loading.
   useEffect(() => {
     if (!loaded) return;
-    document.body.classList.toggle('role-sidebar', user?.role === 'STUDENT' || user?.role === 'ADMIN');
+    document.body.classList.toggle('role-sidebar', user?.role === 'STUDENT' || user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR');
   }, [user, loaded]);
 
   const toggleSidebar = () => {
@@ -77,16 +80,17 @@ export function AppSidebar() {
 
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
+    resetChat();
     clearSessionUser();
     router.push('/login');
     router.refresh();
   };
 
-  if (!usesShell(pathname) || (role !== 'STUDENT' && role !== 'ADMIN')) return null;
+  if (!usesShell(pathname) || (role !== 'STUDENT' && role !== 'ADMIN' && role !== 'INSTRUCTOR')) return null;
 
   return (
     <aside className="app-sidebar fixed inset-y-0 left-0 z-50 flex-col overflow-hidden bg-white border-r border-gray-200" aria-label="Main navigation">
-      <Link href={role === 'ADMIN' ? '/admin?tab=home' : '/dashboard'} className="sidebar-head flex items-center gap-2.5 px-6 h-16 shrink-0" aria-label="CIM India home">
+      <Link href={role === 'ADMIN' ? '/admin?tab=home' : role === 'INSTRUCTOR' ? '/messages' : '/dashboard'} className="sidebar-head flex items-center gap-2.5 px-6 h-16 shrink-0" aria-label="CIM India home">
         <Logo className="h-11" />
         <span className="sidebar-label text-lg font-bold tracking-tight text-gray-900 whitespace-nowrap">CIM India</span>
       </Link>

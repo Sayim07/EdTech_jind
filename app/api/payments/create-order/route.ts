@@ -10,6 +10,8 @@ export async function POST(req: NextRequest) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Please log in to purchase this course' }, { status: 401 });
 
+  if (user.role === 'INSTRUCTOR') return NextResponse.json({ error: 'Instructor accounts cannot purchase courses.' }, { status: 403 });
+
   // A profile with the required details must exist before anything can be bought. The checkout page checks this too,
   // but only this check cannot be skipped.
   if (user.role !== 'ADMIN') {

@@ -26,6 +26,10 @@ export default async function DashboardPage({
     redirect('/admin?tab=home');
   }
 
+  if (user.role === 'INSTRUCTOR') {
+    redirect('/messages');
+  }
+
   // Everything below only needs the user id, so run it all at once: each round trip to the database costs real time.
   const [enrollments, popularCourses, doneRows, attempts, userTests] = await Promise.all([
   prisma.enrollment.findMany({

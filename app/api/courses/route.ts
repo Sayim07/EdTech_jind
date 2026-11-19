@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
 import { serializeFaqs } from '@/lib/course';
+import { resolveInstructor } from '@/lib/course-options';
+import { syncCourseChat } from '@/lib/chat/sync';
 import { syncCourseContent } from '@/lib/course-content';
 import { CourseContentDraft, validateContent } from '@/lib/course-content-shared';
 
@@ -77,6 +79,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Category must be 1 to 60 characters' }, { status: 400 });
     }
 
+    const instructor = await resolveInstructor(body.instructorId);
+    if ('error' in instructor) return NextResponse.json({ error: instructor.error }, { status: 400 });
+
     const content: CourseContentDraft = body.content && Array.isArray(body.content.modules) && Array.isArray(body.content.tests) ? body.content : { modules: [], tests: [] };
     const contentProblem = validateContent(content);
     if (contentProblem) return NextResponse.json({ error: contentProblem }, { status: 400 });
@@ -98,6 +103,8 @@ export async function POST(req: NextRequest) {
         category: category ? String(category).trim() : 'History & Food',
         thumbnail: thumbnail && thumbnail.trim() !== '' ? thumbnail.trim() : null,
         published: true,
+        instructorId: instructor.id,
+        instructorName: instructor.name,
         totalHours: body.totalHours ? parseFloat(body.totalHours) || null : null,
         faqs: serializeFaqs(body.faqs),
       },
@@ -112,6 +119,8 @@ export async function POST(req: NextRequest) {
       const problem = await syncCourseContent(course.id, content);
       if (problem) return NextResponse.json({ error: problem }, { status: 400 });
     }
+
+    if (instructor.id) await syncCourseChat(course.id);
 
     return NextResponse.json({ success: true, course }, { status: 201 });
   } catch (err: any) {

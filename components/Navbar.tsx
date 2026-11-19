@@ -1,6 +1,7 @@
 'use client';
 
 import { Logo } from '@/components/Logo';
+import { resetChat } from '@/components/chat/client';
 import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -34,6 +35,7 @@ export function Navbar(_props: { wide?: boolean }) {
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
+    resetChat();
     clearSessionUser();
     router.push('/login');
     router.refresh();
@@ -46,14 +48,14 @@ export function Navbar(_props: { wide?: boolean }) {
             <LivePageTitle role={role} pathname={pathname} />
           </Suspense></h2>
         {/* Brand */}
-        <Link href={role === 'ADMIN' ? '/admin?tab=home' : user ? '/dashboard' : '/login'} className="nav-brand flex items-center gap-2.5">
+        <Link href={role === 'ADMIN' ? '/admin?tab=home' : role === 'INSTRUCTOR' ? '/messages' : user ? '/dashboard' : '/login'} className="nav-brand flex items-center gap-2.5">
           <Logo className="h-11" />
           <div>
             <span className="font-sans text-lg font-bold tracking-tight text-gray-900 block leading-tight">
               CIM India
             </span>
             <span className="text-xs text-amber-700 font-bold block">
-              {role === 'ADMIN' ? 'Admin Portal' : 'Student Learning'}
+              {role === 'ADMIN' ? 'Admin Portal' : role === 'INSTRUCTOR' ? 'Instructor Portal' : 'Student Learning'}
             </span>
           </div>
         </Link>

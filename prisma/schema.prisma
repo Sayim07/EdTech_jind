@@ -41,6 +41,7 @@ model User {
   resetTokens  PasswordResetToken[]
   mcqAttempts  McqAttempt[]
   payments     Payment[]
+  staffProfile StaffMember?
 }
 
 model PasswordResetToken {
@@ -65,6 +66,8 @@ model Course {
   level            String       @default("All Levels") // "Beginner" | "Intermediate" | "Advanced" | "All Levels"
   category         String       @default("History & Food")
   instructorName   String       @default("CIM India Faculty")
+  instructorId     String?      // the Staff member who teaches it. Without one, course messages go to the admins
+  instructor       StaffMember? @relation(fields: [instructorId], references: [id], onDelete: SetNull)
   published        Boolean      @default(true)
   featured         Boolean      @default(false)
   totalHours       Float?       // optional override; otherwise computed from lesson durations
@@ -333,6 +336,9 @@ model StaffMember {
   designation String?  // e.g. "Culinary Historian", "Student Support Lead"
   bio         String?
   active      Boolean  @default(true)
+  userId      String?  @unique // the login account, once an admin gives this person access (role INSTRUCTOR)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  courses     Course[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

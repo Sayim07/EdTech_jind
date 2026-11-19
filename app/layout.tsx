@@ -41,7 +41,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={sourceSans.variable} suppressHydrationWarning>
-      <body className={`antialiased min-h-screen bg-gray-100 text-gray-900${role === 'STUDENT' || role === 'ADMIN' ? ' role-sidebar' : ''}${collapsed ? ' sidebar-collapsed' : ''}`}>
+      <body className={`antialiased min-h-screen bg-gray-100 text-gray-900${role === 'STUDENT' || role === 'ADMIN' || role === 'INSTRUCTOR' ? ' role-sidebar' : ''}${collapsed ? ' sidebar-collapsed' : ''}`}>
         <ThemeProvider>
           <SessionRoleProvider role={role}>
             <AppSidebar />

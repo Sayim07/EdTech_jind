@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth';
+import { studentJoined } from '@/lib/chat/sync';
 
 export async function GET() {
   try {
@@ -39,6 +40,10 @@ export async function POST(req: NextRequest) {
     const user = await getSessionUser();
     if (!user) {
       return NextResponse.json({ error: 'Please log in to purchase this course' }, { status: 401 });
+    }
+
+    if (user.role === 'INSTRUCTOR') {
+      return NextResponse.json({ error: 'Instructor accounts cannot enroll in courses.' }, { status: 403 });
     }
 
     const { courseId } = await req.json();
@@ -87,6 +92,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    await studentJoined(course.id, user.id);
     return NextResponse.json({ success: true, enrollment });
   } catch (err: any) {
     console.error('Enroll error:', err);

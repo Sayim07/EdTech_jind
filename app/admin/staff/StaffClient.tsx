@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { AlertCircle, GraduationCap, Mail, Pencil, Phone, Plus, Search, Trash2, UserCheck, Users } from 'lucide-react';
+import { KeyRound, AlertCircle, GraduationCap, Mail, Pencil, Phone, Plus, Search, Trash2, UserCheck, Users } from 'lucide-react';
 import { Dialog, primaryBtn, secondaryBtn } from '@/components/mcq/Dialog';
 
 export interface StaffRow {
@@ -13,6 +13,7 @@ export interface StaffRow {
   designation: string | null;
   bio: string | null;
   active: boolean;
+  hasLogin: boolean;
 }
 
 type Filter = 'ALL' | 'INSTRUCTOR' | 'STAFF';
@@ -45,6 +46,20 @@ export function StaffClient({ initial }: { initial: StaffRow[] }) {
   const [removing, setRemoving] = useState<StaffRow | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState('');
+
+  const access = async (r: StaffRow, grant: boolean) => {
+    setBusyId(r.id);
+    setNotice('');
+    try {
+      const data = await call(`/api/admin/staff/${r.id}/access`, grant ? 'POST' : 'DELETE');
+      setRows((cur) => cur.map((x) => (x.id === r.id ? { ...x, hasLogin: grant } : x)));
+      setNotice(grant ? data.message + (data.devInviteLink ? ` No email provider is set up here. Dev link: ${data.devInviteLink}` : '') : `${r.name} no longer has a login.`);
+    } catch (err: any) {
+      setNotice(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const counts = useMemo(
     () => ({
@@ -240,6 +255,25 @@ export function StaffClient({ initial }: { initial: StaffRow[] }) {
                       </span>
                       {r.active ? 'Active' : 'Inactive'}
                     </button>
+                    {r.role === 'INSTRUCTOR' && (
+                      <span className="inline-flex items-center gap-1">
+                        <span className={`text-xs font-semibold ${r.hasLogin ? 'text-emerald-800' : 'text-gray-600'}`}>{r.hasLogin ? 'Has login' : 'No login'}</span>
+                        <button
+                          type="button"
+                          disabled={busyId === r.id || (!r.hasLogin && !r.active)}
+                          onClick={() => access(r, !r.hasLogin)}
+                          className="h-9 px-3 rounded-lg inline-flex items-center gap-1.5 text-sm font-semibold text-gray-800 border border-gray-300 hover:bg-gray-50 transition disabled:opacity-60 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_#e3eeff]"
+                        >
+                          <KeyRound className="w-4 h-4" aria-hidden />
+                          {r.hasLogin ? 'Remove login' : 'Give login access'}
+                        </button>
+                        {r.hasLogin && (
+                          <button type="button" disabled={busyId === r.id} onClick={() => access(r, true)} className="h-9 px-2 rounded-lg text-sm font-semibold text-amber-700 hover:underline disabled:opacity-60 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_#e3eeff]">
+                            Resend invite
+                          </button>
+                        )}
+                      </span>
+                    )}
                     <button type="button" onClick={() => openEdit(r)} aria-label={`Edit ${r.name}`} title="Edit" className="w-9 h-9 rounded-lg inline-flex items-center justify-center text-gray-700 hover:bg-gray-100 transition focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_#e3eeff]">
                       <Pencil className="w-4 h-4" aria-hidden />
                     </button>

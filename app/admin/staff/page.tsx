@@ -23,6 +23,7 @@ export default async function StaffPage() {
     designation: s.designation,
     bio: s.bio,
     active: s.active,
+    hasLogin: !!s.userId,
   }));
 
   return (

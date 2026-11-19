@@ -46,6 +46,7 @@ export default async function AdminEditCoursePage({ params }: { params: Promise<
             category: course.category,
             level: course.level,
             instructorName: course.instructorName,
+            instructorId: course.instructorId,
             thumbnail: course.thumbnail,
             totalHours: course.totalHours,
             faqs: course.faqs,

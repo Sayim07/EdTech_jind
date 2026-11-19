@@ -11,7 +11,7 @@ async function requireAdmin() {
 export async function GET() {
   if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
   const staff = await prisma.staffMember.findMany({ orderBy: [{ active: 'desc' }, { name: 'asc' }] });
-  return NextResponse.json({ staff });
+  return NextResponse.json({ staff: staff.map((s) => ({ ...s, hasLogin: !!s.userId })) });
 }
 
 export async function POST(req: NextRequest) {
@@ -36,5 +36,5 @@ export async function POST(req: NextRequest) {
       active: d.active ?? true,
     },
   });
-  return NextResponse.json({ staff: member }, { status: 201 });
+  return NextResponse.json({ staff: { ...member, hasLogin: false } }, { status: 201 });
 }

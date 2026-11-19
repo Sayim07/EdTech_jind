@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { ButtonSpinner, Spinner } from '@/components/ui/Loaders';
 import { 
   ArrowLeft, 
@@ -19,7 +20,11 @@ import {
   Award as AwardIcon,
   ClipboardCheck,
   PencilLine,
+  MessageSquare,
 } from 'lucide-react';
+
+// The chat code is only downloaded when someone opens it, so the classroom stays fast.
+const ClassChatDrawer = dynamic(() => import('@/components/chat/ClassChatDrawer'), { ssr: false });
 
 interface Props {
   course: any;
@@ -257,6 +262,7 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
   const [submissionText, setSubmissionText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Slides, PDFs and audio lessons are shown in the main area itself, so the tabs below always start on the notes.
   const tabFor = (_l: any): 'notes' | 'slides' | 'audio' => 'notes';
@@ -369,6 +375,15 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
             <span>Syllabus</span>
           </button>
 
+          <button
+            type="button"
+            onClick={() => setChatOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-200 transition active:scale-95"
+          >
+            <MessageSquare className="w-4 h-4" aria-hidden />
+            <span>Class chat</span>
+          </button>
+
           {!activeAssignment && (
           <button
             onClick={() => activeLesson && toggleComplete(activeLesson.id)}
@@ -387,6 +402,10 @@ export function ClassroomPlayerClient({ course, user, initialCompletedIds = [], 
           )}
         </div>
       </header>
+
+      {chatOpen && (
+        <ClassChatDrawer courseId={course.id} courseTitle={course.title} role={user?.role} enrolled={!!canTrackProgress} onClose={() => setChatOpen(false)} />
+      )}
 
       {certificateCode && (
         <div className="bg-emerald-50 border-b border-emerald-200 px-5 sm:px-8 py-3 flex items-center justify-between gap-3 text-sm text-emerald-800">

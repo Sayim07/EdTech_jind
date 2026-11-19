@@ -25,6 +25,7 @@ export interface CourseBasics {
   category: string;
   level: string;
   instructorName: string;
+  instructorId: string | null;
   thumbnail: string | null;
   totalHours: number | null;
   faqs: string | null;
@@ -39,8 +40,8 @@ interface Props {
   initialContent: CourseContentDraft;
   /** Every category already used by a course, plus the defaults. */
   categories: string[];
-  /** Active instructors from the Staff page, offered as suggestions for the instructor name. */
-  instructors: string[];
+  /** Active instructors from the Staff page, for the instructor picker. */
+  instructors: { id: string; name: string; hasLogin: boolean }[];
 }
 
 export function CourseBuilder({ mode, course, initialContent, categories, instructors }: Props) {
@@ -51,7 +52,7 @@ export function CourseBuilder({ mode, course, initialContent, categories, instru
   const [description, setDescription] = useState(course?.description ?? '');
   const [category, setCategory] = useState(course?.category ?? categories[0] ?? '');
   const [level, setLevel] = useState(course?.level ?? LEVELS[0]);
-  const [instructorName, setInstructorName] = useState(course?.instructorName ?? 'CIM India Faculty');
+  const [instructorId, setInstructorId] = useState(course?.instructorId ?? '');
   const [price, setPrice] = useState(String(course?.price ?? 0));
   const [originalPrice, setOriginalPrice] = useState(course?.originalPrice ? String(course.originalPrice) : '');
   const [thumbnail, setThumbnail] = useState(course?.thumbnail ?? '');
@@ -67,7 +68,7 @@ export function CourseBuilder({ mode, course, initialContent, categories, instru
   const [deleting, setDeleting] = useState(false);
 
   const snapshot = (c: CourseContentDraft) =>
-    JSON.stringify([title, shortDescription, description, category, level, instructorName, price, originalPrice, thumbnail, published, totalHours, faqs, c]);
+    JSON.stringify([title, shortDescription, description, category, level, instructorId, price, originalPrice, thumbnail, published, totalHours, faqs, c]);
   const baseline = useRef<string>('');
   const [ready, setReady] = useState(false);
   useEffect(() => {
@@ -112,7 +113,7 @@ export function CourseBuilder({ mode, course, initialContent, categories, instru
         originalPrice: numericOriginal || null,
         level,
         category: category.trim(),
-        instructorName: instructorName.trim() || 'CIM India Faculty',
+        instructorId: instructorId || null,
         thumbnail: thumbnail.trim() || null,
         published,
         totalHours: totalHours ? parseFloat(totalHours) : null,
@@ -244,13 +245,20 @@ export function CourseBuilder({ mode, course, initialContent, categories, instru
               <label htmlFor="c-inst" className={label}>
                 Instructor
               </label>
-              <input id="c-inst" list="c-inst-list" value={instructorName} onChange={(e) => setInstructorName(e.target.value)} className={fieldCls} autoComplete="off" />
-              <datalist id="c-inst-list">
+              <select id="c-inst" value={instructorId} onChange={(e) => setInstructorId(e.target.value)} className={fieldCls}>
+                <option value="">No instructor (CIM India Faculty)</option>
                 {instructors.map((n) => (
-                  <option key={n} value={n} />
+                  <option key={n.id} value={n.id}>
+                    {n.name}
+                    {n.hasLogin ? '' : ' (no login yet)'}
+                  </option>
                 ))}
-              </datalist>
-              {instructors.length > 0 && <p className="text-xs text-gray-600 mt-1">Pick from your Staff list or type a name.</p>}
+                {/* An instructor who was deactivated after being assigned stays visible until changed. */}
+                {instructorId && !instructors.some((n) => n.id === instructorId) && <option value={instructorId}>{course?.instructorName} (inactive)</option>}
+              </select>
+              <p className="text-xs text-gray-600 mt-1">
+                {instructorId ? 'Students message this instructor if they have a login; otherwise the admins.' : 'No instructor selected: student messages go to the admins.'}
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>

@@ -29,7 +29,9 @@ export default async function TestPage({ params }: { params: Promise<{ testKey: 
   });
   const done = attempts.filter((a) => a.status === 'SUBMITTED');
   const inProgress = attempts.some((a) => a.status === 'IN_PROGRESS');
-  const blocked = !test.allowRetakes && done.length > 0;
+  const proctored = test.kind !== 'ASSIGNMENT';
+  // Proctored exams get their retake and schedule rules from the server status call (retake grants exist).
+  const blocked = !proctored && !test.allowRetakes && done.length > 0;
 
   return (
     <>
@@ -47,7 +49,7 @@ export default async function TestPage({ params }: { params: Promise<{ testKey: 
             </div>
             <dl className="flex flex-wrap gap-x-10 gap-y-3">
               {[
-                ['Questions', test.questions.length],
+                ['Questions', test.settings.questionCount && test.settings.questionCount < test.questions.length && test.kind !== 'ASSIGNMENT' ? test.settings.questionCount : test.questions.length],
                 ['Time limit', `${test.timeLimit} min`],
                 ['Passing marks', `${test.passingMarks}%`],
                 ['Retakes', test.allowRetakes ? 'Allowed' : 'Not allowed'],
@@ -65,12 +67,12 @@ export default async function TestPage({ params }: { params: Promise<{ testKey: 
               key: test.key,
               title: test.title,
               courseTitle: course?.title || '',
-              questionCount: test.questions.length,
+              questionCount: test.settings.questionCount && test.settings.questionCount < test.questions.length && test.kind !== 'ASSIGNMENT' ? test.settings.questionCount : test.questions.length,
               timeLimit: test.timeLimit,
               passingMarks: test.passingMarks,
               allowRetakes: test.allowRetakes,
               isSample: test.isSample,
-              proctored: test.kind !== 'ASSIGNMENT',
+              proctored,
             }}
             canStart={!blocked}
             blockedReason={blocked ? 'Retakes are turned off for this test, so it cannot be started again. You can still review your attempt below.' : undefined}

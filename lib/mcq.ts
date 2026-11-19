@@ -20,8 +20,42 @@ export interface TestDraft {
   timeLimit: number;
   passingMarks: number;
   allowRetakes: boolean;
+  /** Exam controls. Only meaningful for tests (kind TEST); MCQ assignments are never proctored. */
+  requireCamera: boolean;
+  requireIdCheck: boolean;
+  requireConsent: boolean;
+  /** Plain text, shown to staff only. Empty = no code. */
+  accessCode: string;
+  /** ISO timestamps, or '' when not set. The builder converts to and from datetime-local. */
+  startsAt: string;
+  endsAt: string;
+  /** How many questions each student gets from the bank. null = all of them. */
+  questionCount: number | null;
+  randomizeQuestions: boolean;
+  randomizeOptions: boolean;
+  maxViolations: number;
+  captureEverySeconds: number;
+  photoRetentionDays: number;
   questions: QuestionDraft[];
 }
+
+/** Defaults for the exam controls, matching the database defaults. */
+export const EXAM_DEFAULTS = {
+  requireCamera: true,
+  requireIdCheck: false,
+  requireConsent: true,
+  accessCode: '',
+  startsAt: '',
+  endsAt: '',
+  questionCount: null as number | null,
+  randomizeQuestions: true,
+  randomizeOptions: true,
+  maxViolations: 3,
+  captureEverySeconds: 120,
+  photoRetentionDays: 30,
+};
+
+export const ACCESS_CODE_PATTERN = /^[A-Za-z0-9]{4,20}$/;
 
 /** Question as stored in an attempt snapshot (server side). */
 export interface StoredQuestion {
@@ -75,14 +109,40 @@ export function blankQuestion(): QuestionDraft {
 }
 
 export function blankTest(): TestDraft {
-  return { id: newId(), title: '', timeLimit: 30, passingMarks: 50, allowRetakes: true, questions: [blankQuestion()] };
+  // A new test asks for an ID check by default; everything else keeps the database default.
+  return { id: newId(), title: '', timeLimit: 30, passingMarks: 50, allowRetakes: true, ...EXAM_DEFAULTS, requireIdCheck: true, questions: [blankQuestion()] };
 }
 
-/** Returns a human readable problem or null when the test can be saved. */
-export function validateTest(t: TestDraft): string | null {
+export type ExamSettingKey = 'startsAt' | 'endsAt' | 'accessCode' | 'questionCount' | 'maxViolations' | 'captureEverySeconds' | 'photoRetentionDays';
+
+/** Problems with the exam controls, keyed by field, so the builder can show each one beside its input. */
+export function examSettingErrors(t: TestDraft): Partial<Record<ExamSettingKey, string>> {
+  const e: Partial<Record<ExamSettingKey, string>> = {};
+  const inRange = (n: unknown, min: number, max: number) => typeof n === 'number' && Number.isInteger(n) && n >= min && n <= max;
+  if (!inRange(t.maxViolations, 1, 20)) e.maxViolations = 'Violation limit must be a whole number from 1 to 20';
+  if (!inRange(t.captureEverySeconds, 30, 600)) e.captureEverySeconds = 'Photo interval must be 30 to 600 seconds';
+  if (!inRange(t.photoRetentionDays, 1, 365)) e.photoRetentionDays = 'Photo retention must be 1 to 365 days';
+  if (t.questionCount !== null && t.questionCount !== undefined && !inRange(t.questionCount, 1, t.questions.length)) {
+    e.questionCount = t.questions.length === 0 ? 'Add questions first' : `Questions per student must be 1 to ${t.questions.length} (the size of the bank)`;
+  }
+  const starts = t.startsAt ? Date.parse(t.startsAt) : null;
+  const ends = t.endsAt ? Date.parse(t.endsAt) : null;
+  if (t.startsAt && Number.isNaN(starts)) e.startsAt = 'Enter a valid opening time';
+  if (t.endsAt && Number.isNaN(ends)) e.endsAt = 'Enter a valid closing time';
+  if (!e.startsAt && !e.endsAt && starts !== null && ends !== null && ends <= starts) e.endsAt = 'The closing time must be after the opening time';
+  if (t.accessCode.trim() && !ACCESS_CODE_PATTERN.test(t.accessCode.trim())) e.accessCode = 'Access code must be 4 to 20 letters or digits';
+  return e;
+}
+
+/** Returns a human readable problem or null when the test can be saved. Pass proctored:false for MCQ assignments. */
+export function validateTest(t: TestDraft, opts: { proctored?: boolean } = {}): string | null {
   if (!t.title.trim()) return 'Test title is required';
   if (!(t.timeLimit >= 1 && t.timeLimit <= 600)) return `"${t.title}": time limit must be 1 to 600 minutes`;
   if (!(t.passingMarks >= 0 && t.passingMarks <= 100)) return `"${t.title}": passing marks must be 0 to 100`;
+  if (opts.proctored !== false) {
+    const first = Object.values(examSettingErrors(t))[0];
+    if (first) return `"${t.title}": ${first.charAt(0).toLowerCase()}${first.slice(1)}`;
+  }
   if (t.questions.length === 0) return `"${t.title}": add at least one question`;
   for (let i = 0; i < t.questions.length; i++) {
     const q = t.questions[i];

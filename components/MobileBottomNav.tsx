@@ -34,7 +34,7 @@ function BottomNav({ role, isLoggedIn }: Props) {
 
   const items =
     role === 'ADMIN'
-      ? ADMIN_LINKS.filter((l) => l.label !== 'Storefront' && l.label !== 'Profile').map((l) => ({ label: l.label, href: l.href, icon: l.icon, active: l.match(pathname, tab) }))
+      ? ADMIN_LINKS.filter((l) => l.label !== 'Storefront' && l.label !== 'Profile').map((l) => ({ label: l.shortLabel ?? l.label, href: l.href, icon: l.icon, active: l.match(pathname, tab) }))
       : role === 'INSTRUCTOR'
       ? INSTRUCTOR_LINKS.map((l) => ({ label: l.label, href: l.href, icon: l.icon, active: l.match(pathname, tab) }))
       : isLoggedIn

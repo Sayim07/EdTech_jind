@@ -42,6 +42,7 @@ model User {
   mcqAttempts  McqAttempt[]
   payments     Payment[]
   staffProfile StaffMember?
+  examVerifications ExamVerification[]
 }
 
 model PasswordResetToken {
@@ -177,6 +178,19 @@ model McqTest {
   timeLimit    Int           @default(30) // minutes
   passingMarks Int           @default(50) // percent
   allowRetakes Boolean       @default(true)
+  // Exam controls (proctoring). The defaults keep existing tests behaving as before.
+  requireCamera      Boolean   @default(true)   // random still photos during the exam (no video, nothing recorded)
+  requireIdCheck     Boolean   @default(false)  // selfie + ID card photo, approved by a teacher/admin, before the first attempt
+  requireConsent     Boolean   @default(true)   // camera and monitoring notice the student must accept
+  accessCode         String?                    // when set, the student must type it to start
+  startsAt           DateTime?                  // exam window: cannot start before this
+  endsAt             DateTime?                  // cannot start after this, and a running attempt is cut off at this time
+  questionCount      Int?                       // draw this many questions from the bank (all when empty)
+  randomizeQuestions Boolean   @default(true)
+  randomizeOptions   Boolean   @default(true)
+  maxViolations      Int       @default(3)      // counted violations before the attempt is submitted automatically
+  captureEverySeconds Int      @default(120)    // one random photo inside every window of this length
+  photoRetentionDays Int       @default(30)     // ID photos and captures are deleted this many days after being taken
   order        Int           @default(1)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -218,7 +232,20 @@ model McqAttempt {
   violations     Int       @default(0)
   autoSubmitted  Boolean   @default(false)
   autoReason     String?   // "TIME_UP" | "PROCTORING"
-  snapshots      String    @default("[]") // JSON: [{ t: ISO string, img: data URL }]
+  snapshots      String    @default("[]") // legacy: JSON [{ t, img: data URL }]. New attempts store captures in object storage (ProctorCapture)
+  deadlineAt     DateTime?  // the server's own end time for this attempt. The browser clock is never used for the timer
+  sessionHash    String?    // hash of the token held by the one tab/device that currently owns this attempt
+  sessionLastSeenAt DateTime? // last heartbeat of that tab
+  sessionDevice  String?
+  consentAt      DateTime?
+  verificationId String?
+  reviewStatus   String    @default("PENDING") // "PENDING" | "VALID" | "SUSPICIOUS" (set by a teacher/admin)
+  reviewNote     String?
+  reviewedById   String?
+  reviewedAt     DateTime?
+  mediaPurgedAt  DateTime?
+  events         ProctorEvent[]
+  captures       ProctorCapture[]
   startedAt      DateTime  @default(now())
   submittedAt    DateTime?
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -341,4 +368,70 @@ model StaffMember {
   courses     Course[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// Identity check before an exam: a live selfie and a photo of the front of the ID card, kept in PRIVATE object storage.
+model ExamVerification {
+  id           String    @id @default(uuid())
+  userId       String
+  testKey      String
+  courseId     String
+  selfieKey    String?   // object storage keys (set to null once the retention period has passed)
+  idKey        String?
+  status       String    @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED"
+  rejectReason String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  consentAt    DateTime?
+  purgeAfter   DateTime
+  purgedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, testKey])
+  @@index([courseId, status])
+  @@index([purgeAfter])
+}
+
+// Everything suspicious that happened during an attempt, with the server's own timestamp.
+model ProctorEvent {
+  id        String     @id @default(uuid())
+  attemptId String
+  type      String     // TAB_HIDDEN | WINDOW_BLUR | FULLSCREEN_EXIT | COPY | PASTE | CUT | CONTEXT_MENU | PRINT | SHORTCUT | CAMERA_LOST | FACE_MISSING | MULTIPLE_FACES | SESSION_CONFLICT | OFFLINE | AUTO_SUBMIT | NOTE
+  at        DateTime   @default(now())
+  clientAt  DateTime?
+  detail    String?
+  counted   Boolean    @default(false) // counted towards the exam's violation limit
+  attempt   McqAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId, at])
+}
+
+// A still photo taken at a random moment. Stored in private object storage; never video.
+model ProctorCapture {
+  id         String     @id @default(uuid())
+  attemptId  String
+  key        String?
+  takenAt    DateTime   @default(now())
+  faceCount  Int?       // from the in-browser face check, when it ran. A hint for the reviewer, never a verdict
+  purgeAfter DateTime
+  purgedAt   DateTime?
+  attempt    McqAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId, takenAt])
+  @@index([purgeAfter])
+}
+
+// A teacher/admin lets one student take an exam again.
+model ExamRetakeGrant {
+  id          String    @id @default(uuid())
+  userId      String
+  testKey     String
+  courseId    String
+  reason      String?
+  grantedById String
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, testKey])
 }

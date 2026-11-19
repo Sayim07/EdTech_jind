@@ -1,10 +1,12 @@
-import { MessageSquare, Award, ClipboardList, Compass, CreditCard, LayoutDashboard, Store, UserRound, Users, BookOpen, Briefcase } from 'lucide-react';
+import { MessageSquare, Award, ClipboardList, Compass, CreditCard, LayoutDashboard, Store, UserRound, Users, BookOpen, Briefcase, ShieldCheck } from 'lucide-react';
 
 export interface NavLink {
   href: string;
   label: string;
   /** Heading shown in the top bar when this link is active. */
   title?: string;
+  /** Shorter label for the phone bottom bar, where seven items share 375px. */
+  shortLabel?: string;
   icon: typeof Award;
   /** `tab` is the admin dashboard's ?tab= value (empty when absent). */
   match: (pathname: string, tab: string) => boolean;
@@ -20,6 +22,7 @@ export const STUDENT_LINKS: NavLink[] = [
 ];
 
 export const INSTRUCTOR_LINKS: NavLink[] = [
+  { href: '/proctoring', label: 'Proctoring', shortLabel: 'Proctor', title: 'Proctoring', icon: ShieldCheck, match: (p) => p === '/proctoring' || p.startsWith('/proctoring/') },
   { href: '/messages', label: 'Messages', title: 'Messages', icon: MessageSquare, match: (p) => p.startsWith('/messages') },
   { href: '/profile', label: 'Profile', icon: UserRound, match: (p) => p === '/profile' },
 ];
@@ -31,6 +34,7 @@ export const ADMIN_LINKS: NavLink[] = [
   { href: '/admin?tab=courses', label: 'Courses', title: 'Manage Courses', icon: BookOpen, match: (p, t) => onAdminTab(p, t, 'courses') || p.startsWith('/admin/courses') || p.startsWith('/admin/categories') },
   { href: '/admin?tab=students', label: 'Students', title: 'Registered Students', icon: Users, match: (p, t) => onAdminTab(p, t, 'students') },
   { href: '/admin?tab=payments', label: 'Payments', title: 'Fee Payments', icon: CreditCard, match: (p, t) => onAdminTab(p, t, 'payments') || p.startsWith('/admin/payments') },
+  { href: '/proctoring', label: 'Proctoring', shortLabel: 'Proctor', title: 'Proctoring', icon: ShieldCheck, match: (p) => p === '/proctoring' || p.startsWith('/proctoring/') },
   { href: '/admin/staff', label: 'Staff', title: 'Staff', icon: Briefcase, match: (p) => p.startsWith('/admin/staff') },
   { href: '/messages', label: 'Messages', title: 'Messages', icon: MessageSquare, match: (p) => p.startsWith('/messages') },
   { href: '/admin?tab=profile', label: 'Profile', title: 'Admin Profile', icon: UserRound, match: (p, t) => onAdminTab(p, t, 'profile') },

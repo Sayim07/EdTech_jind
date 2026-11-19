@@ -73,7 +73,7 @@ export const isNew = (id: string) => id.startsWith('new-');
 
 export const blankLesson = (): LessonDraft => ({ id: newId(), title: '', type: 'VIDEO', videoUrl: '', audioUrl: '', fileUrl: '', duration: '', content: '' });
 export const blankWritten = (): WrittenAssignmentDraft => ({ id: newId(), kind: 'WRITTEN', title: '', summary: '', instructions: '', maxScore: 100, attachments: [] });
-export const blankMcqAssignment = (): McqAssignmentDraft => ({ id: newId(), kind: 'MCQ', test: { ...blankTest(), allowRetakes: true } });
+export const blankMcqAssignment = (): McqAssignmentDraft => ({ id: newId(), kind: 'MCQ', test: { ...blankTest(), allowRetakes: true, requireCamera: false, requireIdCheck: false, requireConsent: false } });
 export const blankModule = (n: number): ModuleDraft => ({ id: newId(), title: `Module ${n}`, lessons: [], assignments: [], tests: [] });
 
 export const isYouTube = (url: string) => /^(https?:\/\/)?(www\.|m\.)?(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)[\w-]{6,}/i.test(url.trim());
@@ -106,7 +106,7 @@ export function validateContent(c: CourseContentDraft): string | null {
         if (!a.instructions.trim()) return `Assignment "${a.title}": add instructions`;
         if (!(a.maxScore >= 1 && a.maxScore <= 1000)) return `Assignment "${a.title}": maximum score must be 1 to 1000`;
       } else {
-        const problem = validateTest(a.test);
+        const problem = validateTest(a.test, { proctored: false });
         if (problem) return `MCQ assignment: ${problem}`;
       }
     }

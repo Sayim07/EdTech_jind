@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { sampleQuestionsFor } from '@/lib/mcq-sample';
 import { AttemptResult, StoredQuestion, gradeAnswers } from '@/lib/mcq';
+import { DEFAULT_EXAM_SETTINGS, type ExamSettings } from '@/lib/proctor';
 
 export interface ResolvedTest {
   key: string; // McqTest.id, or "sample-<courseId>"
@@ -13,6 +14,9 @@ export interface ResolvedTest {
   /** TEST is proctored; ASSIGNMENT (an MCQ assignment inside a module) is not. */
   kind: 'TEST' | 'ASSIGNMENT';
   moduleTitle: string | null;
+  /** Proctoring controls. For the built-in practice test these are the defaults. */
+  settings: ExamSettings;
+  /** The whole question bank. An attempt draws from it (see lib/exam.ts). */
   questions: StoredQuestion[];
 }
 
@@ -61,6 +65,20 @@ export async function resolveCourseTests(course: { id: string; title: string; sl
     isSample: false,
     kind: t.kind === 'ASSIGNMENT' ? 'ASSIGNMENT' : 'TEST',
     moduleTitle: t.module?.title ?? null,
+    settings: {
+      requireCamera: t.requireCamera,
+      requireIdCheck: t.requireIdCheck,
+      requireConsent: t.requireConsent,
+      accessCode: t.accessCode,
+      startsAt: t.startsAt,
+      endsAt: t.endsAt,
+      questionCount: t.questionCount,
+      randomizeQuestions: t.randomizeQuestions,
+      randomizeOptions: t.randomizeOptions,
+      maxViolations: t.maxViolations,
+      captureEverySeconds: t.captureEverySeconds,
+      photoRetentionDays: t.photoRetentionDays,
+    },
     questions: t.questions.map((q) => {
       const c = compact(parseOptions(q.options), q.correctIndex);
       return { id: q.id, text: q.text, options: c.options, correctIndex: c.correctIndex, explanation: q.explanation };
@@ -82,6 +100,7 @@ export async function resolveCourseTests(course: { id: string; title: string; sl
       isSample: true,
       kind: 'TEST',
       moduleTitle: null,
+      settings: { ...DEFAULT_EXAM_SETTINGS },
       questions: sample.map((q, i) => ({ id: `s${i + 1}`, text: q.text, options: q.options, correctIndex: q.correctIndex, explanation: q.explanation })),
     },
   ];

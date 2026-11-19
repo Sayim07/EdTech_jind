@@ -18,6 +18,7 @@
     "deploy:cf": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.2.3",
     "@opennextjs/cloudflare": "^1.20.17",
     "@prisma/adapter-pg": "^6.19.3",
     "@prisma/client": "^6.4.1",

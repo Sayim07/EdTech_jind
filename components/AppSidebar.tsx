@@ -13,7 +13,7 @@ import { UnreadBadge } from '@/components/chat/UnreadBadge';
 import { resetChat } from '@/components/chat/client';
 
 /** Pages that use the app shell. Everything else (login, classroom, certificates, home) has no sidebar. */
-const SHELL_PREFIXES = ['/admin', '/assignments', '/checkout', '/courses', '/dashboard', '/messages', '/profile', '/purchases'];
+const SHELL_PREFIXES = ['/admin', '/assignments', '/checkout', '/courses', '/dashboard', '/messages', '/profile', '/proctoring', '/purchases'];
 export const usesShell = (pathname: string) => SHELL_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
 function Links({ role, pathname, tab }: { role?: string; pathname: string; tab: string }) {

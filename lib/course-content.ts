@@ -30,6 +30,18 @@ type TestRow = {
   timeLimit: number;
   passingMarks: number;
   allowRetakes: boolean;
+  requireCamera: boolean;
+  requireIdCheck: boolean;
+  requireConsent: boolean;
+  accessCode: string | null;
+  startsAt: Date | null;
+  endsAt: Date | null;
+  questionCount: number | null;
+  randomizeQuestions: boolean;
+  randomizeOptions: boolean;
+  maxViolations: number;
+  captureEverySeconds: number;
+  photoRetentionDays: number;
   questions: { id: string; text: string; options: string; correctIndex: number; explanation: string | null }[];
 };
 
@@ -39,6 +51,18 @@ const toTestDraft = (t: TestRow): TestDraft => ({
   timeLimit: t.timeLimit,
   passingMarks: t.passingMarks,
   allowRetakes: t.allowRetakes,
+  requireCamera: t.requireCamera,
+  requireIdCheck: t.requireIdCheck,
+  requireConsent: t.requireConsent,
+  accessCode: t.accessCode || '',
+  startsAt: t.startsAt ? t.startsAt.toISOString() : '',
+  endsAt: t.endsAt ? t.endsAt.toISOString() : '',
+  questionCount: t.questionCount,
+  randomizeQuestions: t.randomizeQuestions,
+  randomizeOptions: t.randomizeOptions,
+  maxViolations: t.maxViolations,
+  captureEverySeconds: t.captureEverySeconds,
+  photoRetentionDays: t.photoRetentionDays,
   questions: t.questions.map((q) => ({ id: q.id, text: q.text, options: parseOptions(q.options), correctIndex: q.correctIndex, explanation: q.explanation || '' })),
 });
 
@@ -120,6 +144,48 @@ const questionSig = (rows: { text: string; options: string; correctIndex: number
   JSON.stringify(rows.map((r) => [r.text, JSON.parse(r.options), r.correctIndex, r.explanation || null]));
 
 
+/**
+ * The exam controls of a test. An MCQ assignment is never proctored, so its camera, ID check, consent, code and
+ * window are always switched off, whatever the draft carries.
+ */
+function examSettings(t: TestDraft, kind: 'TEST' | 'ASSIGNMENT') {
+  const proctored = kind === 'TEST';
+  const date = (iso: string) => (proctored && iso ? new Date(iso) : null);
+  return {
+    requireCamera: proctored && Boolean(t.requireCamera),
+    requireIdCheck: proctored && Boolean(t.requireIdCheck),
+    requireConsent: proctored && Boolean(t.requireConsent),
+    accessCode: proctored ? orNull(t.accessCode) : null,
+    startsAt: date(t.startsAt),
+    endsAt: date(t.endsAt),
+    questionCount: proctored && t.questionCount ? Math.round(t.questionCount) : null,
+    randomizeQuestions: Boolean(t.randomizeQuestions),
+    randomizeOptions: Boolean(t.randomizeOptions),
+    maxViolations: Math.round(t.maxViolations),
+    captureEverySeconds: Math.round(t.captureEverySeconds),
+    photoRetentionDays: Math.round(t.photoRetentionDays),
+  };
+}
+
+type ExamSettings = ReturnType<typeof examSettings>;
+function examChanged(row: ExamSettings, next: ExamSettings) {
+  const time = (d: Date | null) => (d ? d.getTime() : null);
+  return (
+    row.requireCamera !== next.requireCamera ||
+    row.requireIdCheck !== next.requireIdCheck ||
+    row.requireConsent !== next.requireConsent ||
+    (row.accessCode ?? null) !== next.accessCode ||
+    time(row.startsAt) !== time(next.startsAt) ||
+    time(row.endsAt) !== time(next.endsAt) ||
+    (row.questionCount ?? null) !== next.questionCount ||
+    row.randomizeQuestions !== next.randomizeQuestions ||
+    row.randomizeOptions !== next.randomizeOptions ||
+    row.maxViolations !== next.maxViolations ||
+    row.captureEverySeconds !== next.captureEverySeconds ||
+    row.photoRetentionDays !== next.photoRetentionDays
+  );
+}
+
 /** Existing ids are kept; drafts created in the browser (new-xxx) get a real UUID so children can reference them. */
 const realId = (id: string) => (isNew(id) ? crypto.randomUUID() : id);
 
@@ -158,11 +224,13 @@ export async function syncCourseContent(courseId: string, content: CourseContent
   const planTest = (t: TestDraft, parent: { courseId: string } | { moduleId: string }, kind: 'TEST' | 'ASSIGNMENT', order: number) => {
     const id = dbTests.has(t.id) ? t.id : realId(t.id);
     keepTests.add(id);
+    const exam = examSettings(t, kind);
     const data = {
       title: t.title.trim(),
       timeLimit: Math.round(t.timeLimit),
       passingMarks: Math.round(t.passingMarks),
       allowRetakes: Boolean(t.allowRetakes),
+      ...exam,
       kind,
       order,
       ...('courseId' in parent ? { courseId: parent.courseId, moduleId: null } : { moduleId: parent.moduleId, courseId: null }),
@@ -173,7 +241,7 @@ export async function syncCourseContent(courseId: string, content: CourseContent
       newTests.push({ id, ...data });
       questionReplacements.push({ testId: id, rows });
     } else {
-      const changed = existing.title !== data.title || existing.timeLimit !== data.timeLimit || existing.passingMarks !== data.passingMarks || existing.allowRetakes !== data.allowRetakes || existing.kind !== data.kind || existing.order !== order || existing.courseId !== (data.courseId ?? null) || existing.moduleId !== (data.moduleId ?? null);
+      const changed = existing.title !== data.title || existing.timeLimit !== data.timeLimit || existing.passingMarks !== data.passingMarks || existing.allowRetakes !== data.allowRetakes || examChanged(existing, exam) || existing.kind !== data.kind || existing.order !== order || existing.courseId !== (data.courseId ?? null) || existing.moduleId !== (data.moduleId ?? null);
       if (changed) testUpdates.push({ id, data });
       const dbSig = questionSig([...existing.questions].sort((a, b) => a.order - b.order));
       if (dbSig !== questionSig(rows)) questionReplacements.push({ testId: id, rows });

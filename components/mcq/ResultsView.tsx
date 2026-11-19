@@ -44,7 +44,7 @@ export function ResultsView({ result }: { result: AttemptResult }) {
           <p role="status" className="mt-4 flex items-start gap-2 text-sm text-gray-800 bg-white/70 rounded-lg px-3 py-2">
             <AlertTriangle className="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
             {result.autoReason === 'PROCTORING'
-              ? 'This test was submitted automatically after 3 full-screen exits.'
+              ? `This exam was submitted automatically because the limit of rule violations was reached (${result.violations} recorded). Your answers up to that moment were graded, and your teacher can review what happened.`
               : 'This test was submitted automatically when the time ran out.'}
           </p>
         )}
